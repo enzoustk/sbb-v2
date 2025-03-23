@@ -84,3 +84,14 @@ def fetch_events_for_date(date):
             break
     
     return events
+
+def fetch_events_for_id(event_id):
+    from constants.api_params import API_TOKEN
+    import requests
+
+    url_evento = f"https://api.b365api.com/v1/event/view?token={API_TOKEN}&event_id={event_id}"
+    response = requests.get(url_evento)
+    response.raise_for_status()
+    event_data = response.json().get('results', [{}])[0]
+
+    return event_data
