@@ -1,240 +1,227 @@
+from utils import csv_atualizado_event
 import logging
-from datetime import datetime
-import pandas as pd
-from constants.telegram_params import TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID
-from utils.helpers import extrair_nome_jogador, tratar_handicap
-from bets.betting_logic import salvar_aposta_em_xlsx
-from telegram_message.telegram_bot import enviar_TELEGRAM_MESSAGE
-from config import csv_atualizado_event
-from features.feature_engineering import calcular_features_ao_vivo
-from model.bets import calculate_poisson, find_minimum_line
+from constants.file_params import ERROR_EVENTS
 
-eventos_com_erro = set()
+def find_player_name(team_name):
+    
+    try:
+        start = team_name.find('(') + 1
+        end = team_name.find(')')
+        return team_name[start:end].lower()
+    
+    except Exception as e:
+        logging.error(f"Erro ao extrair nome do jogador e time: {e}")
+        return team_name
 
-def predict(evento, model, df_dados):
-    global eventos_com_erro
+def handle_handicap(handicap):
+    try:
+        if isinstance(handicap, float):
+            return handicap
+        
+        if isinstance(handicap, str):
+            if ',' in handicap:
+                handicap_vals = [float(h.strip()) for h in handicap.split(',')]
+                handicap_atual = sum(handicap_vals) / len(handicap_vals)
+            else:
+                handicap_atual = float(handicap.strip())
+            return handicap_atual
+        else:
+            logging.error(f"Tipo inválido para handicap: {type(handicap)} - Valor: {handicap}")
+            return None
+    except ValueError as ve:
+        logging.error(f"Erro ao converter handicap '{handicap}': {ve}")
+        return None
 
+def extract_data(event):
+
+    event_id = event['id']
+
+    home_team= event.get('home', {}).get('name')
+    away_team = event.get('away', {}).get('name')
+    
+    over_odds = float(event['over_od'])
+    under_odds = float(event['under_od'])
+    
+    handicap = handle_handicap(event.get('handicap', '0'))
+    home_player = find_player_name(home_team)
+    away_player = find_player_name(away_team)
+
+    home_team_str = home_team.split('(')[0].strip().lower()
+    away_team_str = away_team.split('(')[0].strip().lower()
+
+    #Extração da liga
+    league = event.get('league', {}).get('name', 'Liga Desconhecida')
+
+    """
+    Retorna os dados do evento
+    """
+    return {'home_player':  home_player,
+            'home_team':    home_team_str,
+            'away_player':  away_player,
+            'away_team':    away_team_str,
+            'over_odds':    over_odds,
+            'under_odds':   under_odds,
+            'handicap':     handicap,
+            'league':       league,
+            'event_id':     event_id,
+            }
+
+def print_event_data(data):
+    """
+    Imprimir dados do evento;
+    """
+    print(f"Liga: {data['league']}")
+    print(f"{data['home_player']} ({data['home_team']}) vs {data['away_player']} ({data['away_team']})")
+    print('-' * 20)
+    print(f"Linha: {data['handicap']}")
+    
+def calculate_probabilities(data, lambda_pred):
+    from model.model_config import EV_THRESHOLD
+    from model.old_predict import calculate_poisson
+
+    """
+    Calcular probabilidades e EV;
+    Retornar probabilidades e EV caso seja maior que o threshold;
+    Retornar None caso não seja maior que o threshold;
+    Imprimir dados do evento;
+    """
+
+    prob_over, prob_under = calculate_poisson(lambda_pred, data['handicap'])
+    ev_over = data['over_odds'] * prob_over - 1
+    ev_under = data['under_odds'] * prob_under - 1
+    
+    print(f"Lambda: {lambda_pred}")
+    print('-' * 20)
+    print(f"Probabilidade Over: {prob_over*100:.2f}%")
+    print(f"Probabilidade Under: {prob_under*100:.2f}%")
+    print(f"EV Over: {ev_over*100:.2f}%")
+    print(f"EV Under: {ev_under*100:.2f}%")
+    print('-' * 60)
+
+    if ev_over >= EV_THRESHOLD:
+        return 'over', data['over_odds'], prob_over, ev_over
+    
+    elif ev_under >= EV_THRESHOLD:
+        return 'under', data['under_odds'], prob_under, ev_under
+    
+    else:
+        return None, None, None
+
+def generate_message(data):
+    
+    """
+    Gerar mensagem para o Telegram;
+    Se EV >= HOT_THRESHOLD, exibir "chamas";
+    """
+
+    from constants.telegram_params import (TELEGRAM_MESSAGE,
+                            HOT_THRESHOLD, HOT_TIPS_STEP, MAX_HOT)
+    
+    mensagem = TELEGRAM_MESSAGE.format(**data)
+    
+    _ev = data['ev']
+    i = 0
+    if _ev >= HOT_THRESHOLD: 
+        mensagem += f"\n⚠️ EV:"
+    
+    while True:
+        if _ev >= HOT_THRESHOLD:
+            mensagem += "🔥"
+            _ev -= HOT_TIPS_STEP
+            i += 1
+        if i == MAX_HOT: break
+        else: break
+    
+    mensagem += "\n"
+
+    print(mensagem)
+
+def predict(event, model):
+
+    
     if not csv_atualizado_event.is_set():
         logging.info("Aguardando a atualização inicial do CSV para iniciar as previsões...")
         csv_atualizado_event.wait()
 
     # Evita repetir se o evento já falhou
-    if evento['id'] in eventos_com_erro:
+    with open(ERROR_EVENTS, 'r') as file:
+        error_events = set(line.strip() for line in file)
+        
+    if event['id'] in error_events:
         return []
 
-    recomendacoes = []
+    bets = []
+
     try:
+        from datetime import datetime
         hora_identificacao = datetime.now().strftime('%H:%M:%S')
-        print(f"Jogo identificado às {hora_identificacao}")
+        print(f"Novo evento identificado às {hora_identificacao}")
 
-        # Extração dos nomes originais
-        time_casa_nome = evento.get('home', {}).get('name')
-        time_fora_nome = evento.get('away', {}).get('name')
-        odds_reais_over = float(evento['over_od'])
-        odds_reais_under = float(evento['under_od'])
-        handicap = tratar_handicap(evento.get('handicap', '0'))
+        #Extrair dados do evento
+        data = extract_data(event)
 
-        # Nomes em minúsculas para cálculos
-        jogador_casa = extrair_nome_jogador(time_casa_nome)
-        time_casa_str = time_casa_nome.split('(')[0].strip().lower()
-        jogador_fora = extrair_nome_jogador(time_fora_nome)
-        time_fora_str = time_fora_nome.split('(')[0].strip().lower()
-
-        #Extração da liga
-        liga = evento.get('league', {}).get('name', 'Liga desconhecida')
+        """
+        Calcular features ao vivo
+        TODO: Adicionar trava para caso features insuficientes, não executar.
+        """
+        from features.new_engineering import calculate_live_features
+        features = calculate_live_features(data['home_player'], data['away_player'])
+       
 
 
-        # Calcula as features ao vivo usando df_dados, já carregado no scanner
-        features = calcular_features_ao_vivo(
-            jogador_casa.lower(),
-            jogador_fora.lower(),
-            time_casa_str,
-            time_fora_str,
-            df_dados
-        )
-        if features is None:
-            logging.warning("As features calculadas foram insuficientes para prever o evento atual.")
-            return recomendacoes
+        import pandas as pd
+        from utils import print_separator
+        from features.required_features import REQUIRED_FEATURES
+        
+        #Criar DataFrame com features
+        x = pd.DataFrame([features])
+        x = x[REQUIRED_FEATURES]
 
-        X_ao_vivo = pd.DataFrame([features])
-        required_features = [
-            'h2h_count', 'l1', 'l2', 'l3',
-            'mediana_3', 'std_3', 'media_3', 'moda_3',
-            'ewma_total_15', 'ewma_total_3',
-            'mediana_total', 'std_total', 'media_total', 'moda_total',
-            'day_of_week', 'hour_of_day', 'day_sin', 'day_cos', 'hour_sin', 'hour_cos',
-            'tempo_dia_zero'
-        ]
-        X_ao_vivo = X_ao_vivo[required_features]
-
-        print('\n' + '-' * 60)
+        print_separator()
         print("Dados reais usados para previsão (X_ao_vivo):")
-        print(X_ao_vivo.to_string(index=False))
-        print('-' * 60 + '\n')
+        print(x.to_string(index=False))
+        print_separator()
 
-        # Faz a previsão
-        gols_previstos = model.predict(X_ao_vivo)[0]
+        """
+        Fazer previsão;
+        Probabilidades via distribuição de Poisson;
+        Imprimir dados do evento;
+        """
+        
+        lambda_pred = model.predict(x)[0]
+        print_event_data(data)
+        bet_type, odd, prob, ev = calculate_probabilities(data, lambda_pred)
 
-        # Probabilidades via distribuição de Poisson
-        prob_over, prob_under = calculate_poisson(gols_previstos, handicap)
+        if bet_type is None:
+            print("Nenhuma aposta válida encontrada")
+            return None
+            
+        from model.bets import calculate_new_minimum
+        minimum_line, minimum_odd = calculate_new_minimum(lambda_pred, data['handicap'], bet_type)
+        time_sent = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        data.update({
+            'bet_type': bet_type,
+            'odd': odd,
+            'prob': prob,
+            'ev': ev,
+            'minimum_line': minimum_line,
+            'minimum_odd': minimum_odd,
+            'time_sent': time_sent,
+        })
+        
+        generate_message(data)
+        from data_update.update import save_bet
 
-        # Cálculo de EV
-        ev_over = odds_reais_over * prob_over - 1
-        ev_under = odds_reais_under * prob_under - 1
+        
+        """
+        TODO: enviar mensagem para o Telegram;
+        """
 
-        # Logs
-        print(f"Liga: {liga}")
-        print(f"{jogador_casa} ({time_casa_str}) vs {jogador_fora} ({time_fora_str})")
-        print('-' * 20)
-        print(f"Lambda: {gols_previstos}")
-        print(f"Linha: {handicap}")
-        print('-' * 20)
-        print(f"Probabilidade Over: {prob_over*100:.2f}%")
-        print(f"Probabilidade Under: {prob_under*100:.2f}%")
-        print(f"EV Over: {ev_over*100:.2f}%")
-        print(f"EV Under: {ev_under*100:.2f}%")
-        print('-' * 60)
+        save_bet(data)
 
-        # Condições de aposta
-        lm_over_ev005 = None
-        lm_under_ev005 = None
 
-        # Over ≥5%
-        if ev_over >= 0.05:
-            recomendacoes.append(("Over", f"{handicap}", ev_over, odds_reais_over))
-            # Calcula linha mínima (EV=0.05) para Over
-            lm_over_ev005 = find_minimum_line(
-                lambda_pred=gols_previstos,
-                handicap_inicial=handicap,
-                ev_alvo=0.05,
-                tipo_aposta="over",
-                max_steps=10
-            )
-
-        # Under ≥5%
-        if ev_under >= 0.05:
-            recomendacoes.append(("Under", f"{handicap}", ev_under, odds_reais_under))
-            # Calcula linha mínima (EV=0.05) para Under
-            lm_under_ev005 = find_minimum_line(
-                lambda_pred=gols_previstos,
-                handicap_inicial=handicap,
-                ev_alvo=0.05,
-                tipo_aposta="under",
-                max_steps=10
-            )
-
-        if not recomendacoes:
-            print("Sem apostas no Evento")
-            return recomendacoes
-
-        # Montar mensagem Telegram
-        jogador_casa_original = (
-            time_casa_nome.split('(')[1].split(')')[0] if '(' in time_casa_nome else jogador_casa
-        )
-        jogador_fora_original = (
-            time_fora_nome.split('(')[1].split(')')[0] if '(' in time_fora_nome else jogador_fora
-        )
-
-        mensagem = (
-            f"🔗 Link: https://www.bet365.com/#/IP/B151\n"
-            f"⚽ Times: {jogador_casa_original} ({time_casa_nome.split('(')[0].strip()}) "
-            f"x {jogador_fora_original} ({time_fora_nome.split('(')[0].strip()})\n"
-            f"🏆 Liga: {liga}\n"
-        )
-
-        horario_envio = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
-        for tipo_aposta, linha, ev, odd in recomendacoes:
-            ev_percentual = ev * 100
-            direcao_aposta = "⬆" if "Over" in tipo_aposta else "⬇"
-
-            # Descobrir se existe uma linha mínima correspondente
-            linha_minima = None
-            odd_minima = None
-
-            if tipo_aposta == "Over" and lm_over_ev005:
-                linha_minima = lm_over_ev005['linha']
-                odd_minima = lm_over_ev005['odd']
-            elif tipo_aposta == "Under" and lm_under_ev005:
-                linha_minima = lm_under_ev005['linha']
-                odd_minima = lm_under_ev005['odd']
-
-            # Montagem do texto de "Odd: x (Min: ...)"
-            # Se não existe linha_minima, só mostramos a odd
-            if linha_minima is None or odd_minima is None:
-                # Sem linha mínima
-                odd_str = f"{odd}"
-            else:
-                # Se a linha principal == linha_minima, ex.: "📈 Odd: 1.925 (Min: 1.89)"
-                # Se diferentes, ex.: "📈 Odd: 1.925 (Min: 4.0 @1.89)"
-                if float(linha) == float(linha_minima):
-                    odd_str = f"{odd} (Min: {odd_minima})"
-                else:
-                    odd_str = f"{odd} (Min: {linha_minima} @{odd_minima})"
-
-            # Exemplo final:
-            # 🎯 Aposta: Under 4.0 ⬇
-            # 📈 Odd: 1.925 (Min: 1.89)
-            mensagem += (
-                f"🎯 Aposta: {tipo_aposta} {linha} {direcao_aposta}\n"
-                f"📈 Odd: {odd_str}\n"
-            )
-
-            # Se EV ≥10%, exibimos "chamas"
-            ev_message = ""
-            if 10 <= ev_percentual < 20:
-                ev_message = "🔥"
-            elif 20 <= ev_percentual < 25:
-                ev_message = "🔥🔥"
-            elif 25 <= ev_percentual < 30:
-                ev_message = "🔥🔥🔥"
-            elif ev_percentual > 30:
-                ev_message = "🔥🔥🔥🔥"
-
-            if ev_percentual >= 10:
-                mensagem += f"\n⚠️ EV: {ev_message}\n"
-
-            mensagem += "\n"
-
-        # Envio ao Telegram
-        message_id = enviar_TELEGRAM_MESSAGE(BOT_TOKEN, CHAT_ID, mensagem)
-
-        # Salvar apostas no XLSX (armazenando linha_minima e odd_minima)
-        for tipo_aposta, linha, ev, odd in recomendacoes:
-            ev_percentual = ev * 100
-
-            # Descobre a linha mínima novamente
-            linha_minima = None
-            odd_minima = None
-            if tipo_aposta == "Over" and lm_over_ev005:
-                linha_minima = lm_over_ev005['linha']
-                odd_minima = lm_over_ev005['odd']
-            elif tipo_aposta == "Under" and lm_under_ev005:
-                linha_minima = lm_under_ev005['linha']
-                odd_minima = lm_under_ev005['odd']
-
-            # Salva no Excel apenas a aposta principal (linha == handicap)
-            if float(linha) == float(handicap):
-                salvar_aposta_em_xlsx(
-                    id_evento=evento['id'],
-                    horario_envio=horario_envio,
-                    liga=liga,
-                    time_casa=time_casa_nome,
-                    time_fora=time_fora_nome,
-                    tipo_aposta=tipo_aposta,
-                    handicap_formatado=linha,
-                    odds=odd,
-                    ev_percentual=ev_percentual,
-                    message_id=message_id,
-                    linha_minima=linha_minima,
-                    odd_minima=odd_minima
-                )
 
     except Exception as e:
-        eventos_com_erro.add(evento['id'])
-        logging.error(
-            f"Erro ao fazer previsão para o evento {evento['id']}: {e}. "
-            f"Jogador Casa: {jogador_casa} ({time_casa_str}), Jogador Fora: {jogador_fora} ({time_fora_str})"
-        )
+        logging.error(f"Erro ao identificar o jogo: {e}")
 
-    return recomendacoes
+
