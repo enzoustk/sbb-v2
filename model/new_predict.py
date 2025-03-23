@@ -110,10 +110,10 @@ def gerar_mensagem(data):
     Se EV >= HOT_THRESHOLD, exibir "chamas";
     """
 
-    from constants.telegram_params import (MENSAGEM_TELEGRAM,
+    from constants.telegram_params import (TELEGRAM_MESSAGE,
                             HOT_THRESHOLD, HOT_TIPS_STEP)
     
-    mensagem = MENSAGEM_TELEGRAM.format(**data)
+    mensagem = TELEGRAM_MESSAGE.format(**data)
     
     _ev = data['ev']
     if _ev >= HOT_THRESHOLD: 
