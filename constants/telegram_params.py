@@ -7,7 +7,7 @@ Chat ID Grupo Teste (Privado) = -1002305899864
 Chat ID Telegram STK = -1001563465125
 """
 
-MENSAGEM_TELEGRAM = (
+TELEGRAM_MESSAGE = (
             f"🔗 Link: https://www.bet365.com/#/IP/B151\n"
             f"⚽ Times: {home_player} ({home_team}) x {away_player} ({away_team})\n"
             f"🏆 Liga: {league_text}\n"
@@ -15,3 +15,4 @@ MENSAGEM_TELEGRAM = (
             f"📈 Odd: {odd} (Min: {minimum_line})\n"
 )
 
+TELEGRAM_REPORT 

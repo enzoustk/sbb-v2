@@ -4,7 +4,7 @@ import pandas as pd
 from constants.telegram_params import TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID
 from utils.helpers import extrair_nome_jogador, tratar_handicap
 from bets.betting_logic import salvar_aposta_em_xlsx
-from telegram_message.telegram_bot import enviar_mensagem_telegram
+from telegram_message.telegram_bot import enviar_TELEGRAM_MESSAGE
 from config import csv_atualizado_event
 from features.feature_engineering import calcular_features_ao_vivo
 from model.bets import calculate_poisson, find_minimum_line
@@ -197,7 +197,7 @@ def predict(evento, model, df_dados):
             mensagem += "\n"
 
         # Envio ao Telegram
-        message_id = enviar_mensagem_telegram(BOT_TOKEN, CHAT_ID, mensagem)
+        message_id = enviar_TELEGRAM_MESSAGE(BOT_TOKEN, CHAT_ID, mensagem)
 
         # Salvar apostas no XLSX (armazenando linha_minima e odd_minima)
         for tipo_aposta, linha, ev, odd in recomendacoes:
