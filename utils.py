@@ -2,8 +2,8 @@ def print_separator():
     print('\n' + '-' * 60)
 
 def events_to_update():
-    from api_requests.pull_data import fetch_live_events
-    from constants.file_params import MADE_BETS
+    from api_requests.fetch import fetch_live_events
+    from files.paths import MADE_BETS
     live_events = fetch_live_events()
 
     live_events_ids = {str(event['id']) for event in live_events}
