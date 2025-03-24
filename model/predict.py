@@ -1,179 +1,65 @@
-from utils import csv_atualizado_event
-import logging
-from constants.file_params import ERROR_EVENTS
-
-def find_player_name(team_name):
+def make_prediction(event, model):
+    import logging
+    import pandas as pd
+    from datetime import datetime
     
-    try:
-        start = team_name.find('(') + 1
-        end = team_name.find(')')
-        return team_name[start:end].lower()
+    from features import create
+    from model import calculate
+    from telegram import message
+    from data.update import save_bet
+    from utils import print_separator, csv_atualizado_event
+    from api_requests.handle_data import event_to_dict, print_event_data
     
-    except Exception as e:
-        logging.error(f"Erro ao extrair nome do jogador e time: {e}")
-        return team_name
 
-def handle_handicap(handicap):
-    try:
-        if isinstance(handicap, float):
-            return handicap
-        
-        if isinstance(handicap, str):
-            if ',' in handicap:
-                handicap_vals = [float(h.strip()) for h in handicap.split(',')]
-                handicap_atual = sum(handicap_vals) / len(handicap_vals)
-            else:
-                handicap_atual = float(handicap.strip())
-            return handicap_atual
-        else:
-            logging.error(f"Tipo inválido para handicap: {type(handicap)} - Valor: {handicap}")
-            return None
-    except ValueError as ve:
-        logging.error(f"Erro ao converter handicap '{handicap}': {ve}")
-        return None
-
-def extract_data(event):
-
-    event_id = event['id']
-
-    home_team= event.get('home', {}).get('name')
-    away_team = event.get('away', {}).get('name')
-    
-    over_odds = float(event['over_od'])
-    under_odds = float(event['under_od'])
-    
-    handicap = handle_handicap(event.get('handicap', '0'))
-    home_player = find_player_name(home_team)
-    away_player = find_player_name(away_team)
-
-    home_team_str = home_team.split('(')[0].strip().lower()
-    away_team_str = away_team.split('(')[0].strip().lower()
-
-    #Extração da liga
-    league = event.get('league', {}).get('name', 'Liga Desconhecida')
-
-    """
-    Retorna os dados do evento
-    """
-    return {'home_player':  home_player,
-            'home_team':    home_team_str,
-            'away_player':  away_player,
-            'away_team':    away_team_str,
-            'over_odds':    over_odds,
-            'under_odds':   under_odds,
-            'handicap':     handicap,
-            'league':       league,
-            'event_id':     event_id,
-            }
-
-def print_event_data(data):
-    """
-    Imprimir dados do evento;
-    """
-    print(f"Liga: {data['league']}")
-    print(f"{data['home_player']} ({data['home_team']}) vs {data['away_player']} ({data['away_team']})")
-    print('-' * 20)
-    print(f"Linha: {data['handicap']}")
-    
-def calculate_probabilities(data, lambda_pred):
-    from model.model_config import EV_THRESHOLD
-    from model.old_predict import calculate_poisson
-
-    """
-    Calcular probabilidades e EV;
-    Retornar probabilidades e EV caso seja maior que o threshold;
-    Retornar None caso não seja maior que o threshold;
-    Imprimir dados do evento;
-    """
-
-    prob_over, prob_under = calculate_poisson(lambda_pred, data['handicap'])
-    ev_over = data['over_odds'] * prob_over - 1
-    ev_under = data['under_odds'] * prob_under - 1
-    
-    print(f"Lambda: {lambda_pred}")
-    print('-' * 20)
-    print(f"Probabilidade Over: {prob_over*100:.2f}%")
-    print(f"Probabilidade Under: {prob_under*100:.2f}%")
-    print(f"EV Over: {ev_over*100:.2f}%")
-    print(f"EV Under: {ev_under*100:.2f}%")
-    print('-' * 60)
-
-    if ev_over >= EV_THRESHOLD:
-        return 'over', data['over_odds'], prob_over, ev_over
-    
-    elif ev_under >= EV_THRESHOLD:
-        return 'under', data['under_odds'], prob_under, ev_under
-    
-    else:
-        return None, None, None
-
-def generate_message(data):
+    from files.paths import ERROR_EVENTS
+    from features.required import REQUIRED_FEATURES
     
     """
-    Gerar mensagem para o Telegram;
-    Se EV >= HOT_THRESHOLD, exibir "chamas";
-    """
+    Using the event data, make a prediction based on the model;
 
-    from constants.telegram_params import (TELEGRAM_MESSAGE,
-                            HOT_THRESHOLD, HOT_TIPS_STEP, MAX_HOT)
+    1- Preprocess the event;
+        1.1- Wait for the CSV to be updated;
+        1.2- Check if the event has already failed;
+            1.2.1- If it has, break the code and return None;
+        1.3- Extract the event data from the API;
     
-    mensagem = TELEGRAM_MESSAGE.format(**data)
-    
-    _ev = data['ev']
-    i = 0
-    if _ev >= HOT_THRESHOLD: 
-        mensagem += f"\n⚠️ EV:"
-    
-    while True:
-        if _ev >= HOT_THRESHOLD:
-            mensagem += "🔥"
-            _ev -= HOT_TIPS_STEP
-            i += 1
-        if i == MAX_HOT: break
-        else: break
-    
-    mensagem += "\n"
+    2- Predict the event;
+        2.1- Calculate the live features needed for the model to predict using the calculate_live_features function;
+        2.2- Make the Model Prediction;
+        2.3- Turn the prediction into probabilities;
+        2.4- See if there is a +EV bet using the calculated_probabilities function;
+            
+            
+    3- Process the bet;
+        3.1- If no +EV bet is found, break the code and return None;
+        3.2- If a +EV bet is found:
+            3.2.1 - Calculate the new minimum line and odd;
+            3.2.2 - Update the event data with the betting information, like minimum line, odd, time sent, etc;
+            3.2.3 - Generate and send the message to the Telegram channel;
+            3.2.4 - Save the bet in the MADE_BETS file;
+    """    
 
-    print(mensagem)
 
-def predict(event, model):
-
-    
     if not csv_atualizado_event.is_set():
         logging.info("Aguardando a atualização inicial do CSV para iniciar as previsões...")
         csv_atualizado_event.wait()
 
-    # Evita repetir se o evento já falhou
     with open(ERROR_EVENTS, 'r') as file:
         error_events = set(line.strip() for line in file)
         
     if event['id'] in error_events:
         return []
 
-    bets = []
-
     try:
-        from datetime import datetime
+       
         hora_identificacao = datetime.now().strftime('%H:%M:%S')
         print(f"Novo evento identificado às {hora_identificacao}")
 
-        #Extrair dados do evento
-        data = extract_data(event)
-
-        """
-        Calcular features ao vivo
-        TODO: Adicionar trava para caso features insuficientes, não executar.
-        """
-        from features.new_engineering import calculate_live_features
-        features = calculate_live_features(data['home_player'], data['away_player'])
+        data = event_to_dict(event)
        
+        # TODO: Adicionar trava para caso features insuficientes, não executar.
+        features = create.features(data, live=True, players=(data['players']))
 
-
-        import pandas as pd
-        from utils import print_separator
-        from features.required_features import REQUIRED_FEATURES
-        
-        #Criar DataFrame com features
         x = pd.DataFrame([features])
         x = x[REQUIRED_FEATURES]
 
@@ -181,23 +67,16 @@ def predict(event, model):
         print("Dados reais usados para previsão (X_ao_vivo):")
         print(x.to_string(index=False))
         print_separator()
-
-        """
-        Fazer previsão;
-        Probabilidades via distribuição de Poisson;
-        Imprimir dados do evento;
-        """
         
         lambda_pred = model.predict(x)[0]
         print_event_data(data)
-        bet_type, odd, prob, ev = calculate_probabilities(data, lambda_pred)
+        bet_type, odd, prob, ev = calculate.probabilities(data, lambda_pred)
 
         if bet_type is None:
             print("Nenhuma aposta válida encontrada")
             return None
             
-        from model.bets import calculate_new_minimum
-        minimum_line, minimum_odd = calculate_new_minimum(lambda_pred, data['handicap'], bet_type)
+        minimum_line, minimum_odd = calculate.minimum(lambda_pred, data['handicap'], bet_type)
         time_sent = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         data.update({
             'bet_type': bet_type,
@@ -209,19 +88,10 @@ def predict(event, model):
             'time_sent': time_sent,
         })
         
-        generate_message(data)
-        from data_update.update import save_bet
-
-        
-        """
-        TODO: enviar mensagem para o Telegram;
-        """
-
+        message_text = message.generate(data)
+        data['message_id'] = message.send(message_text)
         save_bet(data)
-
 
 
     except Exception as e:
         logging.error(f"Erro ao identificar o jogo: {e}")
-
-
