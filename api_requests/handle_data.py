@@ -36,7 +36,7 @@ def print_event(data: dict) -> None:
     print('-' * 20)
     print(f"Line: {data['handicap']}")
 
-def get_name(side: str | None = None, event: dict | None = None, type: str | None = None) -> str | None:
+def get_name(event: dict | None = None, side: str | None = None, type: str | None = None) -> str | None:
     
     if side is None:
         import logging
