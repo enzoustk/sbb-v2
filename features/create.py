@@ -1,6 +1,9 @@
-import pandas as pd, numpy as np
+import numpy as np
+import pandas as pd
 from features.h2h_acessor import H2HAcessor
+
 from files.paths import GAME_DATA
+from features.required import REQUIRED_COLUMNS
 
 def time_features(data):
     
@@ -47,12 +50,9 @@ def goal_features(data, time, normalize, live) -> pd.DataFrame:
     
     TODO: Finish normalization logic all around the code and repository.
     """
-
-
-    required_columns = {'home_player', 'away_player', 'total_goals', 'league'}
     
-    if not required_columns.issubset(data.columns):
-        raise ValueError(f"DataFrame must contain the following columns: {required_columns}") 
+    if not REQUIRED_COLUMNS.issubset(data.columns):
+        raise ValueError(f"DataFrame must contain the following columns: {REQUIRED_COLUMNS}") 
 
     data = data.copy()
 
