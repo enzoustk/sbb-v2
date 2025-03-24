@@ -1,6 +1,11 @@
 import requests, logging
 from constants.api import API_TOKEN, SPORT_ID, LEAGUE_ID, URLS
 
+"""
+Fetch all kinds of data from the API
+TODO: Improve error handling.
+"""
+
 def live_events() -> list[dict]:
 
     """
