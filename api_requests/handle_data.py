@@ -27,32 +27,6 @@ def handle_handicap(handicap: float | str) -> float | None:
         logging.error(f"Error converting handicap '{handicap}': {ve}")
         return None
 
-def event_to_dict(event) -> dict:
-    
-    """
-    Recieves the event data from the API for one single event.
-    Extracts the data and returns a dictionary with the event data.
-    """
-
-    return {
-        
-            'home_str': event.get('home', {}).get('name'),
-            'away_str': event.get('away', {}).get('name'),
-
-            'home_player': get_name(side='home', event=event, type='player'),
-            'home_team': get_name(side='home', event=event, type='team'),
-            
-            'away_player': get_name(side='away', event=event, type='player'),
-            'away_team': get_name(side='away', event=event, type='team'),
-            
-            'over_odd': float(event['over_od']),
-            'under_odd': float(event['under_od']),
-
-            'handicap': handle_handicap(event.get('handicap', '0')),
-            'league': event.get('league', {}).get('name', 'Unknown League'),
-            'event_id': event['id'],
-            }
-
 def print_event(data: dict) -> None:
     """
     Print the event data;
@@ -106,4 +80,42 @@ def get_name(side: str | None = None, event: dict | None = None, type: str | Non
             logging.error(f"Error: {e}")
             return None
         
-        
+def get_players(event: dict) -> tuple[str, str]:
+    
+    """
+    Gets the players from the event data.
+    Returns a tuple with the players sorted and in lowercase.
+    """
+
+    players = tuple(sorted([
+        str(event['home_player']).lower(),
+        str(event['away_player']).lower()
+    ]))
+
+    return players
+
+def event_to_dict(event) -> dict:
+    
+    """
+    Recieves the event data from the API for one single event.
+    Extracts the data and returns a dictionary with the event data.
+    """
+
+    return {
+            'home_str': event.get('home', {}).get('name'),
+            'away_str': event.get('away', {}).get('name'),
+            'players': get_players(event),
+
+            'home_player': get_name(side='home', event=event, type='player'),
+            'home_team': get_name(side='home', event=event, type='team'),
+            
+            'away_player': get_name(side='away', event=event, type='player'),
+            'away_team': get_name(side='away', event=event, type='team'),
+            
+            'over_odd': float(event['over_od']),
+            'under_odd': float(event['under_od']),
+
+            'handicap': handle_handicap(event.get('handicap', '0')),
+            'league': event.get('league', {}).get('name', 'Unknown League'),
+            'event_id': event['id'],
+            }
