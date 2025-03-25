@@ -3,6 +3,7 @@ def make_prediction(event, model):
     import pandas as pd
     from datetime import datetime
     
+    from api_requests.class_bet import Bet
     from features import create
     from model import calculate
     from telegram import message
@@ -55,7 +56,7 @@ def make_prediction(event, model):
         hora_identificacao = datetime.now().strftime('%H:%M:%S')
         print(f"Novo evento identificado às {hora_identificacao}")
 
-        data = event_to_dict(event)
+        data = Bet(event)
        
         # TODO: Adicionar trava para caso features insuficientes, não executar.
         features = create.features(data, live=True, players=(data['players']))
@@ -69,28 +70,14 @@ def make_prediction(event, model):
         print_separator()
         
         lambda_pred = model.predict(x)[0]
-        print_event_data(data)
-        bet_type, odd, prob, ev = calculate.probabilities(data, lambda_pred)
-
-        if bet_type is None:
-            print("Nenhuma aposta válida encontrada")
-            return None
-            
-        minimum_line, minimum_odd = calculate.minimum(lambda_pred, data['handicap'], bet_type)
-        time_sent = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        data.update({
-            'bet_type': bet_type,
-            'odd': odd,
-            'prob': prob,
-            'ev': ev,
-            'minimum_line': minimum_line,
-            'minimum_odd': minimum_odd,
-            'time_sent': time_sent,
-        })
         
-        message_text = message.generate(data)
-        data['message_id'] = message.send(message_text)
-        save_bet(data)
+        Bet.lambda_pred(lambda_pred)
+        Bet.print_data()
+        Bet.calculate_probabilities()
+        Bet.validate()
+        Bet.calculate_minimum()
+        Bet.generate_and_send_message()
+        Bet.save_bet()
 
 
     except Exception as e:
