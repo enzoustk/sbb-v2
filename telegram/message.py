@@ -1,9 +1,9 @@
+import requests, logging
+from model.config import HOT_THRESHOLD, HOT_TIPS_STEP, MAX_HOT
+from constants import TELEGRAM_TOKEN, TELEGRAM_CHAT_ID, TELEGRAM_MESSAGE,MIN_LINE_MESSAGE,MIN_ODD_MESSAGE
+
 def generate(data):
     
-    from constants.telegram_params import (
-    TELEGRAM_MESSAGE,MIN_LINE_MESSAGE,MIN_ODD_MESSAGE)
-    from model.config import (HOT_THRESHOLD, HOT_TIPS_STEP, MAX_HOT)
-
     """
     1- Create template message;
     2- Build minimum line message;
@@ -40,8 +40,6 @@ def generate(data):
     return message
 
 def send(message):
-    from constants import TELEGRAM_TOKEN, TELEGRAM_CHAT_ID
-    import requests, logging
 
     url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
     data = {
@@ -55,7 +53,23 @@ def send(message):
     if response.ok and response.json().get('ok'):
         logging.info("Telegram message sent successfully")
         message_id = response.json()['result']['message_id']
-        return message_id
+        return message_id, TELEGRAM_CHAT_ID
     else:
         logging.error("Telegram message not sent")
-        return None
+        return None, None
+    
+def edit(message_id, message, chat_id):
+    url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/editMessageText"
+    data = {
+                    "chat_id": chat_id,
+                    "message_id": message_id,
+                    "text": message,
+                    "parse_mode": "MarkdownV2",
+                    "disable_web_page_preview": True
+                }
+    response = requests.post(url, data=data)
+    if response.status_code == 200:
+        edited = True
+        return edited
+    else:
+        logging.error(f'Error editing message {message_id}: {response.status_code} - {response.text}')

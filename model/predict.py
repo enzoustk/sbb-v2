@@ -33,7 +33,7 @@ def make_prediction(event, model):
             3.2.1 - Calculate the new minimum line and odd;
             3.2.2 - Update the event data with the betting information, like minimum line, odd, time sent, etc;
             3.2.3 - Generate and send the message to the Telegram channel;
-            3.2.4 - Save the bet in the MADE_BETS file;
+            3.2.4 - Save the bet in the ALL_DATA file;
     """    
 
 
@@ -67,7 +67,7 @@ def make_prediction(event, model):
         
         lambda_pred = model.predict(x)[0]
         
-        Bet.lambda_pred(lambda_pred)
+        Bet.get_lambda_pred(lambda_pred)
         Bet.calculate_probabilities()
         Bet.validate()
         Bet.calculate_minimum()

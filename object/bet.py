@@ -45,12 +45,26 @@ class Bet:
         self.time_sent = None
         self.lambda_pred = None
 
+        self.ended = False
         self.home_score = None
         self.away_score = None
         self.total_score = None
+        self.raw_score = None
 
         self.profit = None
         self.result = None
+        self.canceled = False
+
+        self.sent = False
+        self.message_id = None
+        self.chat_id = None
+        self.edited = False
+        self.result_emoji = None
+        self.bet_type_emoji = None
+        self.time_interval = None
+
+        self.saved_on_excel = False
+        self.totally_processed = None
       
     def print_event_data(self) -> None:
         """
@@ -81,7 +95,7 @@ class Bet:
     def validate(self, bet_type: str | None) -> bool:
         self.bet_type = bet_type
         
-    def lambda_pred(self, lambda_pred: float):
+    def get_lambda_pred(self, lambda_pred: float):
         self.lambda_pred = lambda_pred
         
     def calculate_probabilities(self) -> tuple[str, float, float, float] | None:
@@ -114,7 +128,7 @@ class Bet:
             self.bet_ev = self.ev_under
         
         else:
-            print('Não há EV+ nessa partida')
+            print('No EV+ Bet Found')
             return None
 
     def poisson(self) -> tuple[float, float]:
@@ -225,27 +239,172 @@ class Bet:
         self.implement_minimum_in_message()
         self.implement_hot_tips()
 
-        message.send(self.message)
-    
+        if self.bet_type is not None:
+            self.message_id, self.chat_id = message.send(self.message)
+        
+        if self.message_id is not None:
+            self.sent = True
+            self._get_time_atributes()
+  
     def save_bet(self):
-        import pandas as pd
+        import json, threading
+        from files.paths import NOT_ENDED
+
+        try:
+            with open(NOT_ENDED, 'r') as file:
+                data = json.load(file)
+        except (FileNotFoundError, json.JSONDecodeError):
+            data = []
+
+        data.append(self.__dict__)
+
+        with open(NOT_ENDED, 'w') as file:
+            json.dump(data, file, indent=4)
+
+    def process_not_ended(self):
+        import json, logging, pandas as pd, threading
+        from files.paths import MADE_BETS, ALL_DATA, NOT_ENDED
+       
+        not_ended, ended, error_events = [], [], []
+
+        try:
+            with open(NOT_ENDED, 'r') as file:
+                data = json.load(file)
+                
+                
+                """
+                Ver se acabou;
+                Se acabou:
+                     puxar resultado, e calcular tudo
+                    Salvar em all_data.csv
+                    Se bet_type != None, salvar em made_bets.xlsx usando as colunas corretas
+                    Apagar de not_ended
+                Se não acabou
+                    Pular
+                """
+                for bet_entry in data:
+                    bet = Bet()
+                    bet.__dict__.update(bet)
+                    bet._get_end()
+
+                    if  bet.ended:
+                        bet.finish_processing()
+                        bet.save_made_bet()
+                        bet.process()
+
+                    if bet.totally_processed == True: ended.append(bet)
+                    elif bet.totally_processed == False: error_events.append(bet)
+                    elif bet.totally_processed == None: not_ended.append(bet)
+                    else: logging.warning(f'Tottaly Processing: Labeling Error for Event {bet.event_id}')
+
+            with open(NOT_ENDED, 'w') as not_ended_file:
+                not_ended_data = [bet.__dict__ for bet in not_ended]
+                json.dump(not_ended_data, not_ended_file, indent=4)
+            
+            with open(ALL_DATA, 'a') as all_data_file:
+                ended_data = [bet.__dict__ for bet in ended]
+                json.dump(ended_data, all_data_file, indent=4)
+    
+        except (FileNotFoundError, json.JSONDecodeError):
+            logging.error(f"Error loading data from {NOT_ENDED}")
+        
+    def save_made_bet(self):
         from files.paths import MADE_BETS
+        import pandas as pd
+
+        if self.bet_type is None:
+            return
         
         try:
-            file = pd.read_csv(MADE_BETS)
-            file = file.append(self.__dict__, ignore_index=True)
+            with pd.ExcelWriter(MADE_BETS, engine='openpyxl', mode='a', if_sheet_exists='overlay') as writer:
+                
+                if str(self.month) in writer.book.sheetnames:
+                    df_existing = pd.read_excel(MADE_BETS, sheet_name=str(self.month))
+                else:
+                    df_existing = pd.DataFrame(columns=self._get_excel_columns().keys())
+                
+                
+                new_data = pd.DataFrame([self._get_excel_columns()])
+                df_updated = pd.concat([df_existing, new_data], ignore_index=True)
+                df_updated.to_excel(writer, sheet_name=str(self.month), index=False)
+                
+        except FileNotFoundError:
+            new_data = pd.DataFrame([self._get_excel_columns()])
+            with pd.ExcelWriter(MADE_BETS, engine='openpyxl') as writer:
+                new_data.to_excel(writer, sheet_name=str(self.month), index=False)
+                
+    def finish_processing(self):
+                """
+                Calcula tudo o que falta.
+                Se alguma coisa der errado, marca totally_processed como false.
+                TODO: Colocar try except em todos os métodos abaixo
+                """
+                if self.bet_type is not None:
+                    self.calculate_profit()
+                    self.edit_telegram_message()
 
-        except FileNotFoundError as e:
-            import logging
-            logging.warning(f'File {MADE_BETS} found, creating new file')
-            file = pd.DataFrame(self.__dict__)
+    def process(self):
+        if self.bet_type is not None:
+            self.totally_processed = all([
+                self.sent,
+                self.edited,
+                self.ended,
+                self.saved_on_excel,
+                self.profit is not None,
+                self.result is not None,
+                self.raw_score is not None
+                ])
+        else: 
+            if self.raw_score is not None:
+                self.totally_processed = True
+                                
+    def edit_telegram_message(self):
+        from constants.telegram_params import EDITED_MESSAGE
+        from telegram.message import edit
+        '''
+        Recebe os dados da Aposta e Edita no Telegram
+        '''
 
-        file.to_excel(MADE_BETS, index=False)
-        logging.info(f"Bet {self.event_id} saved")
+        self._get_bet_emojis()
+        self.message += EDITED_MESSAGE.format(**self.__dict__)
+        self._escape()
+        self.edited = edit(self.message_id, self.message, self.chat_id)
 
-        def _get_league(self) -> str:
-            return self.event.get('league', {}).get('name', 'Unknown League')
+    def _escape(self):
+        self.message = (
+            self.message.replace('.', r'\.')
+                                .replace('-', r'\-')
+                                .replace('(', r'\(')
+                                .replace(')', r'\)')
+                                .replace('|', r'\|')
+                                .replace('#', r'\#')
+                                .replace('_', r'\_')
+        )
+    
+    def _get_bet_emojis(self):
+        from constants.telegram_params import RESULT_EMOJIS, BET_TYPE_EMOJIS
 
+        self.result_emoji = RESULT_EMOJIS.get(self.result, '')
+        self.bet_type_emoji = BET_TYPE_EMOJIS.get(self.bet_type, '')
+    
+    def _get_end(self):
+        from api_requests import fetch
+        
+        """
+        Procura pelo fim do jogo
+        Se não está mais ao vivo, procura pelo placar
+        Se acha placar, Marca ended como True
+        Se
+        """
+
+        live_events = fetch.live_events()
+
+        live_ids = {str(event['id']) for event in live_events}
+
+        if self.event_id not in live_ids:
+            if self._get_score() is not None:
+                self.ended = True
+  
     def _get_event_id(self) -> str:
         return self.event['id']
 
@@ -333,13 +492,22 @@ class Bet:
     
     def _get_score(self):
         from api_requests.fetch import event_for_id
-        event_data = event_for_id(self.event_id)
-        raw_score = event_data.get('ss', None)
-        self.home_score, self.away_score = map(int, raw_score.split('-'))
-        self.total_score = self.home_score + self.away_score
+        """
+        Pull result data from API,
+        If raw_score = None, breaks out
+        If raw_score != None, gets home, away and total scores
+        """
 
-    def _get_time_sent(self):
-        pass
+
+        event_data = event_for_id(self.event_id)
+
+        self.raw_score = event_data.get('ss', None)
+        
+        if self.raw_score is None:
+            return
+        
+        self.home_score, self.away_score = map(int, self.raw_score.split('-'))
+        self.total_score = self.home_score + self.away_score
     
     def _implement_minimum_in_message(self):
         from constants.telegram_params import MIN_LINE_MESSAGE,MIN_ODD_MESSAGE
@@ -351,7 +519,7 @@ class Bet:
             self.message += MIN_LINE_MESSAGE.format(**self.__dict__)
 
     def _implement_hot_tips(self):
-        from model.config import (HOT_THRESHOLD, HOT_TIPS_STEP, MAX_HOT)
+        from model.config import (HOT_THRESHOLD, HOT_TIPS_STEP, MAX_HOT, HOT_TIPS_MESSAGE)
         
         _ev = self.bet_ev
         self.hot_ev = 0
@@ -364,18 +532,40 @@ class Bet:
                     self.hot_ev += 1
                 
                 if self.hot_ev == MAX_HOT: 
-                    self.message += f"\n⚠️ EV: {self.hot_emoji}\n"
+                    self.message += HOT_TIPS_MESSAGE.format(**self.__dict__)
                     break
                 
                 else:
-                    self.message += f"\n⚠️ EV: {self.hot_emoji}\n"
+                    self.message += HOT_TIPS_MESSAGE.format(**self.__dict__)
                     break
 
-    def _get_time_sent(self):
+    def _get_time_atributes(self):
         import pandas as pd
+        from model.config import TIME_RANGES
+
         self.time_sent = pd.Timestamp.now() - pd.Timedelta(hours=3)
+        self.month = self.time_sent.strftime("%m/%Y")
+        hour = self.time_sent.hour
+
+        for range, (start, end) in TIME_RANGES.items():
+            if start <= hour <= end:
+                self.time_range = range
 
     def _get_league(self) -> str:
         return self.event.get('league', {}).get('name', 'Unknown League')
     
-    
+    def _get_excel_columns(self):
+        return{
+            'Horário Envio': self.time_sent.strftime("%H:%M"),
+            'Liga': self.league,
+            'Partida': self.home_str + 'vs. ' + self.away_str,
+            'Tipo Aposta': self.bet_type.capitalize(),
+            'Linha': f'{self.line:2f}',
+            'Resultado' : self.result.replace('_', ' ').capitalize(),
+            'Odd': f'{self.odds:2f}',
+            'Lucro': f'{self.profit:2f}',
+            'Intervalo': self.time_range,
+        }
+
+    def cancel(self):
+        pass

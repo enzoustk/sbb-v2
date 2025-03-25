@@ -8,4 +8,5 @@ ERROR_EVENTS = 'data\sheets\error_events.csv'
 MADE_BETS = r'data\sheets\bets.xlsx'
 
 # All analised matches
-GAME_DATA = r'data\sheets\all_data.csv'
+ALL_DATA = r'data\sheets\all_data.json'
+NOT_ENDED = r'data\sheets\not_ended.json'
