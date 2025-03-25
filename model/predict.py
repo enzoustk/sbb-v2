@@ -3,13 +3,9 @@ def make_prediction(event, model):
     import pandas as pd
     from datetime import datetime
     
-    from api_requests.class_bet import Bet
+    from object.bet import Bet
     from features import create
-    from model import calculate
-    from telegram import message
-    from data.update import save_bet
     from utils import print_separator, csv_atualizado_event
-    from api_requests.handle_data import event_to_dict, print_event_data
     
 
     from files.paths import ERROR_EVENTS
@@ -72,13 +68,11 @@ def make_prediction(event, model):
         lambda_pred = model.predict(x)[0]
         
         Bet.lambda_pred(lambda_pred)
-        Bet.print_data()
         Bet.calculate_probabilities()
         Bet.validate()
         Bet.calculate_minimum()
         Bet.generate_and_send_message()
         Bet.save_bet()
-
 
     except Exception as e:
         logging.error(f"Erro ao identificar o jogo: {e}")
