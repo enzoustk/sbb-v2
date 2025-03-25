@@ -67,11 +67,12 @@ def make_prediction(event, model):
         
         lambda_pred = model.predict(x)[0]
         
-        Bet.get_lambda_pred(lambda_pred)
-        Bet.calculate_probabilities()
-        Bet.validate()
-        Bet.calculate_minimum()
-        Bet.generate_and_send_message()
+
+        Bet.find_ev(lambda_pred)
+
+        if Bet.bet_type is not None:
+            Bet.handle_made_bet()
+        
         Bet.save_bet()
 
     except Exception as e:
