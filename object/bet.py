@@ -11,22 +11,21 @@ class Bet:
         
         self.event = event
 
+        self.event_id = self._get_event_id()
+        self.league = self._get_league()
+
         self.home_str = self._get_str('home')
         self.away_str = self._get_str('away')
-
+        
         self.home_team = self._get_name('home', 'team')
         self.home_player = self._get_name('home', 'player')
         self.away_team = self._get_name('away', 'team')
         self.away_player = self._get_name('away', 'player')
-
         self.players = self._get_players()
-
-        self.odd_over = float(event['over_od'])
-        self.odd_under = float(event['under_od'])
-
-        self.handicap = self._handle_handicap()
-        self.league = self._get_league()
-        self.event_id = self._get_event_id()
+  
+        self.odd_over = None 
+        self.odd_under = None
+        self.handicap = None
 
         self.prob_over = None
         self.prob_under = None
@@ -68,8 +67,24 @@ class Bet:
         self.saved_on_excel = False
         self.month = None
         self.totally_processed = None
-      
-         
+    
+    def get_odds(self, market: str='goals'):
+        from api_requests import fetch, validate
+
+        """
+        Pulls betting odds and handicaps from API
+        Params:
+            Market: betting market
+        TODO: Handle Different markets and variables, such as Asian Handicap or The Draw
+        """
+
+        betting_data = fetch.odds(self.event_id)
+
+        (self.handicap,
+         self.odd_over,
+         self.odd_under
+         ) = validate.odds(betting_data, self.event_id, market=market)
+                                        
     def find_ev(self, lambda_pred: float):
         from model.config import EV_THRESHOLD
         from model import calculate
@@ -114,10 +129,10 @@ class Bet:
 
         with open(NOT_ENDED, 'w') as file:
             json.dump(data, file, indent=4)
-
+    
     def handle_not_ended_events(self):
         import json, logging, pandas as pd, threading
-        from files.paths import ALL_DATA, NOT_ENDED
+        from files.paths import ALL_DATA, NOT_ENDED, ERROR_EVENTS
        
         not_ended, ended, error_events = [], [], []
 
@@ -136,20 +151,26 @@ class Bet:
                 Se não acabou
                     Pular
                 """
-                for _ in data:
+                for bet_data in data:
                     bet = Bet()
-                    bet.__dict__.update(bet)
+                    bet.__dict__.update(bet_data)
                     bet._get_end()
 
                     if  bet.ended:
                         bet.finish_processing()
-                        bet._save_made_bet()
-                        bet._mark_processed()
 
-                    if bet.totally_processed == True: ended.append(bet)
-                    elif bet.totally_processed == False: error_events.append(bet)
-                    elif bet.totally_processed == None: not_ended.append(bet)
-                    else: logging.warning(f'Tottaly Processing: Labeling Error for Event {bet.event_id}')
+
+                    if bet.totally_processed: 
+                        ended.append(bet)
+                    
+                    elif not bet.totally_processed: 
+                        error_events.append(bet)
+
+                    elif bet.totally_processed is None:
+                        not_ended.append(bet)
+
+                    else: 
+                        logging.warning(f'Tottaly Processing: Labeling Error for Event {bet.event_id}')
 
             with open(NOT_ENDED, 'w') as not_ended_file:
                 not_ended_data = [bet.__dict__ for bet in not_ended]
@@ -158,35 +179,14 @@ class Bet:
             with open(ALL_DATA, 'a') as all_data_file:
                 ended_data = [bet.__dict__ for bet in ended]
                 json.dump(ended_data, all_data_file, indent=4)
+            
+            with open(ERROR_EVENTS, 'a') as error_events_file:
+                error_events_data = [bet.__dict__ for bet in error_events]
+                json.dump(error_events_data, error_events_file, indent=4)
     
         except (FileNotFoundError, json.JSONDecodeError):
             logging.error(f"Error loading data from {NOT_ENDED}")
-        
-    def _save_made_bet(self):
-        from files.paths import MADE_BETS
-        import pandas as pd
-
-        if self.bet_type is None:
-            return
-        
-        try:
-            with pd.ExcelWriter(MADE_BETS, engine='openpyxl', mode='a', if_sheet_exists='overlay') as writer:
-                
-                if str(self.month) in writer.book.sheetnames:
-                    df_existing = pd.read_excel(MADE_BETS, sheet_name=str(self.month))
-                else:
-                    df_existing = pd.DataFrame(columns=self._get_excel_columns().keys())
-                
-                
-                new_data = pd.DataFrame([self._get_excel_columns()])
-                df_updated = pd.concat([df_existing, new_data], ignore_index=True)
-                df_updated.to_excel(writer, sheet_name=str(self.month), index=False)
-                
-        except FileNotFoundError:
-            new_data = pd.DataFrame([self._get_excel_columns()])
-            with pd.ExcelWriter(MADE_BETS, engine='openpyxl') as writer:
-                new_data.to_excel(writer, sheet_name=str(self.month), index=False)
-                
+            
     def finish_processing(self):
                 from model import calculate
                 """
@@ -198,10 +198,18 @@ class Bet:
                     self.profit, self.result = calculate.profit(self.bet_type, self.handicap, self.total_score, self.bet_odd)
                     self._edit_telegram_message()
                     self._save_made_bet()
-                             
+                    self._mark_processed()
+    
+    def to_historic_file(self):
+        exclude_keys = self._remove_collumns_to_csv
+        dte = {k: v for k, v in self.__dict__.items() if k not in exclude_keys}
 
+        '''
+        TODO: Finish it
+        '''
 
     # ------------------------------------------- #
+
 
     def _edit_telegram_message(self):
         from constants.telegram_params import EDITED_MESSAGE
@@ -264,35 +272,6 @@ class Bet:
     def _get_str(self, type: str) -> str:
         return self.event.get(type, {}).get('name')
         
-    def _handle_handicap(self) -> float | None:
-        
-        import logging
-    
-        """
-        Gets the handicap from the API and solves type errors,
-        Also, converts it to a float and returns the current handicap if successful.
-        """
-        handicap = self.event['handicap']
-
-        try:
-            if isinstance(handicap, float): return handicap
-            
-            if isinstance(handicap, str):
-                if ',' in handicap:
-                    handicap_vals = [float(h.strip()) for h in handicap.split(',')]
-                    current_handicap = sum(handicap_vals) / len(handicap_vals)
-                else:
-                    current_handicap = float(handicap.strip())
-                return current_handicap
-            
-            else:
-                logging.error(f"Invalid Handicap or Handicap type: {type(handicap)} - Value: {handicap}")
-                return None
-        
-        except ValueError as ve:
-            logging.error(f"Error converting handicap '{handicap}': {ve}")
-            return None
-    
     def _get_players(self) -> tuple[str, str]:
         try:
             home = str(self.home_player).lower()
@@ -381,9 +360,9 @@ class Bet:
 
     def _get_time_atributes(self):
         import pandas as pd
-        from model.config import TIME_RANGES
+        from model.config import TIME_RANGES, AJUSTE_FUSO
 
-        self.time_sent = pd.Timestamp.now() - pd.Timedelta(hours=3)
+        self.time_sent = pd.Timestamp.now() - pd.Timedelta(hours=AJUSTE_FUSO)
         self.month = self.time_sent.strftime("%m/%Y")
         hour = self.time_sent.hour
 
@@ -401,13 +380,16 @@ class Bet:
             'Partida': self.home_str + 'vs. ' + self.away_str,
             'Tipo Aposta': self.bet_type.capitalize(),
             'Hot Tips': self.hot_emoji,
-            'Linha': f'{self.line:2f}',
+            'Linha': f'{self.handicap:2f}',
             'Resultado' : self.result.replace('_', ' ').capitalize(),
-            'Odd': f'{self.odds:2f}',
+            'Odd': f'{self.bet_odd:2f}',
             'Lucro': f'{self.profit:2f}',
             'Intervalo': self.time_range,
         }
 
+    def _remove_collumns_to_csv(self):
+        return {'event', 'hot_emoji', 'message', 'bet_type_emoji'}
+    
     def _get_lambda_pred(self, lambda_pred: float):
         self.lambda_pred = lambda_pred
      
@@ -492,10 +474,9 @@ class Bet:
         from telegram import message
         
         self.message_id, self.chat_id = message.send(self.message)
-        if self.message_id is None:
-            self.sent = False
-            self._get_time_atributes()
-
+        self._get_time_atributes()
+        if self.message_id is None: self.sent = False
+        
     def _mark_processed(self):
         if self.bet_type is not None:
             self.totally_processed = all([
@@ -510,6 +491,33 @@ class Bet:
         else: 
             if self.raw_score is not None:
                 self.totally_processed = True
-   
+      
+    def _save_made_bet(self):
+        from files.paths import MADE_BETS
+        import pandas as pd
+
+        if self.bet_type is None:
+            return
+        
+        try:
+            with pd.ExcelWriter(MADE_BETS, engine='openpyxl', mode='a', if_sheet_exists='overlay') as writer:
+                
+                if str(self.month) in writer.book.sheetnames:
+                    df_existing = pd.read_excel(MADE_BETS, sheet_name=str(self.month))
+                else:
+                    df_existing = pd.DataFrame(columns=self._get_excel_columns().keys())
+                
+                
+                new_data = pd.DataFrame([self._get_excel_columns()])
+                df_updated = pd.concat([df_existing, new_data], ignore_index=True)
+                df_updated.to_excel(writer, sheet_name=str(self.month), index=False)
+                self.saved_on_excel = True
+                
+        except FileNotFoundError:
+            new_data = pd.DataFrame([self._get_excel_columns()])
+            with pd.ExcelWriter(MADE_BETS, engine='openpyxl') as writer:
+                new_data.to_excel(writer, sheet_name=str(self.month), index=False)
+            self.saved_on_excel = True
+
     def cancel(self):
         pass
