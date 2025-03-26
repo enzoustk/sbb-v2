@@ -45,43 +45,47 @@ def odds(event_id: str) -> list[dict]:
     try:
         response = requests.get(URLS['odds'], params=params)
         response.raise_for_status()
-        data = response.json()
-        return data
-    
+        all_data = response.json()
+        
+        if all_data and all_data.get('sucess', {}) == 1:
+            betting_data = all_data.get('results', {}).get('odds',{})
+            return betting_data
+
     except requests.exceptions.RequestException as e:
         logging.error(f"Error fetching odds: {e}")
         return []
 
-def events_for_date(date) -> list[dict]:
+def events_for_date(dates: list) -> list[dict]:
     
     """
-    Fetch all ended events for a specific date
+    Fetch all ended events for a specific list of dates
     TODO: add parameter to choose league.
     """
 
-    formatted_date = date.strftime('%Y%m%d')
-    params = {
-        "token": API_TOKEN,
-        "sport_id": SPORT_ID,
-        "league_id": LEAGUE_ID,
-        "day": formatted_date,
-        "page": 1
-    }
+    for date in dates:
+        formatted_date = date.strftime('%Y%m%d')
+        params = {
+            "token": API_TOKEN,
+            "sport_id": SPORT_ID,
+            "league_id": LEAGUE_ID,
+            "day": formatted_date,
+            "page": 1
+        }
 
-    events = []
+        events = []
 
-    while True:
-        response = requests.get(URLS['ended_events'], params=params)
-        if response.status_code == 200:
-            data = response.json()
-            events.extend(data['results'])
-            if params['page'] * data['pager']['per_page'] < data['pager']['total']:
-                params['page'] += 1
+        while True:
+            response = requests.get(URLS['ended_events'], params=params)
+            if response.status_code == 200:
+                data = response.json()
+                events.extend(data['results'])
+                if params['page'] * data['pager']['per_page'] < data['pager']['total']:
+                    params['page'] += 1
+                else:
+                    break
             else:
+                logging.error(f"Request failed: {response.status_code} for date {formatted_date}")
                 break
-        else:
-            logging.error(f"Request failed: {response.status_code} for date {formatted_date}")
-            break
     
     return events
 
