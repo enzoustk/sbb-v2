@@ -14,6 +14,9 @@ def make_prediction(event, model):
     """
     Using the event data, make a prediction based on the model;
 
+
+    Recieves 'EVENT' from scanner thread.
+
     1- Preprocess the event;
         1.1- Wait for the CSV to be updated;
         1.2- Check if the event has already failed;
@@ -53,6 +56,7 @@ def make_prediction(event, model):
         print(f"Novo evento identificado às {hora_identificacao}")
 
         data = Bet(event)
+        Bet.get_odds(market='goals')
        
         # TODO: Adicionar trava para caso features insuficientes, não executar.
         features = create.features(data, live=True, players=(data['players']))
