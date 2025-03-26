@@ -2,6 +2,8 @@ API_TOKEN = "183604-pWN7flhoAsWGu8"
 
 LEAGUE_ID = 22614
 SPORT_ID = 1
+ASIAN_GOALS = '1_3'
+
 
 URLS = {
     "inplay": "https://api.betsapi.com/v1/bet365/inplay",
