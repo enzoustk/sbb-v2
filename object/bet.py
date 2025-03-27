@@ -3,6 +3,7 @@ class Bet:
     """
     All Bet-related data, methods and attributes.
     TODO: Create a subset to bet exported in xlsx
+    TODO: Create cancel method to cancel a made bet
     TODO: Create a way to delete Bet Objetcts that are no longer needed to be stored
     """
 
@@ -77,9 +78,9 @@ class Bet:
             Market: betting market
         TODO: Handle Different markets and variables, such as Asian Handicap or The Draw
         """
-
+                
         betting_data = fetch.odds(self.event_id)
-
+        
         (self.handicap,
          self.odd_over,
          self.odd_under
@@ -201,12 +202,21 @@ class Bet:
                     self._mark_processed()
     
     def to_historic_file(self):
-        exclude_keys = self._remove_collumns_to_csv
-        dte = {k: v for k, v in self.__dict__.items() if k not in exclude_keys}
-
+        from files.paths import HISTORIC_DATA
+        
         '''
+        Recieves data and exports it to csv file
+
+
         TODO: Finish it
         '''
+
+
+
+        exclude_keys = self._remove_collumns_to_csv
+        dte = {k: v for k, v in self.__dict__.items() if k not in exclude_keys} # dte = dictionary to export
+
+
 
     # ------------------------------------------- #
 
@@ -282,8 +292,8 @@ class Bet:
 
     def _get_name(
                 self, 
-                side: str,
-                type: str,
+                side: str | None = None,
+                type: str | None = None,
                 ) -> str | None:
     
         if side is None:
@@ -518,6 +528,6 @@ class Bet:
             with pd.ExcelWriter(MADE_BETS, engine='openpyxl') as writer:
                 new_data.to_excel(writer, sheet_name=str(self.month), index=False)
             self.saved_on_excel = True
-
+    
     def cancel(self):
         pass
