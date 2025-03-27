@@ -1,69 +1,58 @@
-from api_requests import fetch
-from data import load
+import json
+import logging
 import pandas as pd
-from model.config import AJUSTE_FUSO
-from files.paths import ALL_DATA, HISTORIC_DATA
-from collections import defaultdict
+
 from object.bet import Bet
+from collections import defaultdict
+
+from data import load
+from api_requests import fetch
+
+from model.config import AJUSTE_FUSO
+from files.paths import ALL_DATA, HISTORIC_DATA, NOT_ENDED
 
 
-def update_dataframe():
-    import logging
-    from collections import defaultdict
-
+def update_csv(data: list):
     """
-    APPROACH 1: Use ALL_DATA file to update the HISTORIC_DATA.csv file.
-    Carrega os dados do json
-    Inicia Variável bet com os dados do json
-    
-    TODO: Add a API pull function, to add events that are not stored.
+    Atualiza o arquivo HISTORIC_DATA.csv com novos dados, ordenando por data e evitando duplicatas.
     """
 
-    csv_data, csv_ids = load.data('csv', load_ids=True)
-    json_data = load.data('json')
+    try: 
+        existing_data = pd.read_csv(HISTORIC_DATA)
+    except FileNotFoundError: 
+        existing_data = pd.DataFrame()
 
-    new_matches = []
-
-    for match in json_data.to_dict('records'):
-        try:
-
-            date = match['time_sent'].date()
-
-            if match['event_id'] not in csv_ids.get(date, set()): 
-                new_matches.append(match)
-      
-        except KeyError:
-            logging.error(f"Evento {match} inválido"); continue
-
-    '''
-    Até aqui, temos:
-    Lista de dicionários de novas partidas a serem adicionadas
-    '''
     
-    if new_matches:
-        new_data = pd.DataFrame(new_matches)
-        
-        if not csv_data.empty:
-            csv_data = pd.concat([csv_data, new_data], ignore_index=True)
-        else:
-            csv_data = new_data
-        
-        if 'time_sent' in csv_data.columns:
-            csv_data = csv_data.sort_values(by='date')
+    exclude_keys = remove_columns_to_csv()
+    new_data = [
+        {key: value for key, value in bet.__dict__.items() if key not in exclude_keys}  
+        for bet in data
+        ]
+
+    new_df = pd.DataFrame(new_data)
+
+    if existing_data.empty:
+        new_df.to_csv(HISTORIC_DATA, index=False)
+        logging.info('File Historic Data updated sucessfully')
+        return
+
+    new_df = pd.concat([existing_data, new_df], ignore_index=True)
+    new_df['time_sent'] = pd.to_datetime(new_df['time_sent'], format='%d/%m/%Y', errors='coerce')
+    new_df = new_df.sort_values(by='date', ascending=False)
+    new_df = new_df.drop_duplicates()
+
+    new_df.to_csv(HISTORIC_DATA, index=False)
 
 def fill_data_gaps(gap: int = 30):
     
     """
     Finds all data gaps in the all_files file.
-    Pulls all-day API data for days containing gaps 
+    Pulls all-day API data for days containing gaps
+    Runs only at start of application 
     Checks if it is not in the ALL_DATA.json and neither in HISTORIC_DATA.csv
     If it is not, appends to HISTORIC_DATA.csv
     TODO: Remover o dia de hoje de processed_dates
     """
-
-
-
-
 
     json_data = load.data('json')
     json_data['time_sent'] = pd.to_datetime(json_data['time_sent']) + pd.Timedelta(hours=AJUSTE_FUSO)
@@ -106,3 +95,26 @@ def fill_data_gaps(gap: int = 30):
         match.to_historic_file()
 
         existing_data[date].add(event_id)
+
+def not_ended(data: list):
+    
+    """
+    Rewrites NOT_ENDED json with events that are still unended after iteration
+    """
+    
+    with open(NOT_ENDED, 'w') as ne_file:
+        ne_data = [bet.__dict__ for bet in data]
+        json.dump(ne_data, ne_file, indent=4)
+        logging.info('Not ended events updated sucessfully')
+
+def error_events(data: list):
+    """
+    Appens buggy events to ERROR Events
+    """
+    with open(NOT_ENDED, 'a') as error_file:
+        error_data = [event.__dict__ for event in data]
+        json.dump(error_data, error_file, indent=4)
+        logging.info('Not ended events updated sucessfully')
+
+def remove_columns_to_csv():
+    return {'event', 'hot_emoji', 'message', 'bet_type_emoji'}

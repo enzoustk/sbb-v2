@@ -1,7 +1,7 @@
 import logging
 import pandas as pd
 from collections import defaultdict
-from files.paths import HISTORIC_DATA, ALL_DATA
+from files.paths import HISTORIC_DATA, ALL_DATA, NOT_ENDED
 
 def data(file: str, load_ids: bool = False) -> pd.DataFrame | tuple[pd.DataFrame, defaultdict]:
     """_summary_
@@ -20,6 +20,7 @@ def data(file: str, load_ids: bool = False) -> pd.DataFrame | tuple[pd.DataFrame
     try: 
         if file == 'csv': data = pd.read_csv(HISTORIC_DATA)
         elif file == 'json': data = pd.read_json(ALL_DATA)
+        elif file == 'not_ended': data = pd.read_json(NOT_ENDED)
 
         if load_ids: 
             try:
