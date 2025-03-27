@@ -1,25 +1,37 @@
+import logging
+import pandas as pd
+from collections import defaultdict
+from files.paths import HISTORIC_DATA, ALL_DATA
 
-def csv():
-    import pandas as pd
-    from files.paths import HISTORIC_DATA
-    try:
-        csv_data = pd.read_csv(HISTORIC_DATA)
+def data(file: str, load_ids: bool = False) -> pd.DataFrame | tuple[pd.DataFrame, defaultdict]:
+    """_summary_
+
+    Args:
+        file (str): _description_
+        load_ids (bool, optional): _description_. Defaults to False.
+
+    Returns:
+        pd.DataFrame | tuple[pd.DataFrame, defaultdict]: _description_
+    """
     
-    except FileNotFoundError:
-        csv_data = pd.DataFrame()
+    ids = defaultdict(set)
+    data = pd.DataFrame()
+
+    try: 
+        if file == 'csv': data = pd.read_csv(HISTORIC_DATA)
+        elif file == 'json': data = pd.read_json(ALL_DATA)
+
+        if load_ids: 
+            try:
+                for datapoint in data.to_dict('records'):
+                    date = datapoint['time_sent'].date()
+                    ids[date].add(datapoint['event_id'])
+            
+            except KeyError as e: 
+                logging.warning(f'Missing data {e}')
     
-    if isinstance(csv_data, str):
-        csv_data = pd.DataFrame()
-
-    return csv_data
-
-def json():
-    import pandas as pd
-    from files.paths import ALL_DATA
-    try:
-        json_data = pd.read_json(ALL_DATA)
-    
-    except FileNotFoundError:
-        json_data = pd.DataFrame()
-
-    return json_data
+    except FileNotFoundError: 
+        logging.warning(f'File {file} not found')
+        
+    if load_ids: return data, ids
+    else: return data

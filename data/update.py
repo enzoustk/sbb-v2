@@ -1,29 +1,44 @@
+from api_requests import fetch
+from data import load
+import pandas as pd
+from model.config import AJUSTE_FUSO
+from files.paths import ALL_DATA, HISTORIC_DATA
+from collections import defaultdict
+from object.bet import Bet
+
+
 def update_dataframe():
-    
-    import pandas as pd
-    from data import load
-    from files.paths import HISTORIC_DATA
-    
-    '''
-    APPROACH 1: Use ALL_DATA file to update the HISTORIC_DATA.csv file.
-    TODO: Add a API pull function, to add events that are not stored.
-    '''
+    import logging
+    from collections import defaultdict
 
     """
+    APPROACH 1: Use ALL_DATA file to update the HISTORIC_DATA.csv file.
     Carrega os dados do json
     Inicia Variável bet com os dados do json
+    
+    TODO: Add a API pull function, to add events that are not stored.
     """
 
-    json_data = load.json() 
-    csv_data = load.csv()
-
+    csv_data, csv_ids = load.data('csv', load_ids=True)
+    json_data = load.data('json')
 
     new_matches = []
-    
-    for match in json_data.to_dict('records'): 
-        if csv_data.empty or not any(csv_data['event_id'] == match['event_id']):
-            new_matches.append(match)
 
+    for match in json_data.to_dict('records'):
+        try:
+
+            date = match['time_sent'].date()
+
+            if match['event_id'] not in csv_ids.get(date, set()): 
+                new_matches.append(match)
+      
+        except KeyError:
+            logging.error(f"Evento {match} inválido"); continue
+
+    '''
+    Até aqui, temos:
+    Lista de dicionários de novas partidas a serem adicionadas
+    '''
     
     if new_matches:
         new_data = pd.DataFrame(new_matches)
@@ -35,32 +50,22 @@ def update_dataframe():
         
         if 'time_sent' in csv_data.columns:
             csv_data = csv_data.sort_values(by='date')
-        
-        # Salva o resultado no CSV
-        csv_data.to_csv(HISTORIC_DATA, index=False)
-        print(f"Total de matches adicionados: {len(new_matches)}")
-    
-    return csv_data
-        
-def update_from_api(gap: int = 30):
-    from api_requests import fetch
-    from data import load
-    import pandas as pd
-    from model.config import AJUSTE_FUSO
-    from files.paths import ALL_DATA, HISTORIC_DATA
-    from collections import defaultdict
-    from object.bet import Bet
 
-    '''
+def fill_data_gaps(gap: int = 30):
+    
+    """
     Finds all data gaps in the all_files file.
     Pulls all-day API data for days containing gaps 
     Checks if it is not in the ALL_DATA.json and neither in HISTORIC_DATA.csv
     If it is not, appends to HISTORIC_DATA.csv
     TODO: Remover o dia de hoje de processed_dates
-    '''
+    """
 
-    json_data = pd.DataFrame(load.json)
-    
+
+
+
+
+    json_data = load.data('json')
     json_data['time_sent'] = pd.to_datetime(json_data['time_sent']) + pd.Timedelta(hours=AJUSTE_FUSO)
     json_data['date'] = json_data['time_sent'].dt.normalize()
     
@@ -80,12 +85,6 @@ def update_from_api(gap: int = 30):
 
     matches_fetched = fetch.events_for_date(dates=dates_to_fetch)
     
-    '''
-    existing_ids = set()
-    for item in ALL_DATA: existing_ids.add(item['event_id'])
-    for item in HISTORIC_DATA: existing_ids.add(['event_id'])
-    '''
-
     existing_data = defaultdict(set)
     
     for dataset in [ALL_DATA, HISTORIC_DATA]:   
@@ -97,7 +96,7 @@ def update_from_api(gap: int = 30):
 
         date = datapoint['time_sent'].date()
         event_id = datapoint['event_id']
-                       
+                    
         if event_id in existing_data.get(date, set()): 
             continue
 
