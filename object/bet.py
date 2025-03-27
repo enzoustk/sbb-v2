@@ -9,7 +9,7 @@ class Bet:
 
     def __init__(self, event: dict):
         # Starts Class - Needs event data to do so.
-        
+    
         self.event = event
 
         self.event_id = self._get_event_id()
@@ -68,7 +68,7 @@ class Bet:
         self.saved_on_excel = False
         self.month = None
         self.totally_processed = None
-    
+
     def get_odds(self, market: str='goals'):
         from api_requests import fetch, validate
 
@@ -117,8 +117,11 @@ class Bet:
         self._send_message
 
     def save_bet(self):
-        import json, threading
+        import json
         from files.paths import NOT_ENDED
+        """
+        Adiciona o objeto recém previsto ao json NOT_ENDED
+        """
 
         try:
             with open(NOT_ENDED, 'r') as file:
@@ -132,6 +135,13 @@ class Bet:
             json.dump(data, file, indent=4)
     
     def handle_not_ended_events(self):
+        '''
+        1- Olha tudo o que tem em NOT_ENDED
+        2- Puxa o score de todos eles
+        3- Para os que tem score:
+            Processa usando finish_processing()
+            Salva em seu devido lugar
+        '''
         import json, logging, pandas as pd, threading
         from files.paths import ALL_DATA, NOT_ENDED, ERROR_EVENTS
        
@@ -172,10 +182,6 @@ class Bet:
 
                     else: 
                         logging.warning(f'Tottaly Processing: Labeling Error for Event {bet.event_id}')
-
-            with open(NOT_ENDED, 'w') as not_ended_file:
-                not_ended_data = [bet.__dict__ for bet in not_ended]
-                json.dump(not_ended_data, not_ended_file, indent=4)
             
             with open(ALL_DATA, 'a') as all_data_file:
                 ended_data = [bet.__dict__ for bet in ended]
@@ -187,39 +193,64 @@ class Bet:
     
         except (FileNotFoundError, json.JSONDecodeError):
             logging.error(f"Error loading data from {NOT_ENDED}")
-            
-    def finish_processing(self):
-                from model import calculate
-                """
-                Calcula tudo o que falta.
-                Se alguma coisa der errado, marca totally_processed como false.
-                TODO: Colocar try except em todos os métodos abaixo
-                """
-                if self.bet_type is not None:
-                    self.profit, self.result = calculate.profit(self.bet_type, self.handicap, self.total_score, self.bet_odd)
-                    self._edit_telegram_message()
-                    self._save_made_bet()
-                    self._mark_processed()
-    
-    def to_historic_file(self):
-        from files.paths import HISTORIC_DATA
+          
+    def save_made_bet(self):
+        from files.paths import MADE_BETS
+        import pandas as pd, logging
+
+        if self.bet_type is None:
+            logging.warning("Attempted to save match we didn't bet on. Skipped Sucessfully")
+            return
         
+        try:
+            with pd.ExcelWriter(MADE_BETS, engine='openpyxl', mode='a', if_sheet_exists='overlay') as writer:
+                
+                if str(self.month) in writer.book.sheetnames:
+                    df_existing = pd.read_excel(MADE_BETS, sheet_name=str(self.month))
+                else:
+                    df_existing = pd.DataFrame(columns=self._get_excel_columns().keys())
+                
+                
+                new_data = pd.DataFrame([self._get_excel_columns()])
+                df_updated = pd.concat([df_existing, new_data], ignore_index=True)
+                df_updated.to_excel(writer, sheet_name=str(self.month), index=False)
+                self.saved_on_excel = True
+                
+        except FileNotFoundError:
+            new_data = pd.DataFrame([self._get_excel_columns()])
+            with pd.ExcelWriter(MADE_BETS, engine='openpyxl') as writer:
+                new_data.to_excel(writer, sheet_name=str(self.month), index=False)
+            self.saved_on_excel = True
+    
+    def handle_ended_bet(self):
+        from model import calculate
+
         '''
-        Recieves data and exports it to csv file
-
-
-        TODO: Finish it
+        Se bet_type não for nulo:
+            Acha o Lucro e o Resultado da Aposta
+            Salva a aposta
         '''
 
-
-
-        exclude_keys = self._remove_collumns_to_csv
-        dte = {k: v for k, v in self.__dict__.items() if k not in exclude_keys} # dte = dictionary to export
-
-
-
+        if self.bet_type is None: return
+        self.profit, self.result = calculate.profit(self.bet_type, self.handicap, self.total_score, self.bet_odd)
+        self._edit_telegram_message()
+        
+    def mark_processed(self):
+        if self.bet_type is not None:
+            self.totally_processed = all([
+                self.sent,
+                self.edited,
+                self.ended,
+                self.saved_on_excel,
+                self.profit is not None,
+                self.result is not None,
+                self.raw_score is not None
+                ])
+        else: 
+            if self.raw_score is not None:
+                self.totally_processed = True
+ 
     # ------------------------------------------- #
-
 
     def _edit_telegram_message(self):
         from constants.telegram_params import EDITED_MESSAGE
@@ -397,9 +428,6 @@ class Bet:
             'Intervalo': self.time_range,
         }
 
-    def _remove_collumns_to_csv(self):
-        return {'event', 'hot_emoji', 'message', 'bet_type_emoji'}
-    
     def _get_lambda_pred(self, lambda_pred: float):
         self.lambda_pred = lambda_pred
      
@@ -487,47 +515,5 @@ class Bet:
         self._get_time_atributes()
         if self.message_id is None: self.sent = False
         
-    def _mark_processed(self):
-        if self.bet_type is not None:
-            self.totally_processed = all([
-                self.sent,
-                self.edited,
-                self.ended,
-                self.saved_on_excel,
-                self.profit is not None,
-                self.result is not None,
-                self.raw_score is not None
-                ])
-        else: 
-            if self.raw_score is not None:
-                self.totally_processed = True
-      
-    def _save_made_bet(self):
-        from files.paths import MADE_BETS
-        import pandas as pd
-
-        if self.bet_type is None:
-            return
-        
-        try:
-            with pd.ExcelWriter(MADE_BETS, engine='openpyxl', mode='a', if_sheet_exists='overlay') as writer:
-                
-                if str(self.month) in writer.book.sheetnames:
-                    df_existing = pd.read_excel(MADE_BETS, sheet_name=str(self.month))
-                else:
-                    df_existing = pd.DataFrame(columns=self._get_excel_columns().keys())
-                
-                
-                new_data = pd.DataFrame([self._get_excel_columns()])
-                df_updated = pd.concat([df_existing, new_data], ignore_index=True)
-                df_updated.to_excel(writer, sheet_name=str(self.month), index=False)
-                self.saved_on_excel = True
-                
-        except FileNotFoundError:
-            new_data = pd.DataFrame([self._get_excel_columns()])
-            with pd.ExcelWriter(MADE_BETS, engine='openpyxl') as writer:
-                new_data.to_excel(writer, sheet_name=str(self.month), index=False)
-            self.saved_on_excel = True
-    
     def cancel(self):
         pass

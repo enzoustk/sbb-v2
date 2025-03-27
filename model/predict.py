@@ -1,4 +1,4 @@
-def make_prediction(event, model):
+def match(event, model):
     import logging
     import pandas as pd
     from datetime import datetime
@@ -77,7 +77,7 @@ def make_prediction(event, model):
         if Bet.bet_type is not None:
             Bet.handle_made_bet()
         
-        Bet.save_bet()
+        Bet.save_bet() #Saves Bet in NOT_ENDED
 
     except Exception as e:
         logging.error(f"Erro ao identificar o jogo: {e}")
