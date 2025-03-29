@@ -39,7 +39,6 @@ def match(event, model):
             3.2.4 - Save the bet in the ALL_DATA file;
     """    
 
-
     if not csv_atualizado_event.is_set():
         logging.info("Aguardando a atualização inicial do CSV para iniciar as previsões...")
         csv_atualizado_event.wait()
@@ -59,7 +58,7 @@ def match(event, model):
         Bet.get_odds(market='goals')
        
         # TODO: Adicionar trava para caso features insuficientes, não executar.
-        features = create.features(data, live=True, players=(data['players']))
+        features = create.features(live=True, players=(data['players']))
 
         x = pd.DataFrame([features])
         x = x[REQUIRED_FEATURES]
