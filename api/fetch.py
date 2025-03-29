@@ -1,19 +1,29 @@
-import requests, logging
-from constants.api import API_TOKEN, SPORT_ID, LEAGUE_ID, URLS
+""" Fetch all kinds of data from the API """
+"""TODO: Improve error handling."""
 
-"""
-Fetch all kinds of data from the API
-TODO: Improve error handling.
-"""
 
-def live_events() -> list[dict]:
+import requests
+import logging
+from api.constants import API_TOKEN, SPORT_ID, URLS, LEAGUE_IDS
 
+
+def live_events(league_ids: dict = LEAGUE_IDS) -> list[dict]:
+
+    """Fetch real-time ongoing sports events for specific leagues
+
+    Args:
+    league_ids (dict, optional): Mapping of league identifiers. 
+        Format example: {"soccer": 1, "basketball": 2}. 
+        Defaults to LEAGUE_IDS.
+    
+    Raises:
+        RequestException: if any error pulling data
+
+    Returns:
+        list of dict: live_events where each dict contains:
+        TODO: Fill what each dict contains.
     """
-    Fetch live events from the API
-    returns a list of live events
-    """
 
-    live_events = []
     params = {'token': API_TOKEN, 'sport_id': SPORT_ID}
 
     try:
@@ -21,22 +31,31 @@ def live_events() -> list[dict]:
         response.raise_for_status()
         data = response.json()
 
-        if 'results' in data:
-            for event in data['results']:
-                if event['league']['id'] == LEAGUE_ID:
-                    live_events.append(event)
+        live_events = [event for event in data['results'] if event['league']['id'] in league_ids]
+        return live_events
+
 
     except requests.exceptions.RequestException as e:
         logging.error(f"Error fetching live events: {e}")
         return []
-    
-    return live_events
+
 
 def odds(event_id: str) -> list[dict]:
     
-    """
-    Fetch odds for any event
-    TODO: add parameter to choose market to be collected.
+    """Fetch all odds for a specific event
+
+    Args:
+        event_id (str): Id for an especific match
+        Format example: '982131'
+
+    Raises: 
+        RequestException: if any error pulling event odds
+
+    Returns:
+        list of dict with all event odds.
+        
+
+    TODO: Add parameter to choose market to be collected.
     TODO: Check if the odd is live or pre-live.
     """
 
@@ -55,22 +74,36 @@ def odds(event_id: str) -> list[dict]:
         logging.error(f"Error fetching odds: {e}")
         return []
 
-def events_for_date(dates: list) -> list[dict]:
+
+def events_for_date(dates: list, league_ids: dict = LEAGUE_IDS) -> list[dict]:
     
-    """
-    Fetch all ended events for a specific list of dates
+    """Fetch all ended events for a specific list of dates
+
+    Args:
+        dates (list): List of dates to fetch events from.
+        league_ids (dict, optional): Mapping of league identifiers. 
+        Format example: {"soccer": 1, "basketball": 2}. 
+        Defaults to LEAGUE_IDS.
+
+    Returns:
+        events: list of dicts containing all events.
+    
     TODO: add parameter to choose league.
     """
+    
+    league_ids = league_ids or list(LEAGUE_IDS.keys())
 
     for date in dates:
         formatted_date = date.strftime('%Y%m%d')
-        params = {
-            "token": API_TOKEN,
-            "sport_id": SPORT_ID,
-            "league_id": LEAGUE_ID,
-            "day": formatted_date,
-            "page": 1
-        }
+
+        for league_id in league_ids:
+            params = {
+                "token": API_TOKEN,
+                "sport_id": SPORT_ID,
+                "league_id": league_id,  
+                "day": formatted_date,
+                "page": 1
+            }
 
         events = []
 
@@ -88,6 +121,7 @@ def events_for_date(dates: list) -> list[dict]:
                 break
     
     return events
+
 
 def event_for_id(event_id: str) -> dict:
 
