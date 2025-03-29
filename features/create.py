@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 from features.h2h_acessor import H2HAcessor
 
-from files.paths import GAME_DATA
+from files.paths import HISTORIC_DATA
 from features.required import REQUIRED_COLUMNS
 
 def time_features(data):
@@ -145,7 +145,7 @@ def matchup_key(row):
     str(row['away_player']).lower()]))
 
 def features(
-    data: pd.DataFrame = GAME_DATA,
+    data: pd.DataFrame,
     lookback_data: pd.DataFrame | None = None,
     live: bool = True,
     normalizar: bool = False,
