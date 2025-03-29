@@ -18,6 +18,7 @@ class Bet:
     TODO: Create a subset to bet exported in xlsx
     TODO: Create cancel method to cancel a made bet
     TODO: Create a way to delete Bet Objetcts that are no longer needed to be stored
+    TODO: Implement threading to handle all files
     """
 
     def __init__(self, event: dict):
