@@ -1,3 +1,16 @@
+import json
+import logging
+import threading
+import pandas as pd
+from api import fetch, validate
+from model import calculate
+from telegram import message
+from model.config import EV_THRESHOLD, TIME_RANGES, AJUSTE_FUSO
+from files.paths import ALL_DATA, NOT_ENDED, ERROR_EVENTS, MADE_BETS
+from constants.telegram_params import (TELEGRAM_MESSAGE, MIN_LINE_MESSAGE,
+                                        MIN_ODD_MESSAGE, HOT_TIPS_MESSAGE, EDITED_MESSAGE)
+
+
 class Bet:
     
     """
@@ -8,7 +21,6 @@ class Bet:
     """
 
     def __init__(self, event: dict):
-        # Starts Class - Needs event data to do so.
     
         self.event = event
 
@@ -70,7 +82,6 @@ class Bet:
         self.totally_processed = None
 
     def get_odds(self, market: str='goals'):
-        from api_requests import fetch, validate
 
         """
         Pulls betting odds and handicaps from API
@@ -87,8 +98,6 @@ class Bet:
          ) = validate.odds(betting_data, self.event_id, market=market)
                                         
     def find_ev(self, lambda_pred: float):
-        from model.config import EV_THRESHOLD
-        from model import calculate
 
         """
         Calculate bet probabilities using calculate.poisson
@@ -117,8 +126,7 @@ class Bet:
         self._send_message
 
     def save_bet(self):
-        import json
-        from files.paths import NOT_ENDED
+        
         """
         Adiciona o objeto recém previsto ao json NOT_ENDED
         """
@@ -135,6 +143,7 @@ class Bet:
             json.dump(data, file, indent=4)
     
     def handle_not_ended_events(self):
+        
         '''
         1- Olha tudo o que tem em NOT_ENDED
         2- Puxa o score de todos eles
@@ -142,8 +151,6 @@ class Bet:
             Processa usando finish_processing()
             Salva em seu devido lugar
         '''
-        import json, logging, pandas as pd, threading
-        from files.paths import ALL_DATA, NOT_ENDED, ERROR_EVENTS
        
         not_ended, ended, error_events = [], [], []
 
@@ -195,8 +202,6 @@ class Bet:
             logging.error(f"Error loading data from {NOT_ENDED}")
           
     def save_made_bet(self):
-        from files.paths import MADE_BETS
-        import pandas as pd, logging
 
         if self.bet_type is None:
             logging.warning("Attempted to save match we didn't bet on. Skipped Sucessfully")
@@ -223,7 +228,6 @@ class Bet:
             self.saved_on_excel = True
     
     def handle_ended_bet(self):
-        from model import calculate
 
         '''
         Se bet_type não for nulo:
@@ -253,8 +257,7 @@ class Bet:
     # ------------------------------------------- #
 
     def _edit_telegram_message(self):
-        from constants.telegram_params import EDITED_MESSAGE
-        from telegram.message import edit
+
         '''
         Recebe os dados da Aposta e Edita no Telegram
         '''
@@ -262,9 +265,10 @@ class Bet:
         self._get_bet_emojis()
         self.message += EDITED_MESSAGE.format(**self.__dict__)
         self._escape()
-        self.edited = edit(self.message_id, self.message, self.chat_id)
+        self.edited = message.edit(self.message_id, self.message, self.chat_id)
 
     def _get_bet_type(self, bet_type: str | None):
+        
         """
         Gets Bet Type Object.
         Possible Types: 'over', 'under', None
@@ -290,7 +294,6 @@ class Bet:
         self.bet_type_emoji = BET_TYPE_EMOJIS.get(self.bet_type, '')
     
     def _get_end(self):
-        from api_requests import fetch
         
         """
         Procura pelo fim do jogo
@@ -364,15 +367,14 @@ class Bet:
                 return None
     
     def _get_score(self):
-        from api_requests.fetch import event_for_id
+
         """
         Pull result data from API,
         If raw_score = None, breaks out
         If raw_score != None, gets home, away and total scores
         """
 
-
-        event_data = event_for_id(self.event_id)
+        event_data = fetch.event_for_id(self.event_id)
 
         self.raw_score = event_data.get('ss', None)
         
@@ -400,8 +402,6 @@ class Bet:
                     self.hot_ev += 1
 
     def _get_time_atributes(self):
-        import pandas as pd
-        from model.config import TIME_RANGES, AJUSTE_FUSO
 
         self.time_sent = pd.Timestamp.now() - pd.Timedelta(hours=AJUSTE_FUSO)
         self.month = self.time_sent.strftime("%m/%Y")
@@ -446,10 +446,12 @@ class Bet:
             self.bet_ev = self.ev_under
     
     def _print_bet_data(self):
+        
         """
         Print the event data;
         Print Betting data, such as EV, Probabilities and Bet.
         """
+
         print(f"League: {self.league}")
         print(f"{self.home_player} ({self.home_team}) vs {self.away_player} ({self.away_team})")
         print('-' * 20)
@@ -474,12 +476,10 @@ class Bet:
             print('No EV+ Bet Found')
   
     def _find_min_line(self):
-        from model import calculate
-        self.minimum_line, self.minimum_odd = calculate.min_goal_line(self.handicap, self.bet_type, self.bet_prob)
+        self.minimum_line, self.minimum_odd = calculate.min_goal_line(
+            self.handicap, self.bet_type, self.bet_prob)
 
     def _generate_message(self):
-        
-        from constants.telegram_params import TELEGRAM_MESSAGE, MIN_LINE_MESSAGE, MIN_ODD_MESSAGE, HOT_TIPS_MESSAGE
         
         """"
         If bet_type is none, breaks
@@ -502,14 +502,13 @@ class Bet:
             self.message += HOT_TIPS_MESSAGE.format(**self.__dict__)
 
     def _send_message(self):
+        
         '''
         If bet time is not None, gets called
         Sends the message on telegram using message.send
         Marks self.sent as True or False, depending if it sent sucessfully
         Gets all time-related class objects
         '''
-
-        from telegram import message
         
         self.message_id, self.chat_id = message.send(self.message)
         self._get_time_atributes()
@@ -517,3 +516,4 @@ class Bet:
         
     def cancel(self):
         pass
+
