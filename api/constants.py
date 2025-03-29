@@ -1,9 +1,16 @@
 API_TOKEN = "183604-pWN7flhoAsWGu8"
 
-LEAGUE_ID = 22614
 SPORT_ID = 1
-ASIAN_GOALS = '1_3'
 
+LEAGUE_IDS = {
+    22614: "Battle 8min"
+}
+
+MARKET_IDS = {
+            "moneyline": "1_1",
+            "handicap": "1_2",
+            "goals": "1_3"
+}
 
 URLS = {
     "inplay": "https://api.betsapi.com/v1/bet365/inplay",
@@ -11,5 +18,3 @@ URLS = {
     "ended_events": "https://api.b365api.com/v3/events/ended",
     "event": "https://api.b365api.com/v1/event/view"
 }
-
-
