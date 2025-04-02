@@ -62,7 +62,7 @@ class DailyReport(Report):
         super().__init__(df)
         self.date = datetime.now() - timedelta(days=1)
         self.interval = self.date.strftime('%M de %Y')
-        
+        self.reports = self._filter_df()
 
 
     def send():
@@ -100,8 +100,34 @@ class DailyReport(Report):
 
     # ----------------------------- #
 
+    def _filter_df(self):
+    
+        """Quais dfs vamos retornar:
+        
+        1- O Mensal (TOTAL: Hot + NHot)
+        2- Hot Tips
+        3- Um Mensal (Total) para cada liga presente no Original
+        """
+        self.df = pd.DataFrame
+        
+        reports = []
 
+        leagues = self.df['league'].drop_duplicates().tolist
+        
+        month_df = self.df[
+            (self.df[self.date_column].dt.month == self.date.month) & 
+            (self.df[self.date_column].dt.year == self.date.year)
+        ]
+        hot_tips_df = month_df[(month_df['hot_ev'] > 0)]
+        
+        reports.append(month_df)
+        reports.append(hot_tips_df)
 
+        if len(leagues) > 1:
+            for league in leagues:
+                reports.append(league)
+        
+        return reports
 
     def _get_emoji(self, profit):
         if profit > 0:
