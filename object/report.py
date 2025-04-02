@@ -28,7 +28,6 @@ class Report():
     # ----------------------------------- #
 
     def _get_df(self, date_column: str, df: pd.DataFrame | None = None):
-        
         if df is None:
             try: 
                 df = pd.read_csv(HISTORIC_DATA)
@@ -47,9 +46,6 @@ class Report():
             return df
 
 class DailyReport(Report):
-
-    
-
     def __init__(self, 
             df: pd.DataFrame | None = None,
             ):
@@ -66,7 +62,7 @@ class DailyReport(Report):
 
 
     def send():
-        pass        
+        pass
 
 
     # ----------------------------- #
