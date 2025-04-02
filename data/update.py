@@ -6,7 +6,7 @@ from object.bet import Bet
 from collections import defaultdict
 
 from data import load
-from api_requests import fetch
+from api import fetch
 
 from model.config import AJUSTE_FUSO
 from files.paths import ALL_DATA, HISTORIC_DATA, NOT_ENDED
