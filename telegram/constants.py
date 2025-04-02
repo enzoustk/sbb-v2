@@ -63,8 +63,8 @@ REPORT_TITLE = (
     f"Relatório: Striker Betting\n"
     f"Intervalo: {interval}\n"
     f"Liga: {league}\n"
-    f"Tipo: {betting_type}\n"
-    f"\nSaldo por {line_type}\n"
+    f"Tipo: {ev_type}\n"
+    f"\nSaldo por {period_type} 📅\n"
 )
 
 REPORT_BODY = (
@@ -73,10 +73,10 @@ REPORT_BODY = (
 
 REPORT_TOTAL = (
     f"{bet_type}:\n"
-    f"{profit} {emoji}\n"
-    f"{bet} Tips, {roi} ROI\n"
-    f"Melhor Jogador: {best_player} ({emoji} {best_player_profit})\n"
-    f"Pior Jogador: {worst_player} ({emoji} {worst_player_profit})\n"
+    f"{profit} {total_emoji}\n"
+    f"{vol} Tips, {roi:.2%} ROI\n"
+    f"Melhor Jogador: {best_player} ({emoji2} {best_player_profit})\n"
+    f"Pior Jogador: {worst_player} ({emoji3} {worst_player_profit})\n"
 )
 
 REPORT_TIME_RANGE_TITLE = (
