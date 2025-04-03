@@ -3,6 +3,7 @@ import pandas as pd
 from data import load
 from datetime import datetime, timedelta
 from files.paths import HISTORIC_DATA
+from model.config import TIME_RANGES
 from telegram.constants import (MONTH_NAMES,
     REPORT_TITLE, REPORT_BODY, REPORT_TOTAL,
     REPORT_TIME_RANGE_TITLE, REPORT_TIME_RANGE_BODY,
@@ -16,7 +17,8 @@ Gerar um Relatório Hot Tips Total
 """
 
 class Report():
-    def __init__(self, 
+    def __init__(
+        self, 
         df: pd.DataFrame | None = None,
         date_column: str = 'time_sent'
     ):
@@ -24,7 +26,72 @@ class Report():
         locale.setlocale(locale.LC_TIME, 'pt_BR.utf8')
         self.df = self._get_df(date_column, df)
         self.date_column = df[date_column]
+        self.month_in_date = True
     
+    # ----------------------------------- #
+
+    def generate_title(self,
+        df: pd.DataFrame,
+        message: str = ''
+        ) -> str:
+        title = {}
+        title['interval'] = self.interval
+        title['league'] = self._get_league(df)
+        title['ev_type'] = self._get_ev_type(df)
+        title['period_type'] = self._get_period_type(df)
+
+        message += REPORT_TITLE.format(**title)
+        
+        return message
+
+    def generate_body(self,
+        df: pd.DataFrame,
+        message: str = ''
+        ) -> str:
+    
+        dates = df.groupby(df[self.date_column].dt.date)
+        
+        for period, dataframe in dates:
+            profit = dataframe['profit'].sum()
+            emoji = self._get_emoji(profit=profit)
+            formatted_period = period.strftime('%d')
+            
+            if self.month_in_date:
+                formatted_period += period.strftime('-%m')
+
+            message += REPORT_BODY.format(
+                period=formatted_period,
+                emoji=emoji,
+                profit=profit,  
+            )
+        return message
+
+    def generate_time_range(self,
+        df: pd.DataFrame,
+        message: str = ''
+        ) -> str:
+        
+        grouped = df.groupby(
+            'time_range', observed=True
+            )['profit'].sum()
+        
+        ordered_profits = grouped.reindex(
+            TIME_RANGES.keys(), fill_value=0
+        )
+        
+        for time_range in TIME_RANGES:
+            profit = ordered_profits[time_range]
+            emoji = self._get_emoji(profit=profit)
+            message += REPORT_TIME_RANGE_BODY.format(
+                    time_range=time_range,
+                    emoji=emoji,
+                    profit=f"{profit:,.2f}"
+                )
+        
+        return message
+
+        
+
     # ----------------------------------- #
 
     def _get_df(self, date_column: str, df: pd.DataFrame | None = None):
@@ -45,6 +112,63 @@ class Report():
             print(f"Data loaded sucessfully with {len(df)} lines")
             return df
 
+    def _get_league(self, df: pd.DataFrame):
+        """
+        Se só tem uma liga, retorna essa liga.
+        Se tem mais de uma, retorna um str: 'Liga 1,
+        Liga 2, Liga 3, ...
+        """
+        
+        leagues = df['league'].drop_duplicates().tolist
+        if not leagues:
+            return ''
+        if len(leagues) == 1:
+            return leagues[0]
+        
+        return ", ".join(leagues[:-1]) + " e " + leagues[-1]
+            
+    def _get_ev_type(self, df: pd.DataFrame):
+        ev_types = df['hot_ev'].drop_duplicates().tolist
+        
+        if all(x > 0 for x in ev_types):
+            return "Hot Tips 🔥"
+        elif all(x == 0 for x in ev_types):
+            return "Sem Hot Tips"
+        else:
+            if 0 in ev_types and any(x > 0 for x in ev_types):
+                return "Todas as Apostas"
+            else: 
+                return ""
+        
+    def _get_period_type(self, df: pd.DataFrame) -> str:
+
+        dates = pd.to_datetime(
+            df[self.date_column]
+            ).dt.normalize()
+        
+        unique_dates = dates.drop_duplicates().tolist()
+        
+
+        if len(unique_dates) > 60:
+            return 'Mês'
+        
+
+        month_years = dates.dt.to_period('M').unique()
+        self.month_in_date = len(month_years) > 1
+        
+        return 'Dia'
+
+    def _get_emoji(self, profit):
+        if profit > 0:
+            return '✅✅✅'
+        
+        if profit < 0:
+            return '❌'
+        
+        if profit == 0:
+            return '🔁'
+
+
 class DailyReport(Report):
     def __init__(self, 
             df: pd.DataFrame | None = None,
@@ -64,35 +188,7 @@ class DailyReport(Report):
     def send():
         pass
 
-
     # ----------------------------- #
-        
-
-    def generate_title(self, league):
-        
-        
-        
-        
-
-        message += REPORT_TITLE.format(
-            interval = interval,
-            league = league,
-            ev_tipe = 'Todas as Apostas',
-            period_type = 'Dia'
-        )
-
-    def generate_body(self, df):
-        
-        for line in df:
-            self.message += REPORT_BODY.format(
-                period = line['date'],
-                profit = line['profit'],
-                emoji = self.get_emoji(float(line['profit']))
-            )
-
-    def generate_total(self, df):
-        pass
-
 
     # ----------------------------- #
 
@@ -124,16 +220,6 @@ class DailyReport(Report):
                 reports.append(league)
         
         return reports
-
-    def _get_emoji(self, profit):
-        if profit > 0:
-            return '✅✅✅'
-        
-        if profit < 0:
-            return '❌'
-        
-        if profit == 0:
-            return '🔁'
 
     def _get_player_df(self, 
             df: pd.DataFrame,

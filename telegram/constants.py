@@ -75,12 +75,12 @@ REPORT_TOTAL = (
     f"{bet_type}:\n"
     f"{profit} {total_emoji}\n"
     f"{vol} Tips, {roi:.2%} ROI\n"
-    f"Melhor Jogador: {best_player} ({emoji2} {best_player_profit})\n"
-    f"Pior Jogador: {worst_player} ({emoji3} {worst_player_profit})\n"
+    f"Melhor Jogador: {best_player} ({bp_emoji} {bp_profit})\n"
+    f"Pior Jogador: {worst_player} ({wp_emoji} {wp_profit})\n"
 )
 
 REPORT_TIME_RANGE_TITLE = (
-    f"Por Faixa de Horário:"
+    f"Por Faixa de Horário:\n\n"
 )
 
 REPORT_TIME_RANGE_BODY = (
