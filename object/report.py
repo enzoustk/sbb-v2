@@ -9,6 +9,7 @@ from telegram.constants import (
     REPORT_TIME_RANGE_TITLE, REPORT_TIME_RANGE_BODY,
 )
 
+# TODO: Create CustomReport and PlayerReport classes
 
 class Report():
     def __init__(
