@@ -1,20 +1,14 @@
 import locale
 import pandas as pd
-from data import load
+from telegram import message
 from datetime import datetime, timedelta
 from files.paths import HISTORIC_DATA
 from model.config import TIME_RANGES
-from telegram.constants import (MONTH_NAMES,
+from telegram.constants import (
     REPORT_TITLE, REPORT_BODY, REPORT_TOTAL,
     REPORT_TIME_RANGE_TITLE, REPORT_TIME_RANGE_BODY,
 )
 
-"""
-Quebrar os dataframes por liga
-Gerar um Relatório filtrado para cada liga
-Gerar um Relatório Total
-Gerar um Relatório Hot Tips Total    
-"""
 
 class Report():
     def __init__(
@@ -31,46 +25,40 @@ class Report():
     
     # ----------------------------------- #
 
-    def generate_title(self,
-        df: pd.DataFrame,
-        ) -> str:
+    def generate_title(self, df: pd.DataFrame):
         title = {}
         title['interval'] = self.interval
         title['league'] = self._get_league(df)
         title['ev_type'] = self._get_ev_type(df)
         title['period_type'] = self._get_period_type(df)
 
-        self.message += REPORT_TITLE.format(**title)
+        self.message.append(REPORT_TITLE.format(**title))
+            
+    def generate_body(self, df: pd.DataFrame):
         
-    def generate_body(self,
-        df: pd.DataFrame,
-        ) -> str:
-    
-        dates = df.groupby(df[self.date_column].dt.date)
-        report_body= ''
-        
-        for period, dataframe in dates:
+        report_body = []
+        for period, dataframe in df.groupby(df[self.date_column].dt.date):
             profit = dataframe['profit'].sum()
-            emoji = self._get_emoji(profit=profit)
+            emoji = self._get_emoji(profit)
             formatted_period = period.strftime('%d')
             
             if self.month_in_date:
                 formatted_period += period.strftime('-%m')
-        
-        REPORT_BODY.format(
-            period=formatted_period,
-            emoji=emoji,
-            profit=f"{profit:,.2f}"
-        )
-
             
-                
 
-    def generate_time_range(self,
-        df: pd.DataFrame,
-        message: str = ''
-        ) -> str:
+            report_body.append(
+                REPORT_BODY.format(
+                    period=formatted_period,
+                    emoji=emoji,
+                    profit=f"{profit:,.2f}"
+                )
+            )
         
+        self.message.append(report_body)
+
+    def generate_time_range(self, df: pd.DataFrame):
+        
+        time_range = []
         grouped = df.groupby(
             'time_range', observed=True
             )['profit'].sum()
@@ -82,15 +70,51 @@ class Report():
         for time_range in TIME_RANGES:
             profit = ordered_profits[time_range]
             emoji = self._get_emoji(profit=profit)
-            message += REPORT_TIME_RANGE_BODY.format(
+            time_range.append(
+                REPORT_TIME_RANGE_BODY.format(
                     time_range=time_range,
                     emoji=emoji,
                     profit=f"{profit:,.2f}"
                 )
+            )
         
-        return message
+        self.message.append(REPORT_TIME_RANGE_TITLE)
+        self.message.append(time_range)
+
+    def generate_total(self, df: pd.DataFrame):
+    
+        message_lines = []
+        sub_dfs = {'total': df}
+        grouped = df[df['bet_type'].notna()].groupby('bet_type')
+        for bet_type, group in grouped:
+            sub_dfs[bet_type] = group
 
         
+        for bet_type_key, sub_df in sub_dfs.items():
+            profit = sub_df['profit'].sum()
+            vol = sub_df['profit'].count()
+            roi = (profit / vol * 100) if vol > 0 else 0
+            total_emoji = self._get_emoji(profit)
+            players_df = self._get_player_df(sub_df)
+            notable_players = self._get_notable_players(players_df)
+
+            message_lines.append(  
+                REPORT_TOTAL.format(
+                    bet_type=bet_type_key,
+                    profit=profit,
+                    total_emoji=total_emoji,
+                    vol=vol,
+                    roi=roi,
+                    best_player=notable_players['best_player']['player'],
+                    bp_emoji=notable_players['best_player']['emoji'],
+                    bp_profit=notable_players['best_player']['profit'],
+                    worst_player=notable_players['worst_player']['player'],
+                    wp_emoji=notable_players['worst_player']['emoji'],
+                    wp_profit=notable_players['worst_player']['profit'],
+                )
+            )
+
+            self.message.append(message_lines)
 
     # ----------------------------------- #
 
@@ -111,115 +135,6 @@ class Report():
         if df is not None: 
             print(f"Data loaded sucessfully with {len(df)} lines")
             return df
-
-    def _get_league(self, df: pd.DataFrame):
-        """
-        Se só tem uma liga, retorna essa liga.
-        Se tem mais de uma, retorna um str: 'Liga 1,
-        Liga 2, Liga 3, ...
-        """
-        
-        leagues = df['league'].drop_duplicates().tolist()
-        if not leagues:
-            return ''
-        if len(leagues) == 1:
-            return leagues[0]
-        
-        return ", ".join(leagues[:-1]) + " e " + leagues[-1]
-            
-    def _get_ev_type(self, df: pd.DataFrame):
-        ev_types = df['hot_ev'].drop_duplicates().tolist
-        
-        if all(x > 0 for x in ev_types):
-            return "Hot Tips 🔥"
-        elif all(x == 0 for x in ev_types):
-            return "Sem Hot Tips"
-        else:
-            if 0 in ev_types and any(x > 0 for x in ev_types):
-                return "Todas as Apostas"
-            else: 
-                return ""
-        
-    def _get_period_type(self, df: pd.DataFrame) -> str:
-
-        dates = pd.to_datetime(
-            df[self.date_column]
-            ).dt.normalize()
-        
-        unique_dates = dates.drop_duplicates().tolist()
-        
-
-        if len(unique_dates) > 60:
-            return 'Mês'
-        
-
-        month_years = dates.dt.to_period('M').unique()
-        self.month_in_date = len(month_years) > 1
-        
-        return 'Dia'
-
-    def _get_emoji(self, profit):
-        if profit > 0:
-            return '✅✅✅'
-        
-        if profit < 0:
-            return '❌'
-        
-        if profit == 0:
-            return '🔁'
-
-
-class DailyReport(Report):
-    def __init__(self, 
-            df: pd.DataFrame | None = None,
-            ):
-        
-        """Carrega o dataframe df, 
-        se não for especificado, usa o df HISTORIC_DATA
-        filta os dados para só ter apostas.
-        """
-
-        super().__init__(df)
-        self.date = datetime.now() - timedelta(days=1)
-        self.interval = self.date.strftime('%M de %Y')
-        self.reports = self._filter_df()
-
-
-    def send():
-        pass
-
-    # ----------------------------- #
-
-    # ----------------------------- #
-
-    def _filter_df(self):
-    
-        """Quais dfs vamos retornar:
-        
-        1- O Mensal (TOTAL: Hot + NHot)
-        2- Hot Tips
-        3- Um Mensal (Total) para cada liga presente no Original
-        """
-        self.df = pd.DataFrame
-        
-        reports = []
-
-        leagues = self.df['league'].drop_duplicates().tolist()
-        
-        month_df = self.df[
-            (self.df[self.date_column].dt.month == self.date.month) & 
-            (self.df[self.date_column].dt.year == self.date.year)
-        ]
-        hot_tips_df = month_df[(month_df['hot_ev'] > 0)]
-        
-        reports.append(month_df)
-        reports.append(hot_tips_df)
-
-        if len(leagues) > 1:
-            for league in leagues:
-                reports.append(league)
-        
-        return reports
 
     def _get_player_df(self, 
             df: pd.DataFrame,
@@ -267,32 +182,158 @@ class DailyReport(Report):
         
         return final_df
 
-    def _get_profit_data(self, df: pd.DataFrame) -> list[dict]:
-        reports = []
+    def _get_league(self, df: pd.DataFrame):
+        """
+        Se só tem uma liga, retorna essa liga.
+        Se tem mais de uma, retorna um str: 'Liga 1,
+        Liga 2, Liga 3, ...
+        """
+        
+        leagues = df['league'].drop_duplicates().tolist()
+        if not leagues:
+            return ''
+        if len(leagues) == 1:
+            return leagues[0]
+        
+        return ", ".join(leagues[:-1]) + " e " + leagues[-1]
+            
+    def _get_ev_type(self, df: pd.DataFrame):
+        ev_types = df['hot_ev'].drop_duplicates().tolist
+        
+        if all(x > 0 for x in ev_types):
+            return "Hot Tips 🔥"
+        elif all(x == 0 for x in ev_types):
+            return "Sem Hot Tips"
+        else:
+            if 0 in ev_types and any(x > 0 for x in ev_types):
+                return "Todas as Apostas"
+            else: 
+                return ""
+        
+    def _get_period_type(self, df: pd.DataFrame) -> str:
 
-        bet_types = [
-            {"bet_type": "total"}, 
-            {"bet_type": "over"}, 
-            {"bet_type": "under"}
+        dates = pd.to_datetime(
+            df[self.date_column]
+            ).dt.normalize()
+        
+        unique_dates = dates.drop_duplicates().tolist()
+        
+
+        if len(unique_dates) > 60:
+            return 'Mês'
+        
+
+        month_years = dates.dt.to_period('M').unique()
+        self.month_in_date = len(month_years) > 1
+        
+        return 'Dia'
+
+    def _get_notable_players(self, df: pd.DataFrame) -> dict:
+        
+        notable_players = {}
+
+        if not df.empty and 'profit' in df.columns:
+            
+            bp_row = df.loc[df['profit'].idxmax()]
+            notable_players['best_player'] = bp_row.to_dict()
+            notable_players['best_player']['emoji'] = super()._get_emoji(bp_row['profit'])
+            
+            wp_row = df.loc[df['profit'].idxmin()]
+            notable_players['worst_player'] = wp_row.to_dict()
+            notable_players['worst_player']['emoji'] = super()._get_emoji(wp_row['profit'])
+
+        return notable_players
+
+    def _get_emoji(self, profit):
+        if profit > 0:
+            return '✅✅✅'
+        
+        if profit < 0:
+            return '❌'
+        
+        if profit == 0:
+            return '🔁'
+
+class DailyReport(Report):
+    def __init__(self, 
+            df: pd.DataFrame | None = None,
+            ):
+        
+        """Carrega o dataframe df, 
+        se não for especificado, usa o df HISTORIC_DATA
+        filta os dados para só ter apostas.
+        """
+
+        super().__init__(df)
+        self.date = datetime.now() - timedelta(days=1)
+        self.interval = self.date.strftime('%M de %Y')
+        self.reports = self._filter_df()
+
+    def send(self):
+        for report in self.reports:
+            super().generate_title(report)
+            super().generate_body(report)
+            super().generate_time_range(report)
+            super().generate_total_report(report)
+            self.message.append('end')
+        
+        messages = self.split_list_on_separator()
+        for telegram_message in messages:
+            message.send(telegram_message)
+
+    # ----------------------------- #
+
+    def split_list_on_separator(self, 
+        separator: str = 'end', 
+        start: int = 0
+        ) -> list[list]:
+
+        separator_indices = [i for i,item 
+                        in enumerate(self.message) 
+                        if item == separator
         ]
         
-        for bt in bet_types:
-            filtered_df = df if bt["type"] == "all" else df[
-                df["bet_type"] == bt["type"]]
+        sublists = []
+        
+        for sep_index in separator_indices:
             
-            profit = filtered_df["profit"].sum()
-            vol = filtered_df["profit"].count()
-            roi = profit / vol if vol != 0 else 0
-            emoji = self._get_emoji(profit)
+            if start < sep_index:
+                sublists.append(self.message[start:sep_index])
+            start = sep_index + 1 
+        
+        if start <= len(self.message) - 1:
+            sublists.append(self.message[start:])
+        
+        return sublists
 
-            
-            reports.append({
-                "bet_type": bt["label"],
-                "profit": profit,
-                "total_emoji": emoji,
-                "vol": vol,
-                "roi": roi
-            })
+    # ----------------------------- #
+
+    def _filter_df(self):
+    
+        """Quais dfs vamos retornar:
+        
+        1- O Mensal (TOTAL: Hot + NHot)
+        2- Hot Tips
+        3- Um Mensal (Total) para cada liga presente no Original
+        """
+        self.df = pd.DataFrame
+        
+        reports = []
+
+        leagues = self.df['league'].drop_duplicates().tolist()
+        
+        month_df = self.df[
+            (self.df[self.date_column].dt.month == self.date.month) & 
+            (self.df[self.date_column].dt.year == self.date.year)
+        ]
+        hot_tips_df = month_df[(month_df['hot_ev'] > 0)]
+        
+        reports.append(month_df)
+        reports.append(hot_tips_df)
+
+        if len(leagues) > 1:
+            for league in leagues:
+                reports.append(league)
         
         return reports
 
