@@ -18,25 +18,25 @@ TELEGRAM_MESSAGE = (
     f"📈 Odd: {odd}\n" 
 )
 
-MIN_LINE_MESSAGE =  (
+MIN_LINE_MESSAGE = (
     f"➖ Mínima: {minimum_line} @{minimum_odd}\n"
 )
 
-MIN_ODD_MESSAGE =   (
+MIN_ODD_MESSAGE = (
     f"➖ Odd Mín.: {minimum_odd}\n"
 )
 
-HOT_TIPS_MESSAGE =  (
+HOT_TIPS_MESSAGE = (
     f"\n{'⚠️ EV:'} {hot_emoji}\n"
 )
 
-EDITED_MESSAGE =    (
+EDITED_MESSAGE = (
     f'\n{result_emoji}\n'
     f'\n➡ Resultado:{raw_score}\n'
     f'\n{LINKS_MESSAGE}'
 )
 
-LINKS_MESSAGE =     (
+LINKS_MESSAGE = (
     f"[Instagram]({INSTAGRAM_LINK}) | "
     f"[Resultados]({RESULTS_LINK}) | "
     f"[Suporte]({SUPPORT_LINK})"
@@ -46,7 +46,7 @@ INSTAGRAM_LINK = 'https://www.instagram.com/striker.betting/'
 RESULTS_LINK = 'https://t.me/StrikerSuporteBot'
 SUPPORT_LINK = 'https://linktr.ee/strikerbetting'
 
-RESULT_EMOJIS =     {
+RESULT_EMOJIS = {
     'win': '✅✅✅',
     'half_win': '🔁✅',
     'push': '🔁',
@@ -54,7 +54,7 @@ RESULT_EMOJIS =     {
     'loss': '❌',
 }
 
-BET_TYPE_EMOJIS =   {
+BET_TYPE_EMOJIS = {
     'over': '⬆️',
     'under': '⬇️',
 }

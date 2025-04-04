@@ -61,3 +61,44 @@ def _get_notable_players(self,
     
     return notable_players
    
+def generate_total(
+    self,
+    df: pd.DataFrame,
+    message: str = ''
+) -> str:
+
+    message_lines = message.split('\n') if message else []
+    
+
+    sub_dfs = {'Total': df}
+    grouped = df[df['bet_type'].notna()].groupby('bet_type')
+    for bet_type, group in grouped:
+        sub_dfs[bet_type] = group
+
+    
+    for bet_type_key, sub_df in sub_dfs.items():
+        profit = sub_df['profit'].sum()
+        vol = sub_df['profit'].count()
+        roi = (profit / vol * 100) if vol > 0 else 0
+        total_emoji = self.get_emoji(profit)
+        players_df = _get_players_df(sub_df)
+        notable_players = _get_notable_players(players_df)
+
+        message_lines.append(  
+            REPORT_TOTAL.format(
+                bet_type=bet_type_key,
+                profit=profit,
+                total_emoji=total_emoji,
+                vol=vol,
+                roi=roi,
+                best_player=notable_players['best_player']['player'],
+                bp_emoji=notable_players['best_player']['emoji'],
+                bp_profit=notable_players['best_player']['profit'],
+                worst_player=notable_players['worst_player']['player'],
+                wp_emoji=notable_players['worst_player']['emoji'],
+                wp_profit=notable_players['worst_player']['profit'],
+            )
+        )
+
+
+    return '\n'.join(filter(None, message_lines))

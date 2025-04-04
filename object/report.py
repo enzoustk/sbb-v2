@@ -27,12 +27,12 @@ class Report():
         self.df = self._get_df(date_column, df)
         self.date_column = df[date_column]
         self.month_in_date = True
+        self.message = []
     
     # ----------------------------------- #
 
     def generate_title(self,
         df: pd.DataFrame,
-        message: str = ''
         ) -> str:
         title = {}
         title['interval'] = self.interval
@@ -40,16 +40,14 @@ class Report():
         title['ev_type'] = self._get_ev_type(df)
         title['period_type'] = self._get_period_type(df)
 
-        message += REPORT_TITLE.format(**title)
+        self.message += REPORT_TITLE.format(**title)
         
-        return message
-
     def generate_body(self,
         df: pd.DataFrame,
-        message: str = ''
         ) -> str:
     
         dates = df.groupby(df[self.date_column].dt.date)
+        report_body= ''
         
         for period, dataframe in dates:
             profit = dataframe['profit'].sum()
@@ -58,13 +56,15 @@ class Report():
             
             if self.month_in_date:
                 formatted_period += period.strftime('-%m')
+        
+        REPORT_BODY.format(
+            period=formatted_period,
+            emoji=emoji,
+            profit=f"{profit:,.2f}"
+        )
 
-            message += REPORT_BODY.format(
-                period=formatted_period,
-                emoji=emoji,
-                profit=profit,  
-            )
-        return message
+            
+                
 
     def generate_time_range(self,
         df: pd.DataFrame,
