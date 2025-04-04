@@ -8,13 +8,35 @@ def generate_total(self,
     message: str = ''
     ) -> str:
 
+    sub_dfs = {'total': df}
+    for bet_type in df['bet_type'].dropna().unique():
+        sub_dfs[bet_type] = df[df['bet_type'] == bet_type]
 
-    profit = df['profit'].sum()
-    total_emoji = self.get_emoji(profit)
-    vol = df['profit'].count()
-    roi = profit / vol * 100 if vol > 0 else 0
-    players_df = _get_players_df(df)
-    notable_players = _get_notable_players(players_df)
+
+    for data in sub_dfs:
+        bet_type = data['bet_type'].unique()
+        profit = data['profit'].sum()
+        total_emoji = self.get_emoji(profit)
+        vol = data['profit'].count()
+        if not vol: vol = 0
+        roi = profit / vol * 100 if vol > 0 else 0
+        players_df = _get_players_df(data)
+        notable_players = _get_notable_players(players_df)
+        
+        message += REPORT_TOTAL.format(
+            bet_type=bet_type,
+            profit=profit,
+            total_emoji=total_emoji,
+            vol=vol,
+            roi=roi,
+            best_player=notable_players['best_player']['player'],
+            bp_emoji=notable_players['best_player']['emoji'],
+            bp_profit=notable_players['best_player']['profit'],
+            worst_player=notable_players['worst_player']['player'],
+            wp_emoji=notable_players['worst_player']['emoji'],
+            wp_profit=notable_players['worst_player']['profit'],
+        )
+
 
         
 
@@ -33,7 +55,7 @@ def _get_notable_players(self,
         
         wp_row = df.loc[df['profit'].idxmin()]
         notable_players['worst_player'] = wp_row.to_dict()
-        notable_players['wors_player']['emoji'] = _get_emoji(wp_row['profit'])
+        notable_players['worst_player']['emoji'] = _get_emoji(wp_row['profit'])
 
         
     
