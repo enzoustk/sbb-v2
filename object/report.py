@@ -119,7 +119,7 @@ class Report():
         Liga 2, Liga 3, ...
         """
         
-        leagues = df['league'].drop_duplicates().tolist
+        leagues = df['league'].drop_duplicates().tolist()
         if not leagues:
             return ''
         if len(leagues) == 1:
@@ -204,7 +204,7 @@ class DailyReport(Report):
         
         reports = []
 
-        leagues = self.df['league'].drop_duplicates().tolist
+        leagues = self.df['league'].drop_duplicates().tolist()
         
         month_df = self.df[
             (self.df[self.date_column].dt.month == self.date.month) & 
