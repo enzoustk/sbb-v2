@@ -20,6 +20,7 @@ def update_csv(data: list):
     try: 
         existing_data = pd.read_csv(HISTORIC_DATA)
     except FileNotFoundError: 
+        logging.info(f'File {HISTORIC_DATA} not found, creating it ...')
         existing_data = pd.DataFrame()
 
     
