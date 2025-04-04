@@ -1,5 +1,6 @@
 import logging
 from object.bet import Bet
+from object.report import DailyReport
 
 from api import fetch
 from model import predict
@@ -14,10 +15,7 @@ def scanner(model, i: int = 500):
         model: ML Model used to predict match odds
         i (int): After i runs, it shows a message to assert it is 
         running properly
-
-   
     """
-
 
     iwnne = 0  # Iteration with no new events
     read_matches = set()
@@ -29,35 +27,29 @@ def scanner(model, i: int = 500):
     while True:
         
         live_matches = fetch.live_events()
-        new_matches = False
-
         unread_matches = [match 
                         for match in live_matches 
                         if match['id'] not in read_matches
         ]
         
-        if unread_matches:
-            try:
-                new_matches = True
-                df = load.data('csv')
-                
-                for match in unread_matches:
-                    predict.match(df=df,
-                                event=match,
-                                model=model,
-                    )
-                    read_matches.add(match['id'])
-            
-            except Exception as e:
-                logging.error(f'Error predicting match {match['id']}')
-        
-        if not new_matches: iwnne += 1
+        if not unread_matches:
+            iwnne += 1
+            if iwnne % i == 0:
+                logging.info(f'{i} scans made. No new event found.')
 
-        elif new_matches: iwnne = 0
-        
-        if iwnne % i == 0:
-            logging.info(f'{i} scans made. No new event found.')
+        try:
+            df = load.data('csv')
+            for match in unread_matches:
+                predict.match(df=df,
+                            event=match,
+                            model=model,
+                )
+                read_matches.add(match['id'])
+            iwnne = 0
 
+
+        except Exception as e:
+            logging.error(f'Error predicting match {match['id']}\n{e}')
 
 def updater():
     """
@@ -71,10 +63,10 @@ def updater():
     """
     
     while True:
-        etp = load.data('not_ended')  # Events to update
+        events_to_update = load.data('not_ended')
         not_ended, ended, error_events, made_bets = [], [], [], []
 
-        for match_data in etp.to_dict('records'):
+        for match_data in events_to_update.to_dict('records'):
             match = Bet()
             match.__dict__.update(match_data)
             match._get_end()
@@ -102,3 +94,6 @@ def updater():
         update.csv(ended)
         update.error_events(error_events)
         update.not_ended(not_ended)
+
+def send_report():
+    return DailyReport().send()
