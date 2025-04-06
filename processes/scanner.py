@@ -4,7 +4,7 @@ from data import load
 from api import fetch
 from model import predict
 from processes import updater
-from utils import csv_atualizado_event
+from files.paths import LOCK
 
 
 def run(model, i: int = 50):
@@ -23,11 +23,6 @@ def run(model, i: int = 50):
         args=(60,),
         daemon=True
     )
-
-
-    if not csv_atualizado_event.is_set():
-        logging.info('Waiting for csv file to be updated')
-        csv_atualizado_event.wait()
 
     while True:
         
@@ -48,14 +43,15 @@ def run(model, i: int = 50):
                 logging.info(f'{i*10} scans made. No new event found.')
 
         try:
-            df = load.data('historic')
-            for match in unread_matches:
-                predict.match(df=df,
-                            event=match,
-                            model=model,
-                )
-                read_matches.add(match['id'])
-            i_counter = 0
+            with LOCK:
+                df = load.data('historic')
+                for match in unread_matches:
+                    predict.match(df=df,
+                                event=match,
+                                model=model,
+                    )
+                    read_matches.add(match['id'])
+                i_counter = 0
 
 
         except Exception as e:

@@ -2,6 +2,7 @@ import time
 import logging
 from object.bet import Bet
 from data import load, update
+from files.paths import LOCK
 
 
 
@@ -22,7 +23,7 @@ def run(time_sleep: int = 60):
     
     existing_bets = {}
 
-    while True:
+    with LOCK:
         events_to_update = load.data('not_ended')
         not_ended, ended, error_events, made_bets = [], [], [], []
 
@@ -69,7 +70,3 @@ def run(time_sleep: int = 60):
         update.error_events(error_events)
         update.not_ended(not_ended)
 
-        if len(not_ended) == 0:
-            break
-
-        time.sleep(time_sleep)
