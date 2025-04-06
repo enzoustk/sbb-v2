@@ -39,10 +39,6 @@ def match(event, model):
             3.2.4 - Save the bet in the ALL_DATA file;
     """    
 
-    if not csv_atualizado_event.is_set():
-        logging.info("Aguardando a atualização inicial do CSV para iniciar as previsões...")
-        csv_atualizado_event.wait()
-
     with open(ERROR_EVENTS, 'r') as file:
         error_events = set(line.strip() for line in file)
         
