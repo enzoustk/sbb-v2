@@ -6,7 +6,7 @@ from files.paths import LOCK
 
 
 
-def run(time_sleep: int = 60):
+def run():
     """
     Quando o scanner passar i execuções sem encontrar novos eventos,
     ele chama o updater para processar os eventos que estão no CSV.
@@ -69,4 +69,3 @@ def run(time_sleep: int = 60):
         update.historic_data(ended)
         update.error_events(error_events)
         update.not_ended(not_ended)
-
