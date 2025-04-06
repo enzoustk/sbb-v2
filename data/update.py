@@ -1,6 +1,6 @@
-import json
 import logging
 import pandas as pd
+import os  # Adicionado para verificar existência de arquivos
 
 from object.bet import Bet
 from collections import defaultdict
@@ -9,113 +9,104 @@ from data import load
 from api import fetch
 
 from model.config import AJUSTE_FUSO
-from files.paths import ALL_DATA, HISTORIC_DATA, NOT_ENDED
+from files.paths import ALL_DATA, HISTORIC_DATA, NOT_ENDED, ERROR_EVENTS  # Adicione ERROR_EVENTS
 
 
-def update_csv(data: list):
+def historic_data(data: list):
     """
-    Atualiza o arquivo HISTORIC_DATA.csv com novos dados, ordenando por data e evitando duplicatas.
+    Atualiza o arquivo HISTORIC_DATA.csv com novos dados.
     """
-
-    try: 
-        existing_data = pd.read_csv(HISTORIC_DATA)
-    except FileNotFoundError: 
-        logging.info(f'File {HISTORIC_DATA} not found, creating it ...')
-        existing_data = pd.DataFrame()
-
+    existing_data = load.data('historic')
     
-    exclude_keys = remove_columns_to_csv()
+    exclude_keys = remove_columns_to_historic()
     new_data = [
         {key: value for key, value in bet.__dict__.items() if key not in exclude_keys}  
         for bet in data
-        ]
-
+    ]
+    
     new_df = pd.DataFrame(new_data)
-
+    
     if existing_data.empty:
         new_df.to_csv(HISTORIC_DATA, index=False)
-        logging.info('File Historic Data updated sucessfully')
-        return
+    else:
+        combined_df = pd.concat([existing_data, new_df], ignore_index=True)
+        combined_df['time_sent'] = pd.to_datetime(combined_df['time_sent'], errors='coerce')
+        combined_df = combined_df.sort_values(by='date', ascending=False)
+        combined_df = combined_df.drop_duplicates()
+        combined_df.to_csv(HISTORIC_DATA, index=False)
+    
+    logging.info('Historic data updated successfully.')
 
-    new_df = pd.concat([existing_data, new_df], ignore_index=True)
-    new_df['time_sent'] = pd.to_datetime(new_df['time_sent'], format='%d/%m/%Y', errors='coerce')
-    new_df = new_df.sort_values(by='date', ascending=False)
-    new_df = new_df.drop_duplicates()
-
-    new_df.to_csv(HISTORIC_DATA, index=False)
 
 def fill_data_gaps(gap: int = 30):
-    
     """
-    Finds all data gaps in the all_files file.
-    Pulls all-day API data for days containing gaps
-    Runs only at start of application 
-    Checks if it is not in the ALL_DATA.json and neither in HISTORIC_DATA.csv
-    If it is not, appends to HISTORIC_DATA.csv
-    TODO: Remover o dia de hoje de processed_dates
+    Preenche lacunas nos dados usando CSV.
     """
-
-    json_data = load.data('json')
-    json_data['time_sent'] = pd.to_datetime(json_data['time_sent']) + pd.Timedelta(hours=AJUSTE_FUSO)
-    json_data['date'] = json_data['time_sent'].dt.normalize()
+    all_data = load.data('all_data')
+    all_data['time_sent'] = pd.to_datetime(all_data['time_sent']) + pd.Timedelta(hours=AJUSTE_FUSO)
+    all_data['date'] = all_data['time_sent'].dt.normalize()
     
     dates_to_fetch = []
     processed_dates = set()
 
-    for date, bloco in json_data.groupby('date'):
-            
-            if date in processed_dates: continue
-            bloco = bloco.sort_values('time_sent')
-            delta_t = bloco['time_sent'].diff()
+    for date, bloco in all_data.groupby('date'):
+        if date in processed_dates:
+            continue
+        bloco = bloco.sort_values('time_sent')
+        delta_t = bloco['time_sent'].diff()
         
-            if len(bloco[delta_t > pd.Timedelta(minutes=gap)]) > 0:
-                dates_to_fetch.append(date)
-            
-            processed_dates.add(date)
+        if len(bloco[delta_t > pd.Timedelta(minutes=gap)]) > 0:
+            dates_to_fetch.append(date)
+        
+        processed_dates.add(date)
 
     matches_fetched = fetch.events_for_date(dates=dates_to_fetch)
     
-    existing_data = defaultdict(set)
     
-    for dataset in [ALL_DATA, HISTORIC_DATA]:   
-        for item in dataset:
-            date = item['time_sent'].date()
-            existing_data[date].add(item['event_id'])
-
+    historic_data = pd.read_csv(HISTORIC_DATA)
+    existing_all_data = pd.read_csv(ALL_DATA)
+    existing_data = pd.concat([historic_data, existing_all_data], ignore_index=True)
+    existing_data['time_sent'] = pd.to_datetime(existing_data['time_sent'])
+    
+    new_events = []
     for datapoint in matches_fetched:
-
-        date = datapoint['time_sent'].date()
+        date = pd.to_datetime(datapoint['time_sent']).date()
         event_id = datapoint['event_id']
-                    
-        if event_id in existing_data.get(date, set()): 
+        
+        if event_id in existing_data[existing_data['event_id'] == event_id]['event_id'].values:
             continue
-
-        # Processa o novo evento
+        
         match = Bet()
         match.__dict__.update(datapoint)
-        match.to_historic_file()
+        new_events.append(match.__dict__)
+    
+    if new_events:
+        new_events_df = pd.DataFrame(new_events)
+        new_events_df.to_csv(HISTORIC_DATA, mode='a', index=False, header=False)
+        logging.info(f'{len(new_events)} novos eventos adicionados ao histórico.')
 
-        existing_data[date].add(event_id)
 
 def not_ended(data: list):
-    
     """
-    Rewrites NOT_ENDED json with events that are still unended after iteration
+    Atualiza NOT_ENDED.csv com eventos não finalizados.
     """
-    
-    with open(NOT_ENDED, 'w') as ne_file:
-        ne_data = [bet.__dict__ for bet in data]
-        json.dump(ne_data, ne_file, indent=4)
-        logging.info('Not ended events updated sucessfully')
+    ne_df = pd.DataFrame([bet.__dict__ for bet in data])
+    ne_df.to_csv(NOT_ENDED, index=False)
+    logging.info('Eventos não finalizados atualizados com sucesso.')
+
 
 def error_events(data: list):
     """
-    Appens buggy events to ERROR Events
+    Adiciona eventos com erro ao ERROR_EVENTS.csv.
     """
-    with open(NOT_ENDED, 'a') as error_file:
-        error_data = [event.__dict__ for event in data]
-        json.dump(error_data, error_file, indent=4)
-        logging.info('Not ended events updated sucessfully')
+    error_df = pd.DataFrame([event.__dict__ for event in data])
+    
+    
+    header = not os.path.exists(ERROR_EVENTS)
+    
+    error_df.to_csv(ERROR_EVENTS, mode='a', index=False, header=header)
+    logging.info('Eventos com erro adicionados ao arquivo.')
 
-def remove_columns_to_csv():
+
+def remove_columns_to_historic():
     return {'event', 'hot_emoji', 'message', 'bet_type_emoji'}

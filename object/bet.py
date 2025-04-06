@@ -2,6 +2,7 @@ import json
 import logging
 import threading
 import pandas as pd
+from data import load
 from api import fetch, validate
 from model import calculate
 from telegram import message
@@ -127,24 +128,17 @@ class Bet:
         self._send_message
 
     def save_bet(self):
+        """Adiciona a aposta ao arquivo NOT_ENDED.csv."""
         
-        """
-        Adiciona o objeto recém previsto ao json NOT_ENDED
-        """
+        existing_df = load.data('not_ended')
 
-        try:
-            with open(NOT_ENDED, 'r') as file:
-                data = json.load(file)
-        except (FileNotFoundError, json.JSONDecodeError):
-            data = []
-
-        data.append(self.__dict__)
-
-        with open(NOT_ENDED, 'w') as file:
-            json.dump(data, file, indent=4)
+        new_data = pd.DataFrame([self.__dict__])
+        updated_df = pd.concat([existing_df, new_data], ignore_index=True)
+        updated_df.to_csv(NOT_ENDED, index=False)
     
     def handle_not_ended_events(self):
         
+        # TODO: Ajustar para csv ao invés de json
         '''
         1- Olha tudo o que tem em NOT_ENDED
         2- Puxa o score de todos eles
@@ -201,33 +195,7 @@ class Bet:
     
         except (FileNotFoundError, json.JSONDecodeError):
             logging.error(f"Error loading data from {NOT_ENDED}")
-          
-    def save_made_bet(self):
 
-        if self.bet_type is None:
-            logging.warning("Attempted to save match we didn't bet on. Skipped Sucessfully")
-            return
-        
-        try:
-            with pd.ExcelWriter(MADE_BETS, engine='openpyxl', mode='a', if_sheet_exists='overlay') as writer:
-                
-                if str(self.month) in writer.book.sheetnames:
-                    df_existing = pd.read_excel(MADE_BETS, sheet_name=str(self.month))
-                else:
-                    df_existing = pd.DataFrame(columns=self._get_excel_columns().keys())
-                
-                
-                new_data = pd.DataFrame([self._get_excel_columns()])
-                df_updated = pd.concat([df_existing, new_data], ignore_index=True)
-                df_updated.to_excel(writer, sheet_name=str(self.month), index=False)
-                self.saved_on_excel = True
-                
-        except FileNotFoundError:
-            new_data = pd.DataFrame([self._get_excel_columns()])
-            with pd.ExcelWriter(MADE_BETS, engine='openpyxl') as writer:
-                new_data.to_excel(writer, sheet_name=str(self.month), index=False)
-            self.saved_on_excel = True
-    
     def handle_ended_bet(self):
 
         '''
@@ -239,6 +207,7 @@ class Bet:
         if self.bet_type is None: return
         self.profit, self.result = calculate.profit(self.bet_type, self.handicap, self.total_score, self.bet_odd)
         self._edit_telegram_message()
+        self._save_made_bet()
         
     def mark_processed(self):
         if self.bet_type is not None:
@@ -517,4 +486,30 @@ class Bet:
         
     def cancel(self):
         pass
+         
+    def _save_made_bet(self):
 
+        if self.bet_type is None:
+            logging.warning("Attempted to save match we didn't bet on. Skipped Sucessfully")
+            return
+        
+        try:
+            with pd.ExcelWriter(MADE_BETS, engine='openpyxl', mode='a', if_sheet_exists='overlay') as writer:
+                
+                if str(self.month) in writer.book.sheetnames:
+                    df_existing = pd.read_excel(MADE_BETS, sheet_name=str(self.month))
+                else:
+                    df_existing = pd.DataFrame(columns=self._get_excel_columns().keys())
+                
+                
+                new_data = pd.DataFrame([self._get_excel_columns()])
+                df_updated = pd.concat([df_existing, new_data], ignore_index=True)
+                df_updated.to_excel(writer, sheet_name=str(self.month), index=False)
+                self.saved_on_excel = True
+                
+        except FileNotFoundError:
+            new_data = pd.DataFrame([self._get_excel_columns()])
+            with pd.ExcelWriter(MADE_BETS, engine='openpyxl') as writer:
+                new_data.to_excel(writer, sheet_name=str(self.month), index=False)
+            self.saved_on_excel = True
+    

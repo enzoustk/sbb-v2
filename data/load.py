@@ -1,38 +1,41 @@
 import logging
 import pandas as pd
 from collections import defaultdict
-from files.paths import HISTORIC_DATA, ALL_DATA, NOT_ENDED
+from files.paths import HISTORIC_DATA, ALL_DATA, NOT_ENDED  # Supondo que todos sejam CSVs
 
 def data(file: str, load_ids: bool = False) -> pd.DataFrame | tuple[pd.DataFrame, defaultdict]:
-    """_summary_
+    """Carrega dados de arquivos CSV e, opcionalmente, extrai IDs de eventos por data.
 
     Args:
-        file (str): _description_
-        load_ids (bool, optional): _description_. Defaults to False.
+        file (str): Nome do arquivo a ser carregado ('historic', 'all_data', 'not_ended').
+        load_ids (bool, optional): Se True, retorna um dicionário de IDs agrupados por data. Defaults to False.
 
     Returns:
-        pd.DataFrame | tuple[pd.DataFrame, defaultdict]: _description_
+        pd.DataFrame | tuple[pd.DataFrame, defaultdict]: DataFrame com os dados e (opcionalmente) IDs por data.
     """
-    
+
     ids = defaultdict(set)
     data = pd.DataFrame()
 
-    try: 
-        if file == 'csv': data = pd.read_csv(HISTORIC_DATA)
-        elif file == 'json': data = pd.read_json(ALL_DATA)
-        elif file == 'not_ended': data = pd.read_json(NOT_ENDED)
+    try:
+        if file == 'historic':
+            data = pd.read_csv(HISTORIC_DATA)
+        elif file == 'all_data':
+            data = pd.read_csv(ALL_DATA)
+        elif file == 'not_ended':
+            data = pd.read_csv(NOT_ENDED)  
 
-        if load_ids: 
+
+        if load_ids:
             try:
                 for datapoint in data.to_dict('records'):
                     date = datapoint['time_sent'].date()
                     ids[date].add(datapoint['event_id'])
-            
-            except KeyError as e: 
-                logging.warning(f'Missing data {e}')
+            except KeyError as e:
+                logging.warning(f'Missing Column: {e}')
     
-    except FileNotFoundError: 
-        logging.warning(f'File {file} not found')
-        
-    if load_ids: return data, ids
-    else: return data
+    except FileNotFoundError:
+        logging.warning(f'File {file} not found '
+                        f'Creating it...')
+
+    return (data, ids) if load_ids else data
