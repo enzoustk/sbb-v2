@@ -1,5 +1,6 @@
 import logging
 import threading
+import time
 from data import load
 from api import fetch
 from model import predict
@@ -7,7 +8,7 @@ from processes import updater
 from files.paths import LOCK
 
 
-def run(model, i: int = 50):
+def run(model, i: int = 50, sleep_time: int = 1):
     """Scans all live events and handles them
     
     Arguments:
@@ -56,4 +57,5 @@ def run(model, i: int = 50):
 
         except Exception as e:
             logging.error(f'Error predicting match {match['id']}\n{e}')
-
+        
+        time.sleep(sleep_time)
