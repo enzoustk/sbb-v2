@@ -1,10 +1,10 @@
 import logging
 import pandas as pd
 from collections import defaultdict
-from files.paths import HISTORIC_DATA, ALL_DATA, NOT_ENDED  # Supondo que todos sejam CSVs
+from files.paths import HISTORIC_DATA, ALL_DATA, NOT_ENDED 
 
 def data(file: str, load_ids: bool = False) -> pd.DataFrame | tuple[pd.DataFrame, defaultdict]:
-    """Carrega dados de arquivos CSV e, opcionalmente, extrai IDs de eventos por data.
+    """Loads data from a CSV file and optionally returns IDs grouped by date.
 
     Args:
         file (str): Nome do arquivo a ser carregado ('historic', 'all_data', 'not_ended').
