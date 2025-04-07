@@ -1,7 +1,7 @@
-EV_THRESHOLD = 0.05 # EV mínimo para enviar uma aposta
-HOT_THRESHOLD = 0.1 # EV mínimo para exibir "⚠️ EV:"
-HOT_TIPS_STEP = 0.05 # A cada 0.05, adiciona um "🔥"
-MAX_HOT = 4 #Quantidade de "🔥"
+EV_THRESHOLD = 0.05 #  Minimum +EV to make a bet
+HOT_THRESHOLD = 0.1 #  Minimum +EV to show "⚠️ EV:"
+HOT_TIPS_STEP = 0.05 # for each step, adds a "🔥"
+MAX_HOT = 4 # Maximum number of "🔥" to show
 
 AJUSTE_FUSO = 3
 

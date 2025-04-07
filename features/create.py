@@ -41,6 +41,7 @@ def time_features(
     
     return data
 
+
 def goal_features(
     data: pd.DataFrame, 
     time: bool, 
@@ -147,11 +148,13 @@ def goal_features(
 
     return data   
 
+
 def matchup_key(row):
     """Creates a column with the matchup key for the two players"""
     return tuple(sorted([
     str(row['home_player']).lower(),
     str(row['away_player']).lower()]))
+
 
 def features(
     data: pd.DataFrame,
