@@ -1,3 +1,5 @@
+"""All API-related constants."""
+
 API_TOKEN = "183604-pWN7flhoAsWGu8"
 
 SPORT_ID = 1
