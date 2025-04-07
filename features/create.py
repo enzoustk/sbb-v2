@@ -1,15 +1,20 @@
+import logging
 import numpy as np
 import pandas as pd
-from features.h2h_acessor import H2HAcessor
-
-from files.paths import HISTORIC_DATA
+from features import h2h_acessor
 from features.required import REQUIRED_COLUMNS
 
-def time_features(data):
+def time_features(
+    data: pd.DataFrame
+    ) -> pd.DataFrame:
     
-    """
-    Creation of all time-related features
-    Exports: date, last_h2h, time_since_start, day_of_week, hour_of_day, day_angle, hour_angle
+    """Creation of all time-related features
+
+    Args:
+        data (pd.Dataframe): DataFrame with the data to be transformed
+
+    Returns: pd.DataFrame: DataFrame with the new features appended:
+        date, last_h2h, time_since_start, day_of_week, hour_of_day, day_angle, hour_angle
 
     TODO: Is it necessary to export both the angle and the day_of_week and hour_of_day respectively?
     TODO: Analyze if it really helps or causes overfitting.
@@ -20,25 +25,28 @@ def time_features(data):
     data['day_of_week'] = data['date'].dt.weekday.astype(float)
     data['hour_of_day'] = data['date'].dt.hour.astype(float)
 
-    # Add calculation of cyclic components
     data['day_sin'] = np.sin(2 * np.pi * data['day_of_week'] / 7)
     data['day_cos'] = np.cos(2 * np.pi * data['day_of_week'] / 7)
     data['hour_sin'] = np.sin(2 * np.pi * data['hour_of_day'] / 24)
     data['hour_cos'] = np.cos(2 * np.pi * data['hour_of_day'] / 24) 
 
-    # Now we generate the arctangents
     data['day_angle'] = np.arctan2(data['day_sin'], data['day_cos'])
     data['hour_angle'] = np.arctan2(data['hour_sin'], data['hour_cos'])
 
-    # Generate h2h_count
     data['h2h_count'] = data.h2h.cumcount() + 1
 
-    # Drop auxiliary columns
-    data = data.drop(['day_sin','day_cos','hour_sin','hour_cos'], axis = 1)
+    data = data.drop(
+        ['day_sin','day_cos','hour_sin','hour_cos'],
+        axis = 1)
     
     return data
 
-def goal_features(data, time, normalize, live) -> pd.DataFrame: 
+def goal_features(
+    data: pd.DataFrame, 
+    time: bool, 
+    normalize: bool,
+    live: bool
+    ) -> pd.DataFrame: 
 
     """
     Asserts required columns;
@@ -52,7 +60,7 @@ def goal_features(data, time, normalize, live) -> pd.DataFrame:
     """
     
     if not REQUIRED_COLUMNS.issubset(data.columns):
-        raise ValueError(f"DataFrame must contain the following columns: {REQUIRED_COLUMNS}") 
+        logging.error(f"DataFrame must contain the following columns: {REQUIRED_COLUMNS}") 
 
     data = data.copy()
 
@@ -140,6 +148,7 @@ def goal_features(data, time, normalize, live) -> pd.DataFrame:
     return data   
 
 def matchup_key(row):
+    """Creates a column with the matchup key for the two players"""
     return tuple(sorted([
     str(row['home_player']).lower(),
     str(row['away_player']).lower()]))
