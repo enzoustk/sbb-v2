@@ -1,3 +1,5 @@
+"""Class Method to create a custom accessor for the DataFrame class."""
+
 import pandas as pd
 
 @pd.api.extensions.register_dataframe_accessor("h2h")
