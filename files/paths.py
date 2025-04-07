@@ -11,4 +11,4 @@ ALL_DATA = r'files\sheets\all_data.csv'
 NOT_ENDED = r'files\sheets\not_ended.csv'
 ERROR_EVENTS = r'files\sheets\error_events.csv'
 
-LOCK = r'files\sheets.lock'
+LOCK = FileLock('files\sheets\.lock')
