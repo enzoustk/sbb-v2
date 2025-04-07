@@ -1,27 +1,23 @@
+import os
 import logging
 import pandas as pd
-import os  # Adicionado para verificar existência de arquivos
-
 from object.bet import Bet
-from collections import defaultdict
-
 from data import load
 from api import fetch
-
 from model.config import AJUSTE_FUSO
-from files.paths import ALL_DATA, HISTORIC_DATA, NOT_ENDED, ERROR_EVENTS, LOCK  # Adicione ERROR_EVENTS
+from files.paths import ALL_DATA, HISTORIC_DATA, NOT_ENDED, ERROR_EVENTS, LOCK
 
 
 def historic_data(data: list):
-    """
-    Atualiza o arquivo HISTORIC_DATA.csv com novos dados.
-    """
+    """Update HISTORIC_DATA.csv with new data."""
 
     existing_data = load.data('historic')
     
     exclude_keys = remove_columns_to_historic()
     new_data = [
-        {key: value for key, value in bet.__dict__.items() if key not in exclude_keys}  
+        {key: value for key,
+        value in bet.__dict__.items()
+        if key not in exclude_keys}  
         for bet in data
     ]
     
@@ -39,9 +35,8 @@ def historic_data(data: list):
     logging.info('Historic data updated successfully.')
 
 def fill_data_gaps(gap: int = 30):
-    """
-    Preenche lacunas nos dados usando CSV.
-    """
+    """Uses API to fill gaps in the when the model was not running."""
+
     with LOCK:
         all_data = load.data('all_data')
         all_data['time_sent'] = pd.to_datetime(all_data['time_sent']) + pd.Timedelta(hours=AJUSTE_FUSO)
@@ -87,17 +82,15 @@ def fill_data_gaps(gap: int = 30):
             logging.info(f'{len(new_events)} novos eventos adicionados ao histórico.')
 
 def not_ended(data: list):
-    """
-    Atualiza NOT_ENDED.csv com eventos não finalizados.
-    """
+    """Updates NOT_ENDED.csv with new data."""
+
     ne_df = pd.DataFrame([bet.__dict__ for bet in data])
     ne_df.to_csv(NOT_ENDED, index=False)
     logging.info('Eventos não finalizados atualizados com sucesso.')
 
 def error_events(data: list):
-    """
-    Adiciona eventos com erro ao ERROR_EVENTS.csv.
-    """
+    """Updates ERROR_EVENTS.csv with new data."""
+
     error_df = pd.DataFrame([event.__dict__ for event in data])
     
     
@@ -107,4 +100,5 @@ def error_events(data: list):
     logging.info('Eventos com erro adicionados ao arquivo.')
 
 def remove_columns_to_historic():
+    """Returns columns to be removed from historic data."""
     return {'event', 'hot_emoji', 'message', 'bet_type_emoji'}
