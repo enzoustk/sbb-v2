@@ -1,3 +1,5 @@
+"""All API-related constants."""
+
 API_TOKEN = "<B365_TOKEN>"
 
 SPORT_ID = 1
