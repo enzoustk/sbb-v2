@@ -7,9 +7,9 @@ LEAGUE_IDS = {
 }
 
 MARKET_IDS = {
-            "moneyline": "1_1",
-            "handicap": "1_2",
-            "goals": "1_3"
+    "moneyline": "1_1",
+    "handicap": "1_2",
+    "goals": "1_3"
 }
 
 URLS = {
