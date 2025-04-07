@@ -1,6 +1,10 @@
-def poisson_goals(lambda_pred: float, handicap: float) -> tuple[float, float]:
+from scipy.stats import poisson
+import logging
 
-    from scipy.stats import poisson
+def poisson_goals(
+    lambda_pred: float,
+    handicap: float
+    ) -> tuple[float, float]:
 
     """
     Calculate the Probability of a given Goal Line (Handicap).
@@ -27,11 +31,16 @@ def poisson_goals(lambda_pred: float, handicap: float) -> tuple[float, float]:
         prob_under = (prob_under_lower + prob_under_upper) / 2
 
     else:
+        logging.error(f'Invalid Handicap used to estimate goal probabilities: {handicap}')
         raise ValueError(f"Handicap inválido: {handicap}")
     
     return prob_over, prob_under
 
-def min_goal_line(handicap: float, bet_type: str, bet_prob: float) -> tuple[float, float]:
+def min_goal_line(
+    handicap: float,
+    bet_type: str,
+    bet_prob: float
+    ) -> tuple[float, float]:
     
     """
     Calcular a odd EV == threshold para a linha atual,
@@ -46,7 +55,7 @@ def min_goal_line(handicap: float, bet_type: str, bet_prob: float) -> tuple[floa
     elif bet_type.lower() == 'under': 
         step = -0.25
     else: 
-        raise ValueError(f"Tipo de aposta inválido: {bet_type}")
+        logging.error(f"Tipo de aposta inválido: {bet_type}")
 
     while True:
         from model.config import EV_THRESHOLD
@@ -58,7 +67,8 @@ def min_goal_line(handicap: float, bet_type: str, bet_prob: float) -> tuple[floa
 
         elif minimum_odd < 1.75: minimum_line += step
 
-        else: raise ValueError(f"Odd mínima inválida: {minimum_odd}")
+        else: 
+            logging.error(f'Invalid Min. Odd: {minimum_odd}')
 
 def profit(bet_type: float, handicap: float, total_score: int, bet_odd: float) -> float:
     
@@ -90,7 +100,7 @@ def profit(bet_type: float, handicap: float, total_score: int, bet_odd: float) -
         return profit, result
         
     except: 
-        raise ValueError(f"Ajuste de resultado inválido: {outcome}")
+        logging.error(f"Ajuste de resultado inválido: {outcome}")
 
 def ev(odd, prob):
     return odd * prob -1
