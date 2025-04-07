@@ -1,3 +1,5 @@
+"""Formats and validates the data from the API."""
+
 import logging
 from api.constants import MARKET_IDS
 
@@ -63,6 +65,8 @@ def goal_handicap(market_data) -> float | None:
 
 
 def goal_odds(market_data) -> list[dict]:
+    """Recieves a list of odds and returns the odds with handicap, over and under odds."""
+    
     for odd in market_data: 
             if isinstance(odd, dict):
                 if all (odd.get(k) != '-' for k in ('handicap', 'over_od', 'under_od')):
