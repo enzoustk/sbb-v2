@@ -34,6 +34,7 @@ def historic_data(data: list):
     
     logging.info('Historic data updated successfully.')
 
+
 def fill_data_gaps(gap: int = 30):
     """Uses API to fill gaps in the when the model was not running."""
 
@@ -81,12 +82,14 @@ def fill_data_gaps(gap: int = 30):
             new_events_df.to_csv(HISTORIC_DATA, mode='a', index=False, header=False)
             logging.info(f'{len(new_events)} novos eventos adicionados ao histórico.')
 
+
 def not_ended(data: list):
     """Updates NOT_ENDED.csv with new data."""
 
     ne_df = pd.DataFrame([bet.__dict__ for bet in data])
     ne_df.to_csv(NOT_ENDED, index=False)
     logging.info('Eventos não finalizados atualizados com sucesso.')
+
 
 def error_events(data: list):
     """Updates ERROR_EVENTS.csv with new data."""
@@ -98,6 +101,7 @@ def error_events(data: list):
     
     error_df.to_csv(ERROR_EVENTS, mode='a', index=False, header=header)
     logging.info('Eventos com erro adicionados ao arquivo.')
+
 
 def remove_columns_to_historic():
     """Returns columns to be removed from historic data."""

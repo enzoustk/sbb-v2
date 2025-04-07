@@ -9,21 +9,47 @@ from telegram import message
 from model.config import EV_THRESHOLD, TIME_RANGES, AJUSTE_FUSO
 from files.paths import ALL_DATA, NOT_ENDED, ERROR_EVENTS, MADE_BETS
 from constants.telegram_params import (TELEGRAM_MESSAGE, MIN_LINE_MESSAGE,
-                                        MIN_ODD_MESSAGE, HOT_TIPS_MESSAGE, EDITED_MESSAGE)
+    MIN_ODD_MESSAGE, HOT_TIPS_MESSAGE, EDITED_MESSAGE,RESULT_EMOJIS, BET_TYPE_EMOJIS,
+    HOT_TIPS_STEP, MAX_HOT, HOT_THRESHOLD)
 
 
 class Bet:
-    
+    """Represents a betting opportunity and manages its lifecycle.
+
+    Handles data storage, probability calculations, EV analysis, 
+    external communication (Telegram), and persistence.
+
+    Args:
+        event (dict): Raw event data from scanning system with:
+            - 'id': Unique event identifier
+            - 'home'/'away': Team/player names
+            - 'league': League information
+
+    Attributes:
+        event_id (str): Unique event identifier
+        odds (tuple): (over_odd, under_odd, handicap)
+        probabilities (tuple): (prob_over, prob_under)
+        ev_values (tuple): (ev_over, ev_under)
+        bet_type (str): Final bet decision ('over'/'under'/None)
+
+    Notes:
+        Maintains state through entire bet lifecycle:
+        1. Identification -> 2. Analysis -> 3. Execution -> 4. Settlement
     """
-    All Bet-related data, methods and attributes.
+
+    """
     TODO: Create a subset to bet exported in xlsx
     TODO: Create cancel method to cancel a made bet
     TODO: Create a way to delete Bet Objetcts that are no longer needed to be stored
-    TODO: Implement threading to handle all files
     """
 
     def __init__(self, event: dict):
+        """Initializes Bet instance with raw event data.
     
+        Parses essential identifiers and names from event dictionary.
+        Initializes all tracking attributes to default None/False values.
+        """
+
         self.event = event
 
         self.event_id = self._get_event_id()
@@ -70,7 +96,7 @@ class Bet:
         self.result = None
         self.canceled = None
 
-        self.message = None
+        self.message = ""
         self.sent = None
         self.message_id = None
         self.chat_id = None
@@ -83,13 +109,22 @@ class Bet:
         self.month = None
         self.totally_processed = None
 
-    def get_odds(self, market: str='goals'):
+    def get_odds(
+        self,
+        market: str='goals'
+        ):
 
-        """
-        Pulls betting odds and handicaps from API
-        Params:
-            Market: betting market
-        TODO: Handle Different markets and variables, such as Asian Handicap or The Draw
+        """Fetches and validates betting odds from external API.
+
+        Args:
+            market: Betting market to analyze (default: 'goals')
+
+        Updates:
+            handicap (float): Line for over/under bet
+            odd_over (float): Odds for over bet
+            odd_under (float): Odds for under bet
+
+        TODO: Add support for Asian Handicap and other markets
         """
                 
         betting_data = fetch.odds(self.event_id)
@@ -97,15 +132,25 @@ class Bet:
         (self.handicap,
          self.odd_over,
          self.odd_under
-         ) = validate.odds(betting_data, self.event_id, market=market)
+        ) = validate.odds(
+            betting_data,
+            self.event_id,
+            market=market
+        )
                                         
     def find_ev(self, lambda_pred: float):
 
-        """
-        Calculate bet probabilities using calculate.poisson
-        Calculate ev for possible bets using calculate.ev
-        If ev > EV_THRESHOLD -> Return bet_type and bet_data;
-        Else: return None;
+        """Calculates expected value for potential bets.
+
+        Args:
+            lambda_pred: Model's predicted goal expectation
+
+        Uses:
+            calculate.poisson_goals: Converts lambda to probabilities
+            calculate.ev: Computes expected value for each outcome
+
+        Sets:
+            bet_type: 'over'/'under' if EV > EV_THRESHOLD, else None
         """
 
         self.lambda_pred = lambda_pred
@@ -128,7 +173,7 @@ class Bet:
         self._send_message
 
     def save_bet(self):
-        """Adiciona a aposta ao arquivo NOT_ENDED.csv."""
+        """Adds the current bet to the NOT_ENDED file."""
         
         existing_df = load.data('not_ended')
 
@@ -136,72 +181,13 @@ class Bet:
         updated_df = pd.concat([existing_df, new_data], ignore_index=True)
         updated_df.to_csv(NOT_ENDED, index=False)
     
-    def handle_not_ended_events(self):
-        
-        # TODO: Ajustar para csv ao invés de json
-        '''
-        1- Olha tudo o que tem em NOT_ENDED
-        2- Puxa o score de todos eles
-        3- Para os que tem score:
-            Processa usando finish_processing()
-            Salva em seu devido lugar
-        '''
-       
-        not_ended, ended, error_events = [], [], []
-
-        try:
-            with open(NOT_ENDED, 'r') as file:
-                data = json.load(file)
-                
-                
-                """
-                Ver se acabou;
-                Se acabou:
-                     puxar resultado, e calcular tudo
-                    Salvar em all_data.csv
-                    Se bet_type != None, salvar em made_bets.xlsx usando as colunas corretas
-                    Apagar de not_ended
-                Se não acabou
-                    Pular
-                """
-                for bet_data in data:
-                    bet = Bet()
-                    bet.__dict__.update(bet_data)
-                    bet._get_end()
-
-                    if  bet.ended:
-                        bet.finish_processing()
-
-
-                    if bet.totally_processed: 
-                        ended.append(bet)
-                    
-                    elif not bet.totally_processed: 
-                        error_events.append(bet)
-
-                    elif bet.totally_processed is None:
-                        not_ended.append(bet)
-
-                    else: 
-                        logging.warning(f'Tottaly Processing: Labeling Error for Event {bet.event_id}')
-            
-            with open(ALL_DATA, 'a') as all_data_file:
-                ended_data = [bet.__dict__ for bet in ended]
-                json.dump(ended_data, all_data_file, indent=4)
-            
-            with open(ERROR_EVENTS, 'a') as error_events_file:
-                error_events_data = [bet.__dict__ for bet in error_events]
-                json.dump(error_events_data, error_events_file, indent=4)
-    
-        except (FileNotFoundError, json.JSONDecodeError):
-            logging.error(f"Error loading data from {NOT_ENDED}")
-
     def handle_ended_bet(self):
 
         '''
-        Se bet_type não for nulo:
-            Acha o Lucro e o Resultado da Aposta
-            Salva a aposta
+        If the bet has a bet_type:
+            Calculates Profit,
+            Edits the telegram message
+            Saves the bet on excel
         '''
 
         if self.bet_type is None: return
@@ -210,6 +196,10 @@ class Bet:
         self._save_made_bet()
         
     def mark_processed(self):
+        """Gets all the attributes that are needed to be processed
+        If all of them were processed successfully, marks self.totally_processed as True
+        """
+        
         if self.bet_type is not None:
             self.totally_processed = all([
                 self.sent,
@@ -229,7 +219,8 @@ class Bet:
     def _edit_telegram_message(self):
 
         '''
-        Recebe os dados da Aposta e Edita no Telegram
+        Updates Bet object with the new data
+        Edits telegram message
         '''
 
         self._get_bet_emojis()
@@ -241,12 +232,14 @@ class Bet:
         
         """
         Gets Bet Type Object.
-        Possible Types: 'over', 'under', None
+        Args:
+            bet_type (str): Type of bet ('over'/'under'/'None')
         """
 
         self.bet_type = bet_type
 
     def _escape(self):
+        """Escapes all problematic characters in the message."""
         self.message = (
             self.message.replace('.', r'\.')
                                 .replace('-', r'\-')
@@ -258,7 +251,8 @@ class Bet:
         )
     
     def _get_bet_emojis(self):
-        from constants.telegram_params import RESULT_EMOJIS, BET_TYPE_EMOJIS
+        """Gets emoji for the result and bet type
+        Assings it to object attributes"""
 
         self.result_emoji = RESULT_EMOJIS.get(self.result, '')
         self.bet_type_emoji = BET_TYPE_EMOJIS.get(self.bet_type, '')
@@ -266,10 +260,9 @@ class Bet:
     def _get_end(self):
         
         """
-        Procura pelo fim do jogo
-        Se não está mais ao vivo, procura pelo placar
-        Se acha placar, Marca ended como True
-        Se
+        Checks if the event has ended.
+        If the event is not in live events, sets ended to True
+        and calls _get_score() to fetch the final score.
         """
 
         live_events = fetch.live_events()
@@ -283,38 +276,54 @@ class Bet:
     def _get_event_id(self) -> str:
         return self.event['id']
 
-    def _get_str(self, type: str) -> str:
+    def _get_str(self,
+        type: str
+        ) -> str:
+        """Gets and sets self.home_str and self.away_str
+        Args:
+            type (str): 'home' or 'away'
+        Returns:
+            {type}_str: Full name of the team/player. 
+            Example: 'Barcelona (Player_Name) Esports'
+        """
         return self.event.get(type, {}).get('name')
         
     def _get_players(self) -> tuple[str, str]:
+        """Tries to  generate a tuple containing sorted and
+        lowercased names of the players.
+
+        Returns:
+            tuple[str, str]: Tuple containing the names of the players
+            Example: ('boulevard', 'meltosik')
+
+            if it fails, returns an empty tuple
+        """
+        
         try:
             home = str(self.home_player).lower()
             away = str(self.away_player).lower()
             return tuple(sorted([home, away]))
         except:
+            logging.error("Error: Failed to get players for "
+                f"Event ID: {self.event_id}")
             return ('', '')
 
     def _get_name(
-                self, 
-                side: str | None = None,
-                type: str | None = None,
-                ) -> str | None:
+        self, 
+        side: str | None = None,
+        type: str | None = None,
+        ) -> str | None:
     
-        if side is None:
-            import logging
-            logging.error("Error: side is None")
-            return None
-        
-        if type is None:
-            import logging
-            logging.error("Error: you must provide a name")
-            return None
-        
         """
         Gets team_str: 'Barcelona (Player_Name) Esports'
         if type=team, Returns: 'Barcelona'
         if type=player, Returns: 'Player_Name'
         """
+
+
+        if side is None or type is None:
+            logging.error("side or type is None while trying to get name")
+            return None
 
         team_str = self.event.get(side, {}).get('name')
         
@@ -338,10 +347,16 @@ class Bet:
     
     def _get_score(self):
 
-        """
-        Pull result data from API,
-        If raw_score = None, breaks out
-        If raw_score != None, gets home, away and total scores
+        """Fetches and parses final score from event API.
+        
+        Updates Instance Attributes:
+            home_score (int): Goals from home team
+            away_score (int): Goals from away team
+            total_score (int): Combined goals
+            raw_score (str): Raw score string from API
+
+        Note:
+            Sets `ended=True` if score is successfully retrieved
         """
 
         event_data = fetch.event_for_id(self.event_id)
@@ -354,25 +369,20 @@ class Bet:
         self.home_score, self.away_score = map(int, self.raw_score.split('-'))
         self.total_score = self.home_score + self.away_score
 
-    def _get_hot_tip(self):
-        from model.config import (HOT_THRESHOLD, HOT_TIPS_STEP, MAX_HOT)
-        
-        if self.bet_ev >= HOT_THRESHOLD:
-            _ev = self.bet_ev
-            self.hot_ev = 0
-            
-            while True:
+    def _get_hot_tip(self) -> None:
+        """Calculates 'hotness' level based on Expected Value."""
 
-                if self.hot_ev == MAX_HOT:
-                    break 
+        if self.bet_ev < HOT_THRESHOLD:
+            return
 
-                if _ev >= HOT_THRESHOLD:
-                    self.hot_emoji += "🔥"
-                    _ev -= HOT_TIPS_STEP
-                    self.hot_ev += 1
+        ev_over_threshold = self.bet_ev - HOT_THRESHOLD
+        steps = int(ev_over_threshold // HOT_TIPS_STEP)
+        self.hot_ev = min(steps, MAX_HOT)
+        self.hot_emoji = "🔥" * self.hot_ev
 
     def _get_time_atributes(self):
-
+        """Sets all time-related atributes
+        based on the current time"""
         self.time_sent = pd.Timestamp.now() - pd.Timedelta(hours=AJUSTE_FUSO)
         self.month = self.time_sent.strftime("%m/%Y")
         hour = self.time_sent.hour
@@ -382,9 +392,16 @@ class Bet:
                 self.time_range = range
 
     def _get_league(self) -> str:
+        """Fetches league name from event data.
+        If it fails, returns 'Unknown League'.
+        """
+        
         return self.event.get('league', {}).get('name', 'Unknown League')
     
     def _get_excel_columns(self):
+        """Returns a dcit with the columns and values
+        To the Made Bets Excel file
+        """
         return{
             'Horário Envio': self.time_sent.strftime("%H:%M"),
             'Liga': self.league,
@@ -398,11 +415,22 @@ class Bet:
             'Intervalo': self.time_range,
         }
 
-    def _get_lambda_pred(self, lambda_pred: float):
+    def _get_lambda_pred(self,
+        lambda_pred: float
+        ):
+        """Sets lambda_pred to the current object"""
+
         self.lambda_pred = lambda_pred
      
     def _get_bet_type(self, bet_type: str | None = None):
-        
+        """Creates all MADE bet realted features
+
+        Args:
+            bet_type (str | None, optional): Sets bet atributes
+            to be over or under data, depending on the bet_type.
+            Defaults to None.
+        """
+
         self.bet_type = bet_type
 
         if self.bet_type is 'over':
@@ -417,9 +445,7 @@ class Bet:
     
     def _print_bet_data(self):
         
-        """
-        Print the event data;
-        Print Betting data, such as EV, Probabilities and Bet.
+        """Print all bet data to the console.
         """
 
         print(f"League: {self.league}")
@@ -446,8 +472,10 @@ class Bet:
             print('No EV+ Bet Found')
   
     def _find_min_line(self):
+        """Finds and sets the minimum line and odd for the current bet type.
         self.minimum_line, self.minimum_odd = calculate.min_goal_line(
             self.handicap, self.bet_type, self.bet_prob)
+        """
 
     def _generate_message(self):
         
@@ -483,11 +511,34 @@ class Bet:
         self.message_id, self.chat_id = message.send(self.message)
         self._get_time_atributes()
         if self.message_id is None: self.sent = False
-        
-    def cancel(self):
-        pass
-         
+
     def _save_made_bet(self):
+        """Saves successfully placed bets to a month-specific Excel sheet.
+
+        Persists bet data to MADE_BETS Excel file with the following logic:
+        - Creates new monthly sheet if none exists
+        - Appends to existing sheet while preserving historical data
+        - Maintains consistent column structure across entries
+
+        Workflow:
+            1. Validates bet_type exists (skips with warning otherwise)
+            2. Creates/updates Excel file with openpyxl engine
+            3. Maintains one sheet per month (MM/YYYY format)
+            4. Preserves existing data when adding new entries
+
+        Side Effects:
+            - Sets saved_on_excel flag to True on success
+            - Modifies MADE_BETS Excel file on disk
+
+        Raises:
+            PermissionError: If Excel file is locked/open in another program
+            ValueError: If DataFrame columns mismatch existing sheet structure
+
+        Notes:
+            - Uses _get_excel_columns() for column mapping standardization
+            - Implements exception handling for missing file scenarios
+            - Requires openpyxl package for Excel manipulation
+        """
 
         if self.bet_type is None:
             logging.warning("Attempted to save match we didn't bet on. Skipped Sucessfully")
@@ -512,4 +563,3 @@ class Bet:
             with pd.ExcelWriter(MADE_BETS, engine='openpyxl') as writer:
                 new_data.to_excel(writer, sheet_name=str(self.month), index=False)
             self.saved_on_excel = True
-    

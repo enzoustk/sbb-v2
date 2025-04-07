@@ -2,6 +2,7 @@ import requests, logging
 from model.config import HOT_THRESHOLD, HOT_TIPS_STEP, MAX_HOT
 from constants import TELEGRAM_TOKEN, TELEGRAM_CHAT_ID, TELEGRAM_MESSAGE,MIN_LINE_MESSAGE,MIN_ODD_MESSAGE
 
+
 def generate(data):
     
     """
@@ -39,6 +40,7 @@ def generate(data):
 
     return message
 
+
 def send(message):
 
     url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
@@ -57,7 +59,8 @@ def send(message):
     else:
         logging.error("Telegram message not sent")
         return None, None
-    
+
+
 def edit(message_id, message, chat_id):
     url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/editMessageText"
     data = {

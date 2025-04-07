@@ -255,6 +255,7 @@ class Report():
         if profit == 0:
             return '🔁'
 
+
 class DailyReport(Report):
     def __init__(self, 
             df: pd.DataFrame | None = None,
@@ -338,6 +339,7 @@ class DailyReport(Report):
         
         return reports
 
+
 class CustomReport(Report):
     def __init__(self, df):
         super().__init__(df)
@@ -350,8 +352,6 @@ class CustomReport(Report):
 
     # ----------------------------------------- #
 
+
 class PlayerReport(CustomReport):
     pass
-
-
-

@@ -36,6 +36,7 @@ def poisson_goals(
     
     return prob_over, prob_under
 
+
 def min_goal_line(
     handicap: float,
     bet_type: str,
@@ -70,6 +71,7 @@ def min_goal_line(
         else: 
             logging.error(f'Invalid Min. Odd: {minimum_odd}')
 
+
 def profit(bet_type: float, handicap: float, total_score: int, bet_odd: float) -> float:
     
     """
@@ -101,6 +103,7 @@ def profit(bet_type: float, handicap: float, total_score: int, bet_odd: float) -
         
     except: 
         logging.error(f"Ajuste de resultado inválido: {outcome}")
+
 
 def ev(odd, prob):
     return odd * prob -1
