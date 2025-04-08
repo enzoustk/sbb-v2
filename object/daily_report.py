@@ -117,6 +117,30 @@ class Report():
 
             self.message.append(message_lines)
 
+    def split_list_on_separator(self, 
+        separator: str = 'end', 
+        start: int = 0
+        ) -> list[list]:
+
+        separator_indices = [i for i,item 
+                        in enumerate(self.message) 
+                        if item == separator
+        ]
+        
+        sublists = []
+        
+        for sep_index in separator_indices:
+            
+            if start < sep_index:
+                sublists.append(self.message[start:sep_index])
+            start = sep_index + 1 
+        
+        if start <= len(self.message) - 1:
+            sublists.append(self.message[start:])
+        
+        return sublists
+
+
     # ----------------------------------- #
 
     def _get_df(self, date_column: str, df: pd.DataFrame | None = None):
@@ -256,7 +280,7 @@ class Report():
             return '🔁'
 
 
-class DailyReport(Report):
+class NormalReport(Report):
     def __init__(self, 
             df: pd.DataFrame | None = None,
             ):
@@ -276,37 +300,15 @@ class DailyReport(Report):
             super().generate_title(report)
             super().generate_body(report)
             super().generate_time_range(report)
-            super().generate_total_report(report)
+            super().generate_total(report)
             self.message.append('end')
         
-        messages = self.split_list_on_separator()
+        messages = super().split_list_on_separator()
         for telegram_message in messages:
             message.send(telegram_message)
 
     # ----------------------------- #
 
-    def split_list_on_separator(self, 
-        separator: str = 'end', 
-        start: int = 0
-        ) -> list[list]:
-
-        separator_indices = [i for i,item 
-                        in enumerate(self.message) 
-                        if item == separator
-        ]
-        
-        sublists = []
-        
-        for sep_index in separator_indices:
-            
-            if start < sep_index:
-                sublists.append(self.message[start:sep_index])
-            start = sep_index + 1 
-        
-        if start <= len(self.message) - 1:
-            sublists.append(self.message[start:])
-        
-        return sublists
 
     # ----------------------------- #
 
@@ -335,23 +337,10 @@ class DailyReport(Report):
 
         if len(leagues) > 1:
             for league in leagues:
-                reports.append(league)
+                league_df = month_df[
+                    month_df['league'] == league
+                ]
+                reports.append(league_df)
         
         return reports
 
-
-class CustomReport(Report):
-    def __init__(self, df):
-        super().__init__(df)
-       
-        
-        
-        
-
-
-
-    # ----------------------------------------- #
-
-
-class PlayerReport(CustomReport):
-    pass
