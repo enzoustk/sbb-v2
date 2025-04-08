@@ -1,10 +1,11 @@
 import locale
+import logging
 import pandas as pd
-from telegram import message
-from datetime import datetime, timedelta
+from telegram_bot import message
+from datetime import datetime, timedelta, date
 from files.paths import HISTORIC_DATA
 from model.config import TIME_RANGES
-from telegram.constants import (
+from telegram_bot import (
     REPORT_TITLE, REPORT_BODY, REPORT_TOTAL,
     REPORT_TIME_RANGE_TITLE, REPORT_TIME_RANGE_BODY,
 )
@@ -23,7 +24,82 @@ class Report():
         self.date_column = df[date_column]
         self.month_in_date = True
         self.message = []
+        self.today = date.today()
+
     
+    def _filter_df(self, 
+        league: str = 'all',
+        ev_type: str = 'all',
+        ):
+
+        self._filter_date()
+        self._filter_league(league)
+        self._filter_ev_type(ev_type)
+
+    
+    def build_and_send(self):
+        for report in self.reports:
+            self.generate_title(report)
+            self.generate_body(report)
+            self.generate_time_range(report)
+            self.generate_total(report)
+            self.message.append('end')
+        
+        messages = self.split_list_on_separator()
+        for telegram_message in messages:
+            message.send(telegram_message)
+
+    # ----------------------------------- #
+
+    
+    def _filter_date(self):
+
+        filtered_df = self.df.copy()
+
+        if self.start_date is not None:
+            filtered_df = filtered_df[
+                filtered_df[self.date_column] >= self.start_date]
+
+        if self.end_date is not None:
+            filtered_df = filtered_df[
+                filtered_df[self.date_column] < (
+                    self.end_date + timedelta(days=1))
+            ]
+
+        self.filtered_df = filtered_df
+
+    def _filter_league(self, league: str | None = None):
+        
+        self.leagues = self.df['league'].drop_duplicates().tolist()
+       
+        if league is None:
+           self.league_str = 'Todas'
+        
+        elif league in self.leagues:
+            self.league_str = league
+            self.filtered_df = self.filtered_df[self.filtered_df['league'] == league]
+        else:
+            logging.error(f"League '{league}' not found in the league list.")
+
+    def _filter_ev_type(self,
+        hot: bool = False,
+        not_hot: bool = False,
+        ):
+        
+        self.reports = []
+
+        if hot:
+            self.hot_df = self.filtered_df[self.filtered_df['ev_hot'] > 0]
+            self.reports.append(self.hot_df)
+
+        if not_hot:
+            self.not_hot_df = self.filtered_df[self.filtered_df['ev_hot'] == 0]
+            self.reports.append(self.hot_df)
+
+        if hot and not_hot:
+            self.reports.append(self.filtered_df)
+
+
     # ----------------------------------- #
 
     def generate_title(self, df: pd.DataFrame):
@@ -294,23 +370,6 @@ class NormalReport(Report):
         self.date = datetime.now() - timedelta(days=1)
         self.interval = self.date.strftime('%M de %Y')
         self.reports = self._filter_df()
-
-    def send(self):
-        for report in self.reports:
-            super().generate_title(report)
-            super().generate_body(report)
-            super().generate_time_range(report)
-            super().generate_total(report)
-            self.message.append('end')
-        
-        messages = super().split_list_on_separator()
-        for telegram_message in messages:
-            message.send(telegram_message)
-
-    # ----------------------------- #
-
-
-    # ----------------------------- #
 
     def _filter_df(self):
     
