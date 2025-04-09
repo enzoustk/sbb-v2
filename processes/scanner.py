@@ -5,7 +5,7 @@ from data import load
 from api import fetch
 from model import predict
 from processes import updater
-from files.paths import LOCK
+from files.paths import LOCK, NOT_ENDED
 
 
 def run(model, i: int = 50, sleep_time: int = 1):
@@ -18,7 +18,10 @@ def run(model, i: int = 50, sleep_time: int = 1):
     """
 
     i_counter = 0  # Iteration with no new events
-    read_matches = set()
+    with LOCK:
+        not_ended = load.data('not_ended')
+        read_matches = set(not_ended['event_id'])
+
     updater_thead = threading.Thread(
         target=updater.run,
         args=(60,),
@@ -26,7 +29,6 @@ def run(model, i: int = 50, sleep_time: int = 1):
     )
 
     while True:
-        
         live_matches = fetch.live_events()
         unread_matches = [match 
                         for match in live_matches 
