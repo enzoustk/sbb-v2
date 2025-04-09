@@ -107,3 +107,31 @@ class ThisMonthReport(Report):
         self.interval = 'Mês Atual'
         self.start_date = date(self.today.year, self.today.month, 1)
         self.end_date = self.today
+
+class LastMonthReport(Report):
+    def __init__(self,
+        df: pd.DataFrame | None = None,
+        date_column: str = 'time_sent'
+    ):
+
+        super().__init__(df, date_column)
+
+
+        self.interval = 'Mês Atual'
+        self.start_date = (
+            self.today.replace(day=1) - 
+            timedelta(days=1)).replace(day=1)
+        self.end_date = self.today
+
+class YearToDateReport(Report):
+    def __init__(self,
+        df: pd.DataFrame | None = None,
+        date_column: str = 'time_sent'
+    ):
+
+        super().__init__(df, date_column)
+
+
+        self.interval = 'Mês Atual'
+        self.start_date = date(self.today.year, 1, 1 )
+        self.end_date = self.today
