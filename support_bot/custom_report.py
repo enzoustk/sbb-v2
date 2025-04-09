@@ -55,9 +55,6 @@ class CustomReport(Report):
         return interval
 
 
-
-
-
 class YesterdayReport(Report):
     def __init__(self,
         df: pd.DataFrame | None = None,
@@ -70,6 +67,7 @@ class YesterdayReport(Report):
         self.start_date = self.today - timedelta(days=1)
         self.end_date = self.today - timedelta(days=1)
 
+
 class TodayReport(Report):
     def __init__(self,
         df: pd.DataFrame | None = None,
@@ -81,6 +79,7 @@ class TodayReport(Report):
         self.interval = 'Hoje - Parcial'
         self.start_date = self.today
         self.end_date = self.today
+
 
 class LastSevenDaysReport(Report):
     def __init__(self,
@@ -95,6 +94,7 @@ class LastSevenDaysReport(Report):
             self.start_date = self.today - timedelta(days=6)
             self.end_date = self.today
 
+
 class ThisMonthReport(Report):
     def __init__(self,
         df: pd.DataFrame | None = None,
@@ -107,6 +107,7 @@ class ThisMonthReport(Report):
         self.interval = 'Mês Atual'
         self.start_date = date(self.today.year, self.today.month, 1)
         self.end_date = self.today
+
 
 class LastMonthReport(Report):
     def __init__(self,
@@ -122,6 +123,7 @@ class LastMonthReport(Report):
             self.today.replace(day=1) - 
             timedelta(days=1)).replace(day=1)
         self.end_date = self.today
+
 
 class YearToDateReport(Report):
     def __init__(self,
