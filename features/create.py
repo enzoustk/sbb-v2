@@ -33,7 +33,7 @@ def time_features(
     data['day_angle'] = np.arctan2(data['day_sin'], data['day_cos'])
     data['hour_angle'] = np.arctan2(data['hour_sin'], data['hour_cos'])
 
-    data['h2h_count'] = data.h2h.cumcount() + 1
+    data['h2h_count'] = data.groupby('matchup_key').cumcount() + 1
 
     data = data.drop(
         ['day_sin','day_cos','hour_sin','hour_cos'],
@@ -65,13 +65,16 @@ def goal_features(
 
     data = data.copy()
 
+    
+    data["original_total_score"] = data["total_score"].copy()
+
     if normalize == True:
-        data['total_goals'] = data['total_goals'] / data['league'].map(time)
+        data['total_score'] = data['total_score'] / data['league'].map(time)
 
     if live == False:
-        data['total_goals'] = data.groupby('matchup_key')['total_goals'].shift()
+        data['total_score'] = data.groupby('matchup_key')['total_score'].shift()
 
-    def lags(data) -> pd.DataFrame:
+    def lags(data: pd.DataFrame = data) -> pd.DataFrame:
         """
         Creates lags for the data
         L1 = Last Match total Score
@@ -83,11 +86,11 @@ def goal_features(
         """
         max_lags = 3
         for lag in range(1, max_lags + 1):
-            data[f'l{lag}'] = data.groupby('matchup_key')['gols_totais'].shift(lag)
+            data[f'l{lag}'] = data.groupby('matchup_key')['total_score'].shift(lag)
         
         return data
 
-    def rolling_stats(data, window: int = 3) -> pd.DataFrame:
+    def rolling_stats(data: pd.DataFrame = data, window: int = 3) -> pd.DataFrame:
         
         """
         Creates rolling statistics for the data
@@ -102,24 +105,24 @@ def goal_features(
         }
 
         for name, func in stats.items():
-            data[name] = data.groupby('matchup_key')['gols_totais'].transform(func)
+            data[name] = data.groupby('matchup_key')['total_score'].transform(func)
         
         return data
 
-    def ewma(data, alpha: float) -> pd.DataFrame:
+    def ewma(data: pd.DataFrame = data, alpha: float = 0.03) -> pd.DataFrame:
         
         """
         Creates a EWMA with the final_score of past matches.
         alpha: intensity weighted on most recent matches
         """
 
-        data[f'ewma_{alpha}'] = data.groupby('matchup_key')['gols_totais'].transform(
+        data[f'ewma_{alpha}'] = data.groupby('matchup_key')['total_score'].transform(
             lambda x: x.ewm(alpha=alpha, adjust=False).mean()
             )
         
         return data
 
-    def cumulative_stats(data) -> pd.DataFrame:
+    def cumulative_stats(data: pd.DataFrame = data) -> pd.DataFrame:
 
         """
         Creates cumulative statistics for the data
@@ -134,17 +137,19 @@ def goal_features(
         }
 
         for name, func in stats.items():
-            data[name] = data.groupby('matchup_key')['gols_totais'].transform(func)
+            data[name] = data.groupby('matchup_key')['total_score'].transform(func)
         
         return data
     
-    data = (data
-        .pipe(lags)
-        .pipe(rolling_stats)
-        .pipe(ewma(alpha=0.3))
-        .pipe(ewma(alpha=0.15))
-        .pipe(cumulative_stats)
-    )
+    data = lags(data)
+    data = rolling_stats(data, window=3)
+    data = ewma(data, alpha=0.03)
+    data = ewma(data, alpha=0.15)
+    data = cumulative_stats(data)
+
+    data["total_score"] = data["original_total_score"]
+    data = data.drop(columns=["original_total_score"])  
+
 
     return data   
 
@@ -182,6 +187,9 @@ def features(
     4- Creates all goal-related features;
     5- Returns the dataframe with the new features appended.
     """
+
+    data = data.copy()
+
 
     data['matchup_key'] = data.apply(matchup_key, axis=1)   
 
