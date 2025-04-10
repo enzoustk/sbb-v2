@@ -1,5 +1,12 @@
-from scipy.stats import poisson
 import logging
+import numpy as np
+from scipy.stats import poisson
+
+def poisson_log_loss(y_true, y_pred):
+
+    prob = np.array([poisson.pmf(k, y_pred) for k in y_true])
+    return -np.mean(np.log(prob + 1e-10)) 
+
 
 def poisson_goals(
     lambda_pred: float,
