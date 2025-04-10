@@ -22,7 +22,6 @@ param_grid = {
 model = XGBRegressor(
     objective='count:poisson',
     eval_metric='poisson-nloglik',
-    early_stopping_rounds=50,  
 )
 
 tscv =  TimeSeriesSplit(n_splits=5)
