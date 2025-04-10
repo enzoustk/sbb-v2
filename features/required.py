@@ -1,4 +1,4 @@
-REQUIRED_COLUMNS = {'home_player', 'away_player', 'total_goals', 'league'}
+REQUIRED_COLUMNS = {'home_player', 'away_player', 'total_score'}
 
 REQUIRED_FEATURES = [
     
@@ -8,8 +8,8 @@ REQUIRED_FEATURES = [
 
     # Goal-based features
     'l1', 'l2', 'l3', 
-    'median', 'std', 'avg'
+    'median', 'std', 'avg',
     'median_3', 'std_3', 'avg_3',
-    'ewma_total_15', 'ewma_total_3',
-    'max_5', 'min_5', 'delta_5'
+    'ewma_0.15', 'ewma_0.03',
+    #'max_5', 'min_5', 'delta_5'
 ]
