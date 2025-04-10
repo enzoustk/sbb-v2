@@ -1,11 +1,11 @@
 import locale
 import logging
 import pandas as pd
-from telegram_bot import message
+from bet_bot import message
 from datetime import datetime, timedelta, date
 from files.paths import HISTORIC_DATA
 from model.config import TIME_RANGES
-from telegram_bot import (
+from bet_bot import (
     REPORT_TITLE, REPORT_BODY, REPORT_TOTAL,
     REPORT_TIME_RANGE_TITLE, REPORT_TIME_RANGE_BODY,
 )
