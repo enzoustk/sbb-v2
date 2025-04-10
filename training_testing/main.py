@@ -1,8 +1,10 @@
 import numpy as np
 import pandas as pd
 from features import create
+from model import calculate
+from model.config import grid_search
+from utils.utils import print_separator
 from features.required import REQUIRED_FEATURES
-from model.config import grid_search, poisson_log_loss
 from sklearn.metrics import mean_absolute_error, mean_squared_error
 
 
@@ -52,12 +54,14 @@ best_model = grid_search.best_estimator_
 test_pred = best_model.predict(test_X)
 val_pred = best_model.predict(val_X)
 
-print("--- Teste ---")
+print_separator()
+print('Teste:')
 print(f"MAE: {mean_absolute_error(test_y, test_pred):.4f}")
 print(f"RMSE: {np.sqrt(mean_squared_error(test_y, test_pred)):.4f}")
-print(f"Log Loss: {poisson_log_loss(test_y, test_pred):.4f}")
+print(f"Log Loss: {calculate.poisson_log_loss(test_y, test_pred):.4f}")
 
-print("\n--- Validação ---")
+print_separator()
+print('Validação:')
 print(f"MAE: {mean_absolute_error(val_y, val_pred):.4f}")
 print(f"RMSE: {np.sqrt(mean_squared_error(val_y, val_pred)):.4f}")
-print(f"Log Loss: {poisson_log_loss(val_y, val_pred):.4f}")
+print(f"Log Loss: {calculate.poisson_log_loss(val_y, val_pred):.4f}")
