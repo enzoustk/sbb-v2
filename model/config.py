@@ -1,15 +1,37 @@
-EV_THRESHOLD = 0.05 #  Minimum +EV to make a bet
-HOT_THRESHOLD = 0.1 #  Minimum +EV to show "⚠️ EV:"
-HOT_TIPS_STEP = 0.05 # for each step, adds a "🔥"
-MAX_HOT = 4 # Maximum number of "🔥" to show
+from model import calculate
+from xgboost import XGBRegressor
+from sklearn.metrics import make_scorer
+from sklearn.model_selection import TimeSeriesSplit, GridSearchCV
 
-AJUSTE_FUSO = 3
+custom_scorer = make_scorer(
+    calculate.poisson_log_loss,
+    greater_is_better=False
+)
 
-TIME_RANGES = {
-    '00:00 - 03:59': (0, 3),
-    '04:00 - 07:59': (4, 7),
-    '08:00 - 11:59': (8, 11),
-    '12:00 - 15:59': (12, 15),
-    '16:00 - 19:59': (16, 19),
-    '20:00 - 23:59': (20, 23)
+param_grid = {
+    'learning_rate': [0.01, 0.05, 0.1],
+    'max_depth': [3, 4, 5],
+    'subsample': [0.7, 0.8, 0.9],
+    'colsample_bytree': [0.7, 0.8, 0.9],
+    'n_estimators': [500, 1000],
+    'reg_alpha': [0, 0.1, 0.5],  
+    'reg_lambda': [0, 0.1, 0.5],
+    'min_child_weight': [1, 5, 10]
 }
+
+model = XGBRegressor(
+    objective='count:poisson',
+    eval_metric='poisson-nloglik',
+    early_stopping_rounds=50,  
+)
+
+tscv =  TimeSeriesSplit(n_splits=5)
+
+grid_search = GridSearchCV(
+    estimator=model,
+    param_grid=param_grid,
+    scoring=custom_scorer,
+    cv=tscv,
+    n_jobs=-1,
+    verbose=2
+)
