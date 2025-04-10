@@ -2,7 +2,7 @@ from object.daily_report import Report
 from datetime import timedelta, date, datetime
 import pandas as pd
 import logging
-from telegram_bot import message
+from bet_bot import message
 
 """
 Estrutura:
