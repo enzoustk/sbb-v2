@@ -20,7 +20,7 @@ def time_features(
     TODO: Analyze if it really helps or causes overfitting.
     """
 
-    data['last_h2h'] = data.h2h.date.transform(lambda x: x.diff().dt.total_seconds() / 3600)
+    data['last_h2h'] = data.groupby('matchup_key')['date'].transform(lambda x: x.diff().dt.total_seconds() / 3600)
     data['time_since_start'] = (data['date'] - data['date'].min()).dt.days.astype(float)
     data['day_of_week'] = data['date'].dt.weekday.astype(float)
     data['hour_of_day'] = data['date'].dt.hour.astype(float)
@@ -44,7 +44,7 @@ def time_features(
 
 def goal_features(
     data: pd.DataFrame, 
-    time: bool, 
+    pace: bool, 
     normalize: bool,
     live: bool
     ) -> pd.DataFrame: 
@@ -69,7 +69,7 @@ def goal_features(
     data["original_total_score"] = data["total_score"].copy()
 
     if normalize == True:
-        data['total_score'] = data['total_score'] / data['league'].map(time)
+        data['total_score'] = data['total_score'] / data['league'].map(pace)
 
     if live == False:
         data['total_score'] = data.groupby('matchup_key')['total_score'].shift()
@@ -165,8 +165,8 @@ def features(
     data: pd.DataFrame,
     lookback_data: pd.DataFrame | None = None,
     live: bool = True,
-    normalizar: bool = False,
-    tempo: bool = False,
+    normalize: bool = False,
+    pace: bool = False,
     players: tuple[str, str] = ('', '')
     ) -> pd.DataFrame:
     
@@ -188,10 +188,13 @@ def features(
     5- Returns the dataframe with the new features appended.
     """
 
+    #TODO: Fix normalize param
+
     data = data.copy()
 
 
     data['matchup_key'] = data.apply(matchup_key, axis=1)   
+    data = data.sort_values(['matchup_key', 'date']).reset_index(drop=True)
 
     if lookback_data is not None:
         
@@ -200,14 +203,16 @@ def features(
 
         lookback_data = lookback_data.copy()
         lookback_data['__original__'] = False
+        lookback_data['matchup_key'] = lookback_data.apply(matchup_key, axis=1)  # Correção aqui
+        
         data = pd.concat([original_data, lookback_data], ignore_index=True)
 
     data['date'] = pd.to_datetime(data['date'])
-    data = data.sort_values('date').reset_index(drop=True)
+    data = data.sort_values(['date']).reset_index(drop=True)
     
     data = time_features(data)
 
-    data = goal_features(data, normalizar, live, tempo)
+    data = goal_features(data, pace, normalize, live)
     
     if lookback_data is not None:
         data = data[data['__original__']].drop(columns=['__original__'])
