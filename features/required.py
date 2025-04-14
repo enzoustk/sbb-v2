@@ -4,7 +4,7 @@ REQUIRED_FEATURES = [
     
     # Time-based features
     'h2h_count', 'last_h2h', 'time_since_start',
-    'day_angle', 'hour_angle',
+    #'day_angle', 'hour_angle',
 
     # Goal-based features
     'l1', 'l2', 'l3', 

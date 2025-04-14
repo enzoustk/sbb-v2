@@ -20,8 +20,12 @@ def run(model, i: int = 50, sleep_time: int = 1):
     i_counter = 0  # Iteration with no new events
     with LOCK:
         not_ended = load.data('not_ended')
-        read_matches = set(not_ended['event_id'])
-
+        try:
+            read_matches = set(not_ended['event_id'])
+        except KeyError:
+            logging.error('not_ended data not found.')
+            read_matches = set()
+        
     updater_thead = threading.Thread(
         target=updater.run,
         args=(60,),
@@ -29,10 +33,11 @@ def run(model, i: int = 50, sleep_time: int = 1):
     )
 
     while True:
+        print('iteration on scanner')
         live_matches = fetch.live_events()
-        unread_matches = [match 
-                        for match in live_matches 
-                        if match['id'] not in read_matches
+        unread_matches = [
+            match for match in live_matches 
+            if match['id'] not in read_matches
         ]
         
         if not unread_matches:

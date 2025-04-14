@@ -12,3 +12,5 @@ NOT_ENDED = r'files\sheets\not_ended.csv'
 ERROR_EVENTS = r'files\sheets\error_events.csv'
 
 LOCK = FileLock('files\sheets\.lock')
+
+MODEL_PATH = r'files\model\sbb_model.json'
