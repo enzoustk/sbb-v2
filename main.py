@@ -1,5 +1,6 @@
 import logging
 import threading
+from model import get
 from datetime import datetime
 from data import update
 from processes import scanner
@@ -15,16 +16,20 @@ if __name__ == '__main__':
 
     """
     now = datetime.now().strftime("%d-%m %H%M%S")
+
     logging.basicConfig(
-        level=logging.WARNING,
-        filename=f'{now}.log',
-        filemode='w',
+        level=logging.INFO,
+        #filename=f'{now}.log',
+        #filemode='w',
         format='%(asctime)s - %(levelname)s - %(message)s'
     )
     
     logging.info('Starting updater...')
     logging.info('Filling data gaps...')
+
     
     update.fill_data_gaps()
 
-    scanner.run(model='', i=50)
+    model = get.get_model()
+
+    scanner.run(model=model, i=50)

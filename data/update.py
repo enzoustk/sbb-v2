@@ -4,7 +4,7 @@ import pandas as pd
 from object.bet import Bet
 from data import load
 from api import fetch
-from model.config import AJUSTE_FUSO
+from model.betting_config import AJUSTE_FUSO
 from files.paths import ALL_DATA, HISTORIC_DATA, NOT_ENDED, ERROR_EVENTS, LOCK
 
 
@@ -39,7 +39,13 @@ def fill_data_gaps(gap: int = 30):
     """Uses API to fill gaps in the when the model was not running."""
 
     with LOCK:
+        
         all_data = load.data('all_data')
+
+        if all_data.empty or 'time_sent' not in all_data.columns:
+            logging.warning("DataFrame 'all_data' is empty. skipping data gaps fill.")
+            return 
+
         all_data['time_sent'] = pd.to_datetime(all_data['time_sent']) + pd.Timedelta(hours=AJUSTE_FUSO)
         all_data['date'] = all_data['time_sent'].dt.normalize()
         

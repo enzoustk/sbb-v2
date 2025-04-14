@@ -5,12 +5,13 @@ import pandas as pd
 from data import load
 from api import fetch, validate
 from model import calculate
-from telegram import message
-from model.config import EV_THRESHOLD, TIME_RANGES, AJUSTE_FUSO
+from bet_bot import message
+from model.betting_config import (EV_THRESHOLD, TIME_RANGES,
+    AJUSTE_FUSO, HOT_TIPS_STEP, MAX_HOT, HOT_THRESHOLD)
 from files.paths import ALL_DATA, NOT_ENDED, ERROR_EVENTS, MADE_BETS
-from constants.telegram_params import (TELEGRAM_MESSAGE, MIN_LINE_MESSAGE,
-    MIN_ODD_MESSAGE, HOT_TIPS_MESSAGE, EDITED_MESSAGE,RESULT_EMOJIS, BET_TYPE_EMOJIS,
-    HOT_TIPS_STEP, MAX_HOT, HOT_THRESHOLD)
+from bet_bot.constants import (TELEGRAM_MESSAGE, MIN_LINE_MESSAGE,
+    MIN_ODD_MESSAGE, HOT_TIPS_MESSAGE, EDITED_MESSAGE,
+    RESULT_EMOJIS, BET_TYPE_EMOJIS)
 
 
 class Bet:
@@ -64,9 +65,9 @@ class Bet:
         self.away_player = self._get_name('away', 'player')
         self.players = self._get_players()
   
-        self.odd_over = None 
-        self.odd_under = None
-        self.handicap = None
+        self.odd_over = '' 
+        self.odd_under = ''
+        self.handicap = ''
 
         self.prob_over = None
         self.prob_under = None
@@ -128,6 +129,8 @@ class Bet:
         """
                 
         betting_data = fetch.odds(self.event_id)
+        print('betting_data impresso:', str(betting_data)[:50])
+        print('começando a validar odds.')
         
         (self.handicap,
          self.odd_over,
@@ -137,6 +140,7 @@ class Bet:
             self.event_id,
             market=market
         )
+        print
                                         
     def find_ev(self, lambda_pred: float):
 
@@ -433,12 +437,12 @@ class Bet:
 
         self.bet_type = bet_type
 
-        if self.bet_type is 'over':
+        if self.bet_type == 'over':
             self.bet_odd = self.odd_over
             self.bet_prob = self.prob_over
             self.bet_ev = self.ev_over
         
-        elif self.bet_type is 'under':
+        elif self.bet_type == 'under':
             self.bet_odd = self.odd_under
             self.bet_prob = self.prob_under
             self.bet_ev = self.ev_under

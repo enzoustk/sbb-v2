@@ -31,7 +31,7 @@ def live_events(league_ids: dict = LEAGUE_IDS) -> list[dict]:
         response.raise_for_status()
         data = response.json()
 
-        live_events = [event for event in data['results'] if event['league']['id'] in league_ids]
+        live_events = [event for event in data['results'] if event['league']['id'] in league_ids.keys()]
         return live_events
 
 
@@ -62,13 +62,12 @@ def odds(event_id: str) -> list[dict]:
     params = {'token': API_TOKEN, 'event_id': event_id}
     
     try:
+        print(f'fetchin odds using url {URLS['odds']}')
         response = requests.get(URLS['odds'], params=params)
         response.raise_for_status()
         all_data = response.json()
         
-        if all_data and all_data.get('sucess', {}) == 1:
-            betting_data = all_data.get('results', {}).get('odds',{})
-            return betting_data
+        return all_data
 
     except requests.exceptions.RequestException as e:
         logging.error(f"Error fetching odds: {e}")

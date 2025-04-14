@@ -1,4 +1,4 @@
-def match(event, model):
+def match(df, event, model):
     import logging
     import pandas as pd
     from datetime import datetime
@@ -55,29 +55,38 @@ def match(event, model):
         hora_identificacao = datetime.now().strftime('%H:%M:%S')
         print(f"Novo evento identificado às {hora_identificacao}")
 
-        data = Bet(event)
-        Bet.get_odds(market='goals')
-       
-        # TODO: Adicionar trava para caso features insuficientes, não executar.
-        features = create.features(live=True, players=(data['players']))
+        bet = Bet(event)
+        bet.get_odds(market='goals')
 
-        x = pd.DataFrame([features])
-        x = x[REQUIRED_FEATURES]
+        # TODO: Adicionar trava para caso features insuficientes, não executar.
+        
+        print('odds fetched sucessfully:')
+        print(f'Handicap: {bet.handicap}')
+        print(f'Over_Odd: {bet.odd_over}')
+        print(f'Under_Odd: {bet.odd_under}')
+
+        features = create.features(
+            data=df,
+            live=True,
+            players=(bet['players'])
+        )
+
+        X = pd.DataFrame([features])
+        X = X[REQUIRED_FEATURES]
 
         print_separator()
         print("Dados reais usados para previsão (X_ao_vivo):")
-        print(x.to_string(index=False))
+        print(X.to_string(index=False))
         print_separator()
         
-        lambda_pred = model.predict(x)[0]
+        lambda_pred = model.predict(X)[0]
         
+        bet.find_ev(lambda_pred)
 
-        Bet.find_ev(lambda_pred)
-
-        if Bet.bet_type is not None:
-            Bet.handle_made_bet()
+        if bet.bet_type is not None:
+            bet.handle_made_bet()
         
-        Bet.save_bet()
+        bet.save_bet()
 
     except Exception as e:
         logging.error(f"Erro ao identificar o jogo: {e}")

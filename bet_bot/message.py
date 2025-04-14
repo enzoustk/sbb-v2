@@ -1,6 +1,6 @@
 import requests, logging
-from model.config import HOT_THRESHOLD, HOT_TIPS_STEP, MAX_HOT
-from constants import TELEGRAM_TOKEN, TELEGRAM_CHAT_ID, TELEGRAM_MESSAGE,MIN_LINE_MESSAGE,MIN_ODD_MESSAGE
+from model.betting_config import HOT_THRESHOLD, HOT_TIPS_STEP, MAX_HOT
+from bet_bot.constants import TELEGRAM_BET_BOT_TOKEN, TELEGRAM_CHAT_ID, TELEGRAM_MESSAGE,MIN_LINE_MESSAGE,MIN_ODD_MESSAGE
 
 
 def generate(data):
@@ -43,7 +43,7 @@ def generate(data):
 
 def send(message):
 
-    url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
+    url = f"https://api.telegram.org/bot{TELEGRAM_BET_BOT_TOKEN}/sendMessage"
     data = {
         "chat_id": TELEGRAM_CHAT_ID,
         "text": message,
@@ -62,7 +62,7 @@ def send(message):
 
 
 def edit(message_id, message, chat_id):
-    url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/editMessageText"
+    url = f"https://api.telegram.org/bot{TELEGRAM_BET_BOT_TOKEN}/editMessageText"
     data = {
                     "chat_id": chat_id,
                     "message_id": message_id,
