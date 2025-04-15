@@ -1,4 +1,4 @@
-event_id,date,time_fora,jogador_fora,gols_fora,time_casa,jogador_casa,gols_casa,gols_totais
+event_id,date,away_team,away_player,away_score,home_team,home_player,home_score,total_score
 9386065,2025-01-17 00:04:00,Ukraine,Inquisitor,3.0,USA,Boulevard,1.0,4.0
 9386066,2025-01-17 00:04:00,Denmark,hotShot,0.0,Ghana,Kray,3.0,3.0
 9386085,2025-01-17 00:06:00,Roma,Malenkiy,1.0,Juventus,vivienne,3.0,4.0

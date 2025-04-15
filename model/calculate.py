@@ -1,6 +1,7 @@
 import logging
 import numpy as np
 from scipy.stats import poisson
+from model.betting_config import EV_THRESHOLD
 
 def poisson_log_loss(y_true, y_pred):
 
@@ -17,26 +18,69 @@ def poisson_goals(
     Calculate the Probability of a given Goal Line (Handicap).
     TODO: Create Poisson Probabilities for other markets.
     """
+    def half_goal_handicap(handicap, lambda_pred) -> tuple[float,float]:
+        prob_over = 1 - (poisson.cdf(int(handicap), lambda_pred))
+        prob_under = (poisson.cdf(int(handicap), lambda_pred))
+        
+        return float(prob_over), float(prob_under)
     
-    if handicap % 1 == 0.5:
-        prob_over = 1 - poisson.cdf(int(handicap), lambda_pred)
-        prob_under = poisson.cdf(int(handicap), lambda_pred)
-
-    elif handicap % 1 == 0.0:  
-        prob_over_raw = 1 - poisson.cdf(int(handicap), lambda_pred)
-        prob_under_raw = poisson.cdf(int(handicap) - 1, lambda_pred)
+    def integer_handicap(handicap,lambda_pred) -> tuple[float,float]:
+        prob_over_raw = 1 - (poisson.cdf(int(handicap), lambda_pred))
+        prob_under_raw = (poisson.cdf(int(handicap) - 1, lambda_pred))
+        
         total = prob_over_raw + prob_under_raw
+        
         prob_over = prob_over_raw / total
         prob_under = prob_under_raw / total
 
-    elif handicap % 1 in [0.25, 0.75]:  
+        return float(prob_over), float(prob_under)
+    
+    def quarter_handicap(handicap,lambda_pred) -> tuple[float,float]:
+        
         lower = handicap - 0.25
         upper = handicap + 0.25
-        prob_over_lower, prob_under_lower = poisson(lambda_pred, lower)
-        prob_over_upper, prob_under_upper = poisson(lambda_pred, upper)
-        prob_over = (prob_over_lower + prob_over_upper) / 2
-        prob_under = (prob_under_lower + prob_under_upper) / 2
+        probs_over = []
+        probs_under = []
 
+        for line in lower, upper:
+            if line % 1 == 0.5:
+                over, under = half_goal_handicap(
+                handicap=line,
+                lambda_pred=lambda_pred
+            )
+                
+            elif line % 1 == 0.0:  
+                over, under = integer_handicap(
+                handicap=line,
+                lambda_pred=lambda_pred
+            )
+            
+            probs_over.append(over)
+            probs_under.append(under)
+        
+        prob_over = sum(probs_over) / len(probs_over) 
+        prob_under = sum(probs_under) / len(probs_under)
+        
+        return float(prob_over), float(prob_under)
+
+    if handicap % 1 == 0.5:
+        prob_over, prob_under = half_goal_handicap(
+            handicap=handicap,
+            lambda_pred=lambda_pred
+        )
+
+    elif handicap % 1 == 0.0:  
+        prob_over, prob_under = integer_handicap(
+            handicap=handicap,
+            lambda_pred=lambda_pred
+        )
+
+    elif handicap % 1 in [0.25, 0.75]:  
+        prob_over, prob_under = quarter_handicap(
+            handicap=handicap,
+            lambda_pred=lambda_pred
+        )
+    
     else:
         logging.error(f'Invalid Handicap used to estimate goal probabilities: {handicap}')
         raise ValueError(f"Handicap inválido: {handicap}")
@@ -45,6 +89,7 @@ def poisson_goals(
 
 
 def min_goal_line(
+    lambda_pred: float,
     handicap: float,
     bet_type: str,
     bet_prob: float
@@ -60,21 +105,27 @@ def min_goal_line(
 
     if bet_type.lower() == 'over': 
         step = 0.25
+        prob = 0
+
     elif bet_type.lower() == 'under': 
         step = -0.25
+        prob = 1
+
     else: 
         logging.error(f"Tipo de aposta inválido: {bet_type}")
 
     while True:
-        from model.config import EV_THRESHOLD
+        
+        bet_prob = poisson_goals(lambda_pred=lambda_pred, handicap=minimum_line)
 
-        minimum_odd = ((1.0 + EV_THRESHOLD) / bet_prob).round(2)
+        minimum_odd = round((1.0 + EV_THRESHOLD) / bet_prob[prob], 2)
 
         if minimum_odd >= 1.75:
             return minimum_line, minimum_odd
 
-        elif minimum_odd < 1.75: minimum_line += step
-
+        elif minimum_odd < 1.75: 
+            minimum_line += step
+        
         else: 
             logging.error(f'Invalid Min. Odd: {minimum_odd}')
 

@@ -57,29 +57,24 @@ def match(df, event, model):
 
         bet = Bet(event)
         bet.get_odds(market='goals')
+        print('event: date', bet.date)
 
         # TODO: Adicionar trava para caso features insuficientes, não executar.
         
-        print('odds fetched sucessfully:')
-        print(f'Handicap: {bet.handicap}')
-        print(f'Over_Odd: {bet.odd_over}')
-        print(f'Under_Odd: {bet.odd_under}')
-
         features = create.features(
             data=df,
             live=True,
-            players=(bet['players'])
+            players=bet.players
         )
 
-        X = pd.DataFrame([features])
-        X = X[REQUIRED_FEATURES]
+        X = features[REQUIRED_FEATURES]
 
         print_separator()
         print("Dados reais usados para previsão (X_ao_vivo):")
         print(X.to_string(index=False))
         print_separator()
         
-        lambda_pred = model.predict(X)[0]
+        lambda_pred = model.predict(X)
         
         bet.find_ev(lambda_pred)
 
@@ -89,4 +84,4 @@ def match(df, event, model):
         bet.save_bet()
 
     except Exception as e:
-        logging.error(f"Erro ao identificar o jogo: {e}")
+        logging.error(f"Erro ao prever para o jogo {bet.event_id}: {e}")

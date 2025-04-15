@@ -1,4 +1,4 @@
-import json
+from datetime import datetime, timezone
 import logging
 import threading
 import pandas as pd
@@ -8,7 +8,7 @@ from model import calculate
 from bet_bot import message
 from model.betting_config import (EV_THRESHOLD, TIME_RANGES,
     AJUSTE_FUSO, HOT_TIPS_STEP, MAX_HOT, HOT_THRESHOLD)
-from files.paths import ALL_DATA, NOT_ENDED, ERROR_EVENTS, MADE_BETS
+from files.paths import NOT_ENDED, ERROR_EVENTS, MADE_BETS
 from bet_bot.constants import (TELEGRAM_MESSAGE, MIN_LINE_MESSAGE,
     MIN_ODD_MESSAGE, HOT_TIPS_MESSAGE, EDITED_MESSAGE,
     RESULT_EMOJIS, BET_TYPE_EMOJIS)
@@ -42,6 +42,7 @@ class Bet:
     TODO: Create a subset to bet exported in xlsx
     TODO: Create cancel method to cancel a made bet
     TODO: Create a way to delete Bet Objetcts that are no longer needed to be stored
+    TODO: Create Class EndedBet as child class to __init__ with all data in its method
     """
 
     def __init__(self, event: dict):
@@ -55,6 +56,7 @@ class Bet:
 
         self.event_id = self._get_event_id()
         self.league = self._get_league()
+        self.date = self._get_date()
 
         self.home_str = self._get_str('home')
         self.away_str = self._get_str('away')
@@ -129,9 +131,7 @@ class Bet:
         """
                 
         betting_data = fetch.odds(self.event_id)
-        print('betting_data impresso:', str(betting_data)[:50])
-        print('começando a validar odds.')
-        
+
         (self.handicap,
          self.odd_over,
          self.odd_under
@@ -140,7 +140,6 @@ class Bet:
             self.event_id,
             market=market
         )
-        print
                                         
     def find_ev(self, lambda_pred: float):
 
@@ -160,6 +159,7 @@ class Bet:
         self.lambda_pred = lambda_pred
         
         self.prob_over, self.prob_under = calculate.poisson_goals(self.lambda_pred, self.handicap)
+
         self.ev_over = calculate.ev(self.odd_over, self.prob_over)
         self.ev_under = calculate.ev(self.odd_under, self.prob_under)
 
@@ -172,9 +172,18 @@ class Bet:
         self._print_bet_data()
 
     def handle_made_bet(self):
+        
         self._find_min_line()
+        self._get_hot_tip()
+        print_hot_ev = self.hot_ev if self.hot_ev is not None else 0
+
+        if self.bet_type is not None: 
+            print(f'Bet: {self.bet_type} {self.handicap} @{self.bet_odd}')
+            print(f'Minimum Line: {self.minimum_line} @{self.minimum_odd}')
+            print(f'Hot Tip: {print_hot_ev}')
+        
         self._generate_message()
-        self._send_message
+        self._send_message()
 
     def save_bet(self):
         """Adds the current bet to the NOT_ENDED file."""
@@ -227,7 +236,7 @@ class Bet:
         Edits telegram message
         '''
 
-        self._get_bet_emojis()
+        self._get_result_emoji()
         self.message += EDITED_MESSAGE.format(**self.__dict__)
         self._escape()
         self.edited = message.edit(self.message_id, self.message, self.chat_id)
@@ -254,13 +263,20 @@ class Bet:
                                 .replace('_', r'\_')
         )
     
-    def _get_bet_emojis(self):
+    def _get_result_emoji(self):
         """Gets emoji for the result and bet type
         Assings it to object attributes"""
-
         self.result_emoji = RESULT_EMOJIS.get(self.result, '')
+
+    def _get_bet_type_emoji(self):
         self.bet_type_emoji = BET_TYPE_EMOJIS.get(self.bet_type, '')
-    
+        
+    def _get_date(self):
+        timestamp = self.event.get('time')
+        
+        if timestamp:
+            return datetime.fromtimestamp(int(timestamp), tz=timezone.utc).strftime('%Y-%m-%d %H:%M:%S')
+ 
     def _get_end(self):
         
         """
@@ -379,8 +395,9 @@ class Bet:
         if self.bet_ev < HOT_THRESHOLD:
             return
 
-        ev_over_threshold = self.bet_ev - HOT_THRESHOLD
-        steps = int(ev_over_threshold // HOT_TIPS_STEP)
+        above_th = self.bet_ev - HOT_THRESHOLD
+        steps = int(above_th // HOT_TIPS_STEP)
+        
         self.hot_ev = min(steps, MAX_HOT)
         self.hot_emoji = "🔥" * self.hot_ev
 
@@ -460,26 +477,25 @@ class Bet:
         print('-' * 20)
         print(f"Over Probability: {self.prob_over*100:.2f}%")
         print(f'Over Odd: {self.odd_over}')
-        print(f"Under Probability: {self.prob_over*100:.2f}%")
+        print(f"Under Probability: {self.prob_under*100:.2f}%")
         print(f'Under Odd: {self.odd_under}')
         print('-' * 20)
         print(f"Over EV: {self.ev_over*100:.2f}%")
         print(f"Under EV: {self.ev_under*100:.2f}%")
         print('-' * 60)
         
-        if self.bet_type is not None: 
-            print(f'Bet: {self.bet_type} {self.handicap} @{self.bet_odd}')
-            print(f'Minimum Line: {self.minimum_line} @{self.minimum_odd}')
-            print(f'Hot Tip: {self.hot_ev}')
-        
         if self.bet_type is None: 
             print('No EV+ Bet Found')
   
     def _find_min_line(self):
-        """Finds and sets the minimum line and odd for the current bet type.
-        self.minimum_line, self.minimum_odd = calculate.min_goal_line(
-            self.handicap, self.bet_type, self.bet_prob)
-        """
+        """Finds and sets the minimum line and odd for the current bet type."""
+        (self.minimum_line,
+        self.minimum_odd) = calculate.min_goal_line(
+            self.lambda_pred,
+            self.handicap,
+            self.bet_type,
+            self.bet_prob
+            )
 
     def _generate_message(self):
         
@@ -491,7 +507,8 @@ class Bet:
         Looks at minimum line and hot tips data.
         If it exists, appends to the message.
         """
-        
+        self._get_bet_type_emoji()
+
         self.message = TELEGRAM_MESSAGE.format(**self.__dict__)
 
         if self.minimum_line == self.handicap and self.minimum_odd != self.bet_odd:
@@ -500,7 +517,7 @@ class Bet:
         elif self.minimum_line != self.handicap:
             self.message += MIN_LINE_MESSAGE.format(**self.__dict__)
         
-        if self._get_hot_tip() is not None:
+        if self.hot_ev is not None:
             self.message += HOT_TIPS_MESSAGE.format(**self.__dict__)
 
     def _send_message(self):

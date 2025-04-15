@@ -1,9 +1,12 @@
 import logging
 import pandas as pd
 from collections import defaultdict
-from files.paths import HISTORIC_DATA, ALL_DATA, NOT_ENDED 
+from files.paths import HISTORIC_DATA, NOT_ENDED 
 
-def data(file: str, load_ids: bool = False) -> pd.DataFrame | tuple[pd.DataFrame, defaultdict]:
+def data(
+        file: str,
+        load_ids: bool = False
+        ) -> pd.DataFrame | tuple[pd.DataFrame, defaultdict]:
     """Loads data from a CSV file and optionally returns IDs grouped by date.
 
     Args:
@@ -20,11 +23,18 @@ def data(file: str, load_ids: bool = False) -> pd.DataFrame | tuple[pd.DataFrame
     try:
         if file == 'historic':
             data = pd.read_csv(HISTORIC_DATA)
-        elif file == 'all_data':
-            data = pd.read_csv(ALL_DATA)
+            if not data.empty:
+                # Converter colunas apenas se existirem
+                if 'date' in data.columns:
+                    data['date'] = pd.to_datetime(data['date'])
+                if 'time_sent' in data.columns:
+                    data['time_sent'] = pd.to_datetime(data['time_sent'])
+        
         elif file == 'not_ended':
-            data = pd.read_csv(NOT_ENDED)  
-
+            try:
+                data = pd.read_csv(NOT_ENDED)  
+            except pd.errors.EmptyDataError:
+                data = pd.DataFrame()
 
         if load_ids:
             try:
