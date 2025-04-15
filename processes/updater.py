@@ -1,4 +1,4 @@
-import time
+import ast
 import logging
 from object.bet import Bet
 from data import load, update
@@ -20,23 +20,30 @@ def run():
 
     TODO: Create ERROR_EVENTS handling method
     """
-    
+    print('updater on')
     existing_bets = {}
 
     with LOCK:
         events_to_update = load.data('not_ended')
         not_ended, ended, error_events, made_bets = [], [], [], []
-
+        print('arquivos carregados')
         for match_data in events_to_update.to_dict('records'):
             event_id = match_data.get('event_id')
 
-           
+            if 'event' in match_data:
+                try:
+                    event_str = match_data['event'].replace("'", '"')
+                    event = ast.literal_eval(event_str)
+                except Exception as e:
+                    print(f"Erro ao converter 'event': {e}")
+                    continue 
+
             if event_id in existing_bets:
                 match = existing_bets[event_id]
                 match.__dict__.update(match_data) 
             
             else:
-                match = Bet()
+                match = Bet(event)
                 match.__dict__.update(match_data)
                 existing_bets[event_id] = match
 
@@ -65,6 +72,12 @@ def run():
                     f'Total Processing: Labeling Error for Event'
                     f' {match.event_id}'
                     )
+        print('eventos acabados:', len(ended))
+        print('not ended: ', len(not_ended))
+        print('error: ', len(error_events))
+
+
+
 
         update.historic_data(ended)
         update.error_events(error_events)

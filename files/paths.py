@@ -7,7 +7,6 @@ HISTORIC_DATA = r'files\sheets\game_data.csv'
 MADE_BETS = r'files\sheets\bets.xlsx'
 
 # All analised matches
-ALL_DATA = r'files\sheets\all_data.csv'
 NOT_ENDED = r'files\sheets\not_ended.csv'
 ERROR_EVENTS = r'files\sheets\error_events.csv'
 

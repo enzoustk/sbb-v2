@@ -17,46 +17,41 @@ def odds(betting_data: dict, event_id: str, market: str='goals') -> list:
     TODO: Handle Different markets and variables, such as Asian Handicap or The Draw 
     """
     
-
     odds = betting_data.get('results', {}).get('odds', {})
     
-    if MARKET_IDS[market] in odds:
-        market_data = [odd for odd in MARKET_IDS[market]]
-        print
-        
+    if MARKET_IDS[market] not in odds:
+        logging.error(f'Betting Market not found for event {event_id}')
+        return [None, None, None]
+     
+    market_data = [odd for odd in odds[MARKET_IDS[market]]]
+    
     if market == 'goals': 
         valid_odds = goal_odds(market_data=market_data)
     
     if not valid_odds: 
-        logging.warning(f'No odds avaliable for event{event_id}')
+        logging.warning(f'No odds avaliable for event {event_id}')
         return [None, None, None]
 
     earliest_odds = min(
-        market_data,
+        valid_odds,
         key=lambda x:
-            x.get('add_time', float('inf'))
+        x.get(
+        'add_time', float('inf'))
         )
-    
-    print('earliest odds:', str(earliest_odds)[:50])
     
     return (
         goal_handicap(earliest_odds.get('handicap')),
-        earliest_odds.get('over_od'),
-        earliest_odds.get('under_od')
+        float(earliest_odds.get('over_od')),
+        float(earliest_odds.get('under_od'))
     )
-
-       
-        
-                       
+             
     
-def goal_handicap(market_data) -> float | None:
+def goal_handicap(handicap) -> float | None:
 
     """
     Gets the handicap from the API and solves type errors,
     Also, converts it to a float and returns the current handicap if successful.
     """
-
-    handicap = market_data['handicap']
 
     try: 
         if isinstance(handicap, str):
@@ -76,9 +71,10 @@ def goal_handicap(market_data) -> float | None:
 
 def goal_odds(market_data) -> list[dict]:
     """Recieves a list of odds and returns the odds with handicap, over and under odds."""
-    
-    for odd in market_data: 
-            if isinstance(odd, dict):
-                if all (odd.get(k) != '-' for k in ('handicap', 'over_od', 'under_od')):
-                    market_data.append(odd)
+    return [
+    odd for odd in market_data 
+    if isinstance(odd, dict) 
+    and all(odd.get(k) != '-' 
+    for k in ('handicap', 'over_od', 'under_od')
+    )]
 
