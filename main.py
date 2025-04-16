@@ -32,4 +32,4 @@ if __name__ == '__main__':
 
     model = get.get_model()
 
-    scanner.run(model=model, i=12)
+    scanner.run(model=model, i=50)

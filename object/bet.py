@@ -11,7 +11,7 @@ from model.betting_config import (EV_THRESHOLD, TIME_RANGES,
 from files.paths import NOT_ENDED, ERROR_EVENTS, MADE_BETS
 from bet_bot.constants import (TELEGRAM_MESSAGE, MIN_LINE_MESSAGE,
     MIN_ODD_MESSAGE, HOT_TIPS_MESSAGE, EDITED_MESSAGE,
-    RESULT_EMOJIS, BET_TYPE_EMOJIS)
+    RESULT_EMOJIS, BET_TYPE_EMOJIS, LINKS_MESSAGE)
 
 
 class Bet:
@@ -51,26 +51,27 @@ class Bet:
         Parses essential identifiers and names from event dictionary.
         Initializes all tracking attributes to default None/False values.
         """
+        self._init_defaults()
+        self._update_from_event(event)
 
-        self.event = event
+    def _init_defaults(self):
+        """Initialize all trackable attributes with safe defaults"""
 
-        self.event_id = self._get_event_id()
-        self.league = self._get_league()
-        self.date = self._get_date()
+        self.event_id = None
+        self.league = None
+        self.date = None
 
-        self.home_str = self._get_str('home')
-        self.away_str = self._get_str('away')
-        
-        self.home_team = self._get_name('home', 'team')
-        self.home_player = self._get_name('home', 'player')
-        self.away_team = self._get_name('away', 'team')
-        self.away_player = self._get_name('away', 'player')
-        self.players = self._get_players()
-  
-        self.odd_over = '' 
-        self.odd_under = ''
-        self.handicap = ''
+        self.home_str = ""
+        self.away_str = ""
+        self.home_team = ""
+        self.home_player = ""
+        self.away_team = ""
+        self.away_player = ""
+        self.players = ()
 
+        self.odd_over = None 
+        self.odd_under = None
+        self.handicap = None
         self.prob_over = None
         self.prob_under = None
         self.ev_over = None
@@ -83,7 +84,7 @@ class Bet:
 
         self.hot_ev = None
         self.hot_emoji = None
-        
+
         self.minimum_line = None
         self.minimum_odd = None
         self.time_sent = None
@@ -106,7 +107,7 @@ class Bet:
         self.edited = False
         self.result_emoji = None
         self.bet_type_emoji = None
-        self.time_interval = None
+        self.time_range = ''
 
         self.saved_on_excel = False
         self.month = None
@@ -204,7 +205,8 @@ class Bet:
         '''
 
         if self.bet_type is None: return
-        self.profit, self.result = calculate.profit(self.bet_type, self.handicap, self.total_score, self.bet_odd)
+        self.profit, self.result = calculate.profit(
+            self.bet_type, self.handicap, self.total_score, self.bet_odd)
         self._edit_telegram_message()
         self._save_made_bet()
         
@@ -227,6 +229,41 @@ class Bet:
             if self.raw_score is not None:
                 self.totally_processed = True
  
+    def _update_from_event(self, event: dict):
+        """Parse and clean event data with NaN handling"""
+        cleaned_event = self._clean_data(event)
+        self.event = cleaned_event
+        
+        # Parse dos dados do evento
+        self.event_id = self._get_event_id()
+        self.league = self._get_league()
+        self.date = self._get_date()
+        
+        self.home_str = self._get_str('home')
+        self.away_str = self._get_str('away')
+        self.home_team = self._get_name('home', 'team')
+        self.home_player = self._get_name('home', 'player')
+        self.away_team = self._get_name('away', 'team')
+        self.away_player = self._get_name('away', 'player')
+        self.players = self._get_players()
+ 
+    def update_from_dict(self, data: dict):
+        """Safe update from dictionary with NaN cleaning"""
+        cleaned_data = self._clean_data(data)
+        for key, value in cleaned_data.items():
+            if hasattr(self, key):
+                setattr(self, key, value)
+
+    def _clean_data(self, data):
+        """Recursively convert NaN/NaT/None to appropriate Python nulls"""
+        if isinstance(data, dict):
+            return {k: self._clean_data(v) for k, v in data.items()}
+        elif isinstance(data, list):
+            return [self._clean_data(item) for item in data]
+        elif pd.isna(data):
+            return None if isinstance(data, float) else ''
+        return data
+    
     # ------------------------------------------- #
 
     def _edit_telegram_message(self):
@@ -237,7 +274,7 @@ class Bet:
         '''
 
         self._get_result_emoji()
-        self.message += EDITED_MESSAGE.format(**self.__dict__)
+        self.message += EDITED_MESSAGE.format(**self.__dict__, LINKS_MESSAGE=LINKS_MESSAGE)
         self._escape()
         self.edited = message.edit(self.message_id, self.message, self.chat_id)
 
@@ -288,8 +325,9 @@ class Bet:
         live_events = fetch.live_events()
 
         live_ids = {str(event['id']) for event in live_events}
-
-        if self.event_id not in live_ids:
+        
+        if str(self.event_id) not in live_ids:
+            print(f'evento {self.event_id} fora dos ao vivo')
             if self._get_score() is not None:
                 self.ended = True
   
@@ -388,6 +426,7 @@ class Bet:
         
         self.home_score, self.away_score = map(int, self.raw_score.split('-'))
         self.total_score = self.home_score + self.away_score
+        return self.total_score
 
     def _get_hot_tip(self) -> None:
         """Calculates 'hotness' level based on Expected Value."""
@@ -401,16 +440,16 @@ class Bet:
         self.hot_ev = min(steps, MAX_HOT)
         self.hot_emoji = "🔥" * self.hot_ev
 
-    def _get_time_atributes(self):
+    def _get_time_attributes(self):
         """Sets all time-related atributes
         based on the current time"""
         self.time_sent = pd.Timestamp.now() - pd.Timedelta(hours=AJUSTE_FUSO)
-        self.month = self.time_sent.strftime("%m/%Y")
+        self.month = self.time_sent.strftime("%m-%Y")
         hour = self.time_sent.hour
 
-        for range, (start, end) in TIME_RANGES.items():
+        for string_range, (start, end) in TIME_RANGES.items():
             if start <= hour <= end:
-                self.time_range = range
+                self.time_range = string_range
 
     def _get_league(self) -> str:
         """Fetches league name from event data.
@@ -419,21 +458,31 @@ class Bet:
         
         return self.event.get('league', {}).get('name', 'Unknown League')
     
+    def _format_data(self, data) -> str:
+        if isinstance(data, (datetime, pd.Timestamp)):
+            return data.replace(second=0, microsecond=0)
+        
+        if isinstance(data, float):
+            return f'{data:.2f}'.replace('.', ',')
+        
+        if isinstance(data, str):
+            return f'{data}'.capitalize().replace('_', ' ')
+
     def _get_excel_columns(self):
         """Returns a dcit with the columns and values
         To the Made Bets Excel file
         """
         return{
-            'Horário Envio': self.time_sent.strftime("%H:%M"),
-            'Liga': self.league,
-            'Partida': self.home_str + 'vs. ' + self.away_str,
-            'Tipo Aposta': self.bet_type.capitalize(),
-            'Hot Tips': self.hot_emoji,
-            'Linha': f'{self.handicap:2f}',
-            'Resultado' : self.result.replace('_', ' ').capitalize(),
-            'Odd': f'{self.bet_odd:2f}',
-            'Lucro': f'{self.profit:2f}',
-            'Intervalo': self.time_range,
+            'Horário Envio': self._format_data(self.time_sent),
+            'Liga': self._format_data(self.league),
+            'Partida': self.home_str + ' vs. ' + self.away_str,
+            'Tipo Aposta': self._format_data(self.bet_type),
+            'Hot Tips': self._format_data(self.hot_emoji),
+            'Linha': self._format_data(self.handicap),
+            'Resultado' : self._format_data(self.result),
+            'Odd': {self._format_data(self.bet_odd)},
+            'Lucro': {self._format_data(self.profit)},
+            'Intervalo': self._format_data(self.time_range),
         }
 
     def _get_lambda_pred(self,
@@ -530,7 +579,7 @@ class Bet:
         '''
         
         self.message_id, self.chat_id = message.send(self.message)
-        self._get_time_atributes()
+        self._get_time_attributes()
         if self.message_id is None: self.sent = False
 
     def _save_made_bet(self):
@@ -566,21 +615,23 @@ class Bet:
             return
         
         try:
+            sheet_name = str(self.month).replace('/', '-')
+
             with pd.ExcelWriter(MADE_BETS, engine='openpyxl', mode='a', if_sheet_exists='overlay') as writer:
                 
                 if str(self.month) in writer.book.sheetnames:
-                    df_existing = pd.read_excel(MADE_BETS, sheet_name=str(self.month))
+                    df_existing = pd.read_excel(MADE_BETS, sheet_name=sheet_name)
                 else:
                     df_existing = pd.DataFrame(columns=self._get_excel_columns().keys())
                 
                 
                 new_data = pd.DataFrame([self._get_excel_columns()])
                 df_updated = pd.concat([df_existing, new_data], ignore_index=True)
-                df_updated.to_excel(writer, sheet_name=str(self.month), index=False)
+                df_updated.to_excel(writer, sheet_name=sheet_name, index=False)
                 self.saved_on_excel = True
                 
         except FileNotFoundError:
             new_data = pd.DataFrame([self._get_excel_columns()])
             with pd.ExcelWriter(MADE_BETS, engine='openpyxl') as writer:
-                new_data.to_excel(writer, sheet_name=str(self.month), index=False)
+                new_data.to_excel(writer, sheet_name=sheet_name, index=False)
             self.saved_on_excel = True

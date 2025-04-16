@@ -28,7 +28,6 @@ def run(model, i: int = 50, sleep_time: int = 1):
             read_matches = set()
         
     while True:
-        print(f'iteration {i_counter}')
         live_matches = fetch.live_events()
 
         unread_matches = [

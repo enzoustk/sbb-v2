@@ -1,5 +1,6 @@
 import ast
 import logging
+import pandas as pd
 from object.bet import Bet
 from data import load, update
 from files.paths import LOCK
@@ -39,29 +40,30 @@ def run():
                     continue 
 
             if event_id in existing_bets:
-                match = existing_bets[event_id]
-                match.__dict__.update(match_data) 
+                match: Bet = existing_bets[event_id]
+                match.update_from_dict(match_data)
             
             else:
                 match = Bet(event)
-                match.__dict__.update(match_data)
+                match.update_from_dict(match_data)
                 existing_bets[event_id] = match
-
         
-            match._get_end()
-
-            if match.ended:
+            match._get_end()          
+            
+            if match.ended is True:    
+                print(f'match {match.event_id} terminou, tratando')
                 match.handle_ended_bet()
                 match.mark_processed()
                 existing_bets.pop(event_id, None)
 
-            if match.totally_processed: 
+                if match.bet_type is not None: 
+                    made_bets.append(match)
+                    match._save_made_bet()
+
+            if match.totally_processed is True: 
                 ended.append(match)
 
-            if match.bet_type is not None: 
-                made_bets.append(match)
-
-            elif not match.totally_processed: 
+            elif match.totally_processed is False: 
                 error_events.append(match)
 
             elif match.totally_processed is None: 
@@ -72,13 +74,11 @@ def run():
                     f'Total Processing: Labeling Error for Event'
                     f' {match.event_id}'
                     )
-        print('eventos acabados:', len(ended))
-        print('not ended: ', len(not_ended))
-        print('error: ', len(error_events))
-
-
-
 
         update.historic_data(ended)
         update.error_events(error_events)
         update.not_ended(not_ended)
+        
+        if made_bets is not None:
+            logging.info(f'Added {len(made_bets)} bets to xlsx.')
+        
