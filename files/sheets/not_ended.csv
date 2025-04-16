@@ -1,1 +1,11 @@
+event_id,league,date,home_str,away_str,home_team,home_player,away_team,away_player,players,odd_over,odd_under,handicap,prob_over,prob_under,ev_over,ev_under,bet_type,bet_odd,bet_prob,bet_ev,hot_ev,hot_emoji,minimum_line,minimum_odd,time_sent,lambda_pred,ended,home_score,away_score,total_score,raw_score,profit,result,canceled,message,sent,message_id,chat_id,edited,result_emoji,bet_type_emoji,time_range,saved_on_excel,month,totally_processed,event
+9826293,Esoccer Battle - 8 mins play,2025-04-16 15:16:00,River Plate (Steksy),Real Madrid (Maslja),river plate,steksy,real madrid,maslja,"('maslja', 'steksy')",1.9,1.8,5.5,0.3805267850286384,0.6194732149713615,-0.2769991084455869,0.1150517869484508,under,1.8,0.6194732149713615,0.1150517869484508,0.0,,5.25,1.81,2025-04-16 09:14:50.828803,[4.9799814],False,,,,,,,,"🔗 Link: https://www.bet365.com/#/IP/B151
+⚽ Times: steksy (river plate) x maslja (real madrid)
+🏆 Liga: Esoccer Battle - 8 mins play
+🎯 Aposta: under 5.5 ⬇️
+📈 Odd: 1.8
+➖ Mínima: 5.25 @1.81
 
+⚠️ EV: 
+",,2767.0,-1002305899864.0,False,,⬇️,08:00 - 11:59,False,04-2025,,"{'id': '9826293', 'sport_id': '1', 'time': '1744816560', 'time_status': '1', 'league': {'id': '22614', 'name': 'Esoccer Battle - 8 mins play', 'cc': ''}, 'home': {'id': '1123641', 'name': 'River Plate (Steksy)', 'image_id': '', 'cc': ''}, 'away': {'id': '1097784', 'name': 'Real Madrid (Maslja)', 'image_id': '', 'cc': ''}, 'ss': '', 'bet365_id': '173144955', 'timer': {'tm': 0, 'ts': 0, 'tt': '0', 'ta': 0, 'md': 0}}"
+9826297,Esoccer Battle - 8 mins play,2025-04-16 15:16:00,PSG (Hyper),Boca Juniors (Bolec),psg,hyper,boca juniors,bolec,"('bolec', 'hyper')",1.85,1.85,4.75,0.5497839401754572,0.4502160598245428,0.0171002893245957,-0.1671002893245957,,,,,,,,,,[5.194265],False,,,,,,,,,,,,False,,,,False,,,"{'id': '9826297', 'sport_id': '1', 'time': '1744816560', 'time_status': '1', 'league': {'id': '22614', 'name': 'Esoccer Battle - 8 mins play', 'cc': ''}, 'home': {'id': '1103418', 'name': 'PSG (Hyper)', 'image_id': '', 'cc': ''}, 'away': {'id': '1098575', 'name': 'Boca Juniors (Bolec)', 'image_id': '', 'cc': ''}, 'ss': '', 'bet365_id': '173149321', 'timer': {'tm': 0, 'ts': 0, 'tt': '0', 'ta': 0, 'md': 0}}"

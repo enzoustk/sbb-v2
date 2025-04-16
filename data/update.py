@@ -11,7 +11,11 @@ from files.paths import HISTORIC_DATA, NOT_ENDED, ERROR_EVENTS, LOCK
 def historic_data(data: list):
     """Update HISTORIC_DATA.csv with new data."""
 
-    # Funções já definidas em outros locais do código
+
+    if not data:
+        logging.info(f'No new ended events to append')
+        return
+    
     existing_data = load.data('historic')
     existing_data['date'] = pd.to_datetime(existing_data['date'])
     exclude_keys = remove_columns_to_historic()
@@ -26,13 +30,21 @@ def historic_data(data: list):
     new_df = pd.DataFrame(new_data)
     new_df['date'] = pd.to_datetime(new_df['date'])
     new_df = new_df.sort_values(by='date')
+
+
+    if existing_data.empty:
+        new_df.to_csv(HISTORIC_DATA, index=False)
+        logging.info(f'Historic file created.'
+            f'{len(new_df)} matches added.')
+        
     
-
-    combined_df = pd.concat([existing_data, new_df], ignore_index=True)
-    combined_df['date'] = pd.to_datetime(combined_df['date'])
-    
-
-
+    else:
+        combined_df: pd.DataFrame = pd.concat([existing_data, new_df])
+        combined_df['date'] = pd.to_datetime(combined_df['date'])
+        combined_df.drop_duplicates(subset='event_id')
+        combined_df.to_csv(HISTORIC_DATA, index=False)
+        logging.info(f'{len(new_df)} new matches added to ended events')
+        
 
 def fill_data_gaps(gap: int = 30):
     """Uses API to fill gaps in the when the model was not running."""
@@ -99,7 +111,10 @@ def not_ended(data: list):
     
     ne_df = pd.DataFrame([bet.__dict__ for bet in data])
     ne_df.to_csv(NOT_ENDED, index=False)
-    logging.info('Eventos não finalizados atualizados com sucesso.')
+    logging.info('' \
+        'Not_ended events updated.'
+        f' {len(ne_df)} left to update.'
+        )
 
 
 def error_events(data: list):
@@ -107,11 +122,12 @@ def error_events(data: list):
 
     error_df = pd.DataFrame([event.__dict__ for event in data])
     
-    
     header = not os.path.exists(ERROR_EVENTS)
     
     error_df.to_csv(ERROR_EVENTS, mode='a', index=False, header=header)
-    logging.info('Eventos com erro adicionados ao arquivo.')
+    
+    if error_df is not None:
+        logging.info(f' Added {len(error_df)} error events to error file')
 
 
 def remove_columns_to_historic():

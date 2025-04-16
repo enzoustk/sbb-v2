@@ -140,27 +140,33 @@ def profit(bet_type: float, handicap: float, total_score: int, bet_odd: float) -
 
     if bet_type.lower() == 'over': outcome = total_score - handicap
     elif bet_type.lower() == 'under': outcome = handicap - total_score
-
+    print('bet outcome to calculate profit = ', outcome)
     try:
         if outcome >= 0.5: 
             profit = (bet_odd - 1)
             result = 'win' 
+        
         elif outcome == 0.25: 
             profit = (bet_odd - 1) / 2
             result = 'half_win'
+        
         elif outcome == 0: 
             profit = 0
             result = 'push'
+        
         elif outcome == -0.25:
             profit = -0.5 
             result = 'half_loss'
+        
         elif outcome <= -0.5: 
-            profit -1
+            profit = -1
             result = 'loss'
+        
         return profit, result
         
     except: 
         logging.error(f"Ajuste de resultado inválido: {outcome}")
+        return 0, 'error'
 
 
 def ev(odd, prob):

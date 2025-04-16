@@ -27,24 +27,27 @@ MIN_ODD_MESSAGE = (
 )
 
 HOT_TIPS_MESSAGE = (
-    "\n{'⚠️ EV:'} {hot_emoji}\n"
+    "\n⚠️ EV: {hot_emoji}\n"
 )
 
 EDITED_MESSAGE = (
     '\n{result_emoji}\n'
-    '\n➡ Resultado:{raw_score}\n'
+    '\n➡ Resultado: {raw_score}\n'
     '\n{LINKS_MESSAGE}'
 )
 
-LINKS_MESSAGE = (
-    "[Instagram]({INSTAGRAM_LINK}) | "
-    "[Resultados]({RESULTS_LINK}) | "
-    "[Suporte]({SUPPORT_LINK})"
-)
+LINKS_DICT = {
+    'instagram': 'https://www.instagram.com/striker.betting/',
+    'results': 'https://t.me/StrikerSuporteBot',
+    'support': 'https://linktr.ee/strikerbetting'
+}
 
-INSTAGRAM_LINK = 'https://www.instagram.com/striker.betting/'
-RESULTS_LINK = 'https://t.me/StrikerSuporteBot'
-SUPPORT_LINK = 'https://linktr.ee/strikerbetting'
+LINKS_MESSAGE = (
+    "[Instagram]({instagram}) | "
+    "[Resultados]({results}) | "
+    "[Suporte]({support})"
+).format(**LINKS_DICT)
+
 
 RESULT_EMOJIS = {
     'win': '✅✅✅',
