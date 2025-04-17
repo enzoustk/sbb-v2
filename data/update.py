@@ -51,29 +51,34 @@ def fill_data_gaps(gap: int = 30):
 
     with LOCK:
         
-        existing_data = load.data('historic_data')
+        existing_data = load.data('historic')
 
-        if existing_data.empty or 'time_sent' not in existing_data.columns:
+        if existing_data.empty or 'date' not in existing_data.columns:
             logging.warning("DataFrame 'existing_data' is empty. skipping data gaps fill.")
             return 
 
-        existing_data['time_sent'] = pd.to_datetime(existing_data['time_sent']) + pd.Timedelta(hours=AJUSTE_FUSO)
-        existing_data['date'] = existing_data['time_sent'].dt.normalize()
+        logging.info('Coverting time column to datetime')
+        existing_data['date'] = pd.to_datetime(existing_data['date']) + pd.Timedelta(hours=AJUSTE_FUSO)
+        existing_data['date_day'] = existing_data['date'].dt.normalize()
         
         dates_to_fetch = []
         processed_dates = set()
 
-        for date, bloco in existing_data.groupby('date'):
+        for date, bloco in existing_data.groupby('date_day'):
             if date in processed_dates:
                 continue
-            bloco = bloco.sort_values('time_sent')
-            delta_t = bloco['time_sent'].diff()
+            bloco = bloco.sort_values('date')
+            delta_t = bloco['date'].diff()
             
             if len(bloco[delta_t > pd.Timedelta(minutes=gap)]) > 0:
                 dates_to_fetch.append(date)
             
             processed_dates.add(date)
 
+        formatted_dates = "\n".join(date.strftime("%d-%m-%y") for date in processed_dates)
+        logging.info(f"Dates to fetch:\n{formatted_dates}")
+
+        
         matches_fetched = fetch.events_for_date(
             dates=dates_to_fetch
         )

@@ -21,7 +21,6 @@ def run():
 
     TODO: Create ERROR_EVENTS handling method
     """
-    print('updater on')
     existing_bets = {}
 
     with LOCK:

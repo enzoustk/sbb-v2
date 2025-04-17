@@ -89,25 +89,29 @@ def events_for_date(dates: list, league_ids: dict = LEAGUE_IDS) -> list[dict]:
     
     TODO: add parameter to choose league.
     """
+    logging.info('Starting to fetch data')
+
+    league_ids = (LEAGUE_IDS.keys())
+
+    all_events = []
+
+    params = {
+        "token": API_TOKEN,
+        "sport_id": SPORT_ID,
+        "league_id": league_ids,  
+        "page": 1
+    }
     
-    league_ids = league_ids or list(LEAGUE_IDS.keys())
-
     for date in dates:
-        formatted_date = date.strftime('%Y%m%d')
 
-        for league_id in league_ids:
-            params = {
-                "token": API_TOKEN,
-                "sport_id": SPORT_ID,
-                "league_id": league_id,  
-                "day": formatted_date,
-                "page": 1
-            }
+        params['page'] = 1
+        params['day'] = date.strftime('%Y%m%d')
+        logging.info(f'Fetching events for {date.strftime('%d-%m-%y')}')
 
         events = []
-
         while True:
             response = requests.get(URLS['ended_events'], params=params)
+            
             if response.status_code == 200:
                 data = response.json()
                 events.extend(data['results'])
@@ -116,10 +120,14 @@ def events_for_date(dates: list, league_ids: dict = LEAGUE_IDS) -> list[dict]:
                 else:
                     break
             else:
-                logging.error(f"Request failed: {response.status_code} for date {formatted_date}")
+                logging.error(f"Request failed: {response.status_code} for date {date.strftime('%d-%m-%y')}")
                 break
-    
-    return events
+        
+        logging.info(f"Fetched {len(events)} events for date {date.strftime('%Y-%m-%d')}")
+        
+        all_events.extend(events)
+
+    return all_events
 
 
 def event_for_id(event_id: str) -> dict:

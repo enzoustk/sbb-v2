@@ -22,7 +22,7 @@ def data(
 
     try:
         if file == 'historic':
-            data = pd.read_csv(HISTORIC_DATA)
+            data = pd.read_csv(HISTORIC_DATA, low_memory=False)
             if not data.empty:
                 # Converter colunas apenas se existirem
                 if 'date' in data.columns:
