@@ -1,9 +1,10 @@
 import logging
 import threading
 from model import get
-from datetime import datetime
 from data import update
+from datetime import datetime
 from processes import scanner
+from utils.utils import print_separator
 
 
 if __name__ == '__main__':
@@ -23,11 +24,11 @@ if __name__ == '__main__':
         #filemode='w',
         format='%(asctime)s - %(levelname)s - %(message)s'
     )
+    print_separator()
+    logging.info(f'\nStarting Striker Betting Bot...')
+    print_separator()
     
-    logging.info('Starting updater...')
     logging.info('Filling data gaps...')
-
-    
     update.fill_data_gaps()
 
     model = get.get_model()
