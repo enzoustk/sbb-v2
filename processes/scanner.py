@@ -16,8 +16,9 @@ def run(model, i: int = 50, sleep_time: int = 1):
         i (int): After i runs, it shows a message to assert it is 
         running properly
     """
-
+    logging.info('Scanner Started.')
     i_counter = 0  # Iteration with no new events
+    
     with LOCK:
         not_ended = load.data('not_ended')
         

@@ -459,14 +459,15 @@ class Bet:
         return self.event.get('league', {}).get('name', 'Unknown League')
     
     def _format_data(self, data) -> str:
+
         if isinstance(data, (datetime, pd.Timestamp)):
             return data.replace(second=0, microsecond=0)
         
-        if isinstance(data, float):
+        elif isinstance(data, float):
             return f'{data:.2f}'.replace('.', ',')
         
-        if isinstance(data, str):
-            return f'{data}'.capitalize().replace('_', ' ')
+        elif isinstance(data, str):
+            return f'{data}'.title().replace('_', ' ')
 
     def _get_excel_columns(self):
         """Returns a dcit with the columns and values
@@ -484,7 +485,7 @@ class Bet:
             'Lucro': {self._format_data(self.profit)},
             'Intervalo': self._format_data(self.time_range),
         }
-
+    
     def _get_lambda_pred(self,
         lambda_pred: float
         ):
@@ -558,16 +559,22 @@ class Bet:
         """
         self._get_bet_type_emoji()
 
-        self.message = TELEGRAM_MESSAGE.format(**self.__dict__)
+        formated_dict = {
+            key: self._format_data(value)
+            for key, value 
+            in self.__dict__.items()
+            }
+
+        self.message = TELEGRAM_MESSAGE.format(**formated_dict)
 
         if self.minimum_line == self.handicap and self.minimum_odd != self.bet_odd:
-            self.message += MIN_ODD_MESSAGE.format(**self.__dict__)
+            self.message += MIN_ODD_MESSAGE.format(**formated_dict)
         
         elif self.minimum_line != self.handicap:
-            self.message += MIN_LINE_MESSAGE.format(**self.__dict__)
+            self.message += MIN_LINE_MESSAGE.format(**formated_dict)
         
         if self.hot_ev is not None:
-            self.message += HOT_TIPS_MESSAGE.format(**self.__dict__)
+            self.message += HOT_TIPS_MESSAGE.format(**formated_dict)
 
     def _send_message(self):
         
