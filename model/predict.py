@@ -44,7 +44,7 @@ def match(df, event, model):
         Exceptions are logged via logging.error().
     """
     try:
-        with open(ERROR_EVENTS, 'r') as file:
+        with open(ERROR_EVENTS, 'r', encoding='latin-1') as file:
             error_events = set(line.strip() for line in file)
     except FileNotFoundError:
         logging.info('Error Events file not found. Skipping it')
