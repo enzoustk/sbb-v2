@@ -15,15 +15,15 @@ TELEGRAM_MESSAGE = (
     "⚽ Times: {home_player} ({home_team}) x {away_player} ({away_team})\n" 
     "🏆 Liga: {league}\n" 
     "🎯 Aposta: {bet_type} {handicap} {bet_type_emoji}\n" 
-    "📈 Odd: {bet_odd}\n" 
+    "📈 Odd: {bet_odd}" 
 )
 
 MIN_LINE_MESSAGE = (
-    "➖ Mínima: {minimum_line} @{minimum_odd}\n"
+    "\n➖ Mínima: {minimum_line} @{minimum_odd}\n"
 )
 
 MIN_ODD_MESSAGE = (
-    "➖ Odd Mín.: {minimum_odd}\n"
+    "(Mín @{minimum_odd})\n"
 )
 
 HOT_TIPS_MESSAGE = (
@@ -43,8 +43,8 @@ LINKS_DICT = {
 }
 
 LINKS_MESSAGE = (
-    "[Instagram]({instagram}) | "
-    "[Resultados]({results}) | "
+    "[Instagram]({instagram}) "
+    "[Resultados]({results}) "
     "[Suporte]({support})"
 ).format(**LINKS_DICT)
 

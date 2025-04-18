@@ -28,9 +28,8 @@ if __name__ == '__main__':
     logging.info(f'\nStarting Striker Betting Bot...')
     print_separator()
     
-    logging.info('Filling data gaps...')
-    update.fill_data_gaps()
+    #update.fill_data_gaps()
 
     model = get.get_model()
 
-    scanner.run(model=model, i=50)
+    scanner.run(model=model, i=25)

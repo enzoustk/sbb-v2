@@ -29,7 +29,12 @@ def run(model, i: int = 50, sleep_time: int = 1):
             read_matches = set()
         
     while True:
+        if i_counter % 10 == 0:
+            print('i_counter = ', i_counter)
+        
         live_matches = fetch.live_events()
+
+        print('data fetched ')
 
         unread_matches = [
             match for match in live_matches 

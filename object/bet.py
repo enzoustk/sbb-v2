@@ -1,11 +1,12 @@
+
 from datetime import datetime, timezone
 import logging
-import threading
 import pandas as pd
 from data import load
-from api import fetch, validate
 from model import calculate
 from bet_bot import message
+from api import fetch, validate
+from utils.utils import print_separator
 from model.betting_config import (EV_THRESHOLD, TIME_RANGES,
     AJUSTE_FUSO, HOT_TIPS_STEP, MAX_HOT, HOT_THRESHOLD)
 from files.paths import NOT_ENDED, ERROR_EVENTS, MADE_BETS
@@ -182,6 +183,7 @@ class Bet:
             print(f'Bet: {self.bet_type} {self.handicap} @{self.bet_odd}')
             print(f'Minimum Line: {self.minimum_line} @{self.minimum_odd}')
             print(f'Hot Tip: {print_hot_ev}')
+            print_separator()
         
         self._generate_message()
         self._send_message()
@@ -190,10 +192,16 @@ class Bet:
         """Adds the current bet to the NOT_ENDED file."""
         
         existing_df = load.data('not_ended')
+        existing_df = existing_df.dropna(axis=1, how='all')
 
         new_data = pd.DataFrame([self.__dict__])
-        updated_df = pd.concat([existing_df, new_data], ignore_index=True)
-        updated_df.to_csv(NOT_ENDED, index=False)
+        new_data = new_data.dropna(axis=1, how='all')
+
+        if not existing_df.empty or all(existing_df.isna().all()):
+            updated_df: pd.DataFrame = pd.concat([existing_df, new_data], ignore_index=True)
+            updated_df.to_csv(NOT_ENDED, index=False)
+        else:
+            new_data.to_csv(NOT_ENDED, index=False)
     
     def handle_ended_bet(self):
 
@@ -274,8 +282,8 @@ class Bet:
         '''
 
         self._get_result_emoji()
-        self.message += EDITED_MESSAGE.format(**self.__dict__, LINKS_MESSAGE=LINKS_MESSAGE)
         self._escape()
+        self.message += EDITED_MESSAGE.format(**self.__dict__, LINKS_MESSAGE=LINKS_MESSAGE)
         self.edited = message.edit(self.message_id, self.message, self.chat_id)
 
     def _get_bet_type(self, bet_type: str | None):
@@ -288,7 +296,7 @@ class Bet:
 
         self.bet_type = bet_type
 
-    def _escape(self):
+    def _escape(self): 
         """Escapes all problematic characters in the message."""
         self.message = (
             self.message.replace('.', r'\.')
@@ -518,24 +526,25 @@ class Bet:
         
         """Print all bet data to the console.
         """
-
+        print_separator(30)
         print(f"League: {self.league}")
         print(f"{self.home_player} ({self.home_team}) vs {self.away_player} ({self.away_team})")
-        print('-' * 20)
+        print_separator(15)
         print(f"Line: {self.handicap}")
         print(f"Lambda: {self.lambda_pred}")
-        print('-' * 20)
+        print_separator(15)
         print(f"Over Probability: {self.prob_over*100:.2f}%")
         print(f'Over Odd: {self.odd_over}')
         print(f"Under Probability: {self.prob_under*100:.2f}%")
         print(f'Under Odd: {self.odd_under}')
-        print('-' * 20)
+        print_separator(15)
         print(f"Over EV: {self.ev_over*100:.2f}%")
         print(f"Under EV: {self.ev_under*100:.2f}%")
-        print('-' * 60)
+        print_separator(15)
         
         if self.bet_type is None: 
             print('No EV+ Bet Found')
+            print_separator()
   
     def _find_min_line(self):
         """Finds and sets the minimum line and odd for the current bet type."""

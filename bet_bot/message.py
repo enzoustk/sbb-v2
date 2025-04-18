@@ -51,6 +51,7 @@ def send(message):
     }
 
     response = requests.post(url, data=data)
+    response_data = response.json()
 
     if response.ok and response.json().get('ok'):
         logging.info("Telegram message sent successfully")
@@ -58,6 +59,8 @@ def send(message):
         return message_id, TELEGRAM_CHAT_ID
     else:
         logging.error("Telegram message not sent")
+        logging.error(f"Status code: {response.status_code}")
+        logging.error(f"Response: {response_data}")
         return None, None
 
 
