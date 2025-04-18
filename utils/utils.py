@@ -1,3 +1,3 @@
-def print_separator():
-    print('\n' + '-' * 60 + '\n')
+def print_separator(size: int = 60):
+    print('\n' + '-' * size + '\n')
 

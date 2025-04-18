@@ -13,7 +13,7 @@ def historic_data(data: list):
 
 
     if not data:
-        logging.info(f'No new ended events to append')
+        logging.debug(f'No new ended events')
         return
     
     existing_data = load.data('historic')
@@ -33,6 +33,7 @@ def historic_data(data: list):
 
 
     if existing_data.empty:
+        logging.debug('Existing historic data is empty, creating new file...')
         new_df.to_csv(HISTORIC_DATA, index=False)
         logging.info(f'Historic file created.'
             f'{len(new_df)} matches added.')
@@ -43,6 +44,7 @@ def historic_data(data: list):
         combined_df['date'] = pd.to_datetime(combined_df['date'])
         combined_df.drop_duplicates(subset='event_id')
         combined_df.to_csv(HISTORIC_DATA, index=False)
+
         logging.info(f'{len(new_df)} new matches added to ended events')
         
 
@@ -116,7 +118,7 @@ def not_ended(data: list):
     
     ne_df = pd.DataFrame([bet.__dict__ for bet in data])
     ne_df.to_csv(NOT_ENDED, index=False)
-    logging.info('' \
+    logging.info(
         'Not_ended events updated.'
         f' {len(ne_df)} left to update.'
         )

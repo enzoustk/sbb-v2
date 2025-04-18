@@ -21,12 +21,22 @@ def run():
 
     TODO: Create ERROR_EVENTS handling method
     """
+    logging.debug('Starting Updater..')
     existing_bets = {}
 
     with LOCK:
         events_to_update = load.data('not_ended')
-        not_ended, ended, error_events, made_bets = [], [], [], []
-        print('arquivos carregados')
+        logging.debug(f'Updating data for {len(events_to_update)} events')
+        
+        if events_to_update.empty:
+            logging.debug('No events to Update.')
+            return
+
+        ended = []
+        made_bets = []
+        not_ended = []
+        error_events = [] 
+
         for match_data in events_to_update.to_dict('records'):
             event_id = match_data.get('event_id')
 
@@ -35,7 +45,7 @@ def run():
                     event_str = match_data['event'].replace("'", '"')
                     event = ast.literal_eval(event_str)
                 except Exception as e:
-                    print(f"Erro ao converter 'event': {e}")
+                    logging.exception(f"Error formatting 'event': {e}")
                     continue 
 
             if event_id in existing_bets:
@@ -50,7 +60,6 @@ def run():
             match._get_end()          
             
             if match.ended is True:    
-                print(f'match {match.event_id} terminou, tratando')
                 match.handle_ended_bet()
                 match.mark_processed()
                 existing_bets.pop(event_id, None)
@@ -69,7 +78,7 @@ def run():
                 not_ended.append(match)
 
             else: 
-                logging.warning(
+                logging.error(
                     f'Total Processing: Labeling Error for Event'
                     f' {match.event_id}'
                     )
@@ -79,5 +88,5 @@ def run():
         update.not_ended(not_ended)
         
         if made_bets is not None:
-            logging.info(f'Added {len(made_bets)} bets to xlsx.')
+            logging.info(f'Sucessfully added {len(made_bets)} bets to xlsx.')
         

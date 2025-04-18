@@ -56,11 +56,12 @@ def match(df, event, model):
     try:
        
         hora_identificacao = datetime.now().strftime('%H:%M:%S')
-        print(f"Novo evento identificado às {hora_identificacao}")
+        
+        print_separator()
+        logging.info(f"Novo evento identificado às {hora_identificacao}")
 
         bet = Bet(event)
         bet.get_odds(market='goals')
-        print('event: date', bet.date)
 
         # TODO: Adicionar trava para caso features insuficientes, não executar.
         
@@ -72,10 +73,10 @@ def match(df, event, model):
 
         X = features[REQUIRED_FEATURES]
 
-        print_separator()
-        print("Dados reais usados para previsão (X_ao_vivo):")
-        print(X.to_string(index=False))
-        print_separator()
+        print_separator(30)
+        logging.info("Dados reais usados para previsão (X_ao_vivo):")
+        logging.info(X.to_string(index=False))
+        print_separator(30)
         
         lambda_pred = model.predict(X)
         
