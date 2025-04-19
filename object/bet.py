@@ -1,15 +1,16 @@
 
-from datetime import datetime, timezone
 import logging
 import pandas as pd
 from data import load
 from model import calculate
-from bet_bot import message
+from zoneinfo import ZoneInfo
 from api import fetch, validate
+from bet_bot import message, escape
 from utils.utils import print_separator
+from datetime import datetime, timezone, timedelta
 from model.betting_config import (EV_THRESHOLD, TIME_RANGES,
     AJUSTE_FUSO, HOT_TIPS_STEP, MAX_HOT, HOT_THRESHOLD)
-from files.paths import NOT_ENDED, ERROR_EVENTS, MADE_BETS
+from files.paths import NOT_ENDED, MADE_BETS
 from bet_bot.constants import (TELEGRAM_MESSAGE, MIN_LINE_MESSAGE,
     MIN_ODD_MESSAGE, HOT_TIPS_MESSAGE, EDITED_MESSAGE,
     RESULT_EMOJIS, BET_TYPE_EMOJIS, LINKS_MESSAGE)
@@ -280,10 +281,16 @@ class Bet:
         Updates Bet object with the new data
         Edits telegram message
         '''
-
         self._get_result_emoji()
-        self._escape()
-        self.message += EDITED_MESSAGE.format(**self.__dict__, LINKS_MESSAGE=LINKS_MESSAGE)
+
+        escaped_dict = {
+            key: escape.markdown(value)
+            for key, value 
+            in self.__dict__.items()
+            }
+        
+        self.message = escape.markdown(self.message)
+        self.message += EDITED_MESSAGE.format(**escaped_dict, LINKS_MESSAGE=LINKS_MESSAGE)
         self.edited = message.edit(self.message_id, self.message, self.chat_id)
 
     def _get_bet_type(self, bet_type: str | None):
@@ -296,18 +303,6 @@ class Bet:
 
         self.bet_type = bet_type
 
-    def _escape(self): 
-        """Escapes all problematic characters in the message."""
-        self.message = (
-            self.message.replace('.', r'\.')
-                                .replace('-', r'\-')
-                                .replace('(', r'\(')
-                                .replace(')', r'\)')
-                                .replace('|', r'\|')
-                                .replace('#', r'\#')
-                                .replace('_', r'\_')
-        )
-    
     def _get_result_emoji(self):
         """Gets emoji for the result and bet type
         Assings it to object attributes"""
@@ -335,7 +330,6 @@ class Bet:
         live_ids = {str(event['id']) for event in live_events}
         
         if str(self.event_id) not in live_ids:
-            print(f'evento {self.event_id} fora dos ao vivo')
             if self._get_score() is not None:
                 self.ended = True
   
@@ -451,7 +445,14 @@ class Bet:
     def _get_time_attributes(self):
         """Sets all time-related atributes
         based on the current time"""
-        self.time_sent = pd.Timestamp.now() - pd.Timedelta(hours=AJUSTE_FUSO)
+
+        current_tz = datetime.now().astimezone().tzinfo
+        brasil_tz = ZoneInfo("America/Sao_Paulo")
+
+        self.time_sent = pd.Timestamp.now()
+        if current_tz != brasil_tz:
+            self.time_sent -= pd.Timedelta(hours=AJUSTE_FUSO)
+
         self.month = self.time_sent.strftime("%m-%Y")
         hour = self.time_sent.hour
 
@@ -482,15 +483,15 @@ class Bet:
         To the Made Bets Excel file
         """
         return{
-            'Horário Envio': self._format_data(self.time_sent),
+            'Horário Envio': self._format_data(pd.to_datetime(self.time_sent)),
             'Liga': self._format_data(self.league),
             'Partida': self.home_str + ' vs. ' + self.away_str,
             'Tipo Aposta': self._format_data(self.bet_type),
             'Hot Tips': self._format_data(self.hot_emoji),
             'Linha': self._format_data(self.handicap),
             'Resultado' : self._format_data(self.result),
-            'Odd': {self._format_data(self.bet_odd)},
-            'Lucro': {self._format_data(self.profit)},
+            'Odd': self._format_data(self.bet_odd),
+            'Lucro': self._format_data(self.profit),
             'Intervalo': self._format_data(self.time_range),
         }
     
@@ -527,16 +528,17 @@ class Bet:
         """Print all bet data to the console.
         """
         print_separator(30)
+        print(f"Home: {self.home_player} ({self.home_team}")
+        print(f"Away: {self.away_player} ({self.away_team})")
         print(f"League: {self.league}")
-        print(f"{self.home_player} ({self.home_team}) vs {self.away_player} ({self.away_team})")
         print_separator(15)
         print(f"Line: {self.handicap}")
         print(f"Lambda: {self.lambda_pred}")
         print_separator(15)
-        print(f"Over Probability: {self.prob_over*100:.2f}%")
         print(f'Over Odd: {self.odd_over}')
-        print(f"Under Probability: {self.prob_under*100:.2f}%")
         print(f'Under Odd: {self.odd_under}')
+        print(f"Over Probability: {self.prob_over*100:.2f}%")
+        print(f"Under Probability: {self.prob_under*100:.2f}%")
         print_separator(15)
         print(f"Over EV: {self.ev_over*100:.2f}%")
         print(f"Under EV: {self.ev_under*100:.2f}%")
@@ -583,6 +585,7 @@ class Bet:
             self.message += MIN_LINE_MESSAGE.format(**formated_dict)
         
         if self.hot_ev is not None:
+            if self.hot_ev == 0: return
             self.message += HOT_TIPS_MESSAGE.format(**formated_dict)
 
     def _send_message(self):
@@ -625,7 +628,6 @@ class Bet:
             - Implements exception handling for missing file scenarios
             - Requires openpyxl package for Excel manipulation
         """
-
         if self.bet_type is None:
             logging.warning("Attempted to save match we didn't bet on. Skipped Sucessfully")
             return
@@ -637,6 +639,7 @@ class Bet:
                 
                 if str(self.month) in writer.book.sheetnames:
                     df_existing = pd.read_excel(MADE_BETS, sheet_name=sheet_name)
+                
                 else:
                     df_existing = pd.DataFrame(columns=self._get_excel_columns().keys())
                 
@@ -644,10 +647,13 @@ class Bet:
                 new_data = pd.DataFrame([self._get_excel_columns()])
                 df_updated = pd.concat([df_existing, new_data], ignore_index=True)
                 df_updated.to_excel(writer, sheet_name=sheet_name, index=False)
+
+                logging.info(f"Saved bet {self.home_str + ' vs. ' + self.away_str} in xlsx.\nProfit: {self.profit}")
+
                 self.saved_on_excel = True
                 
         except FileNotFoundError:
             new_data = pd.DataFrame([self._get_excel_columns()])
             with pd.ExcelWriter(MADE_BETS, engine='openpyxl') as writer:
                 new_data.to_excel(writer, sheet_name=sheet_name, index=False)
-            self.saved_on_excel = True
+            self.saved_on_excel = True        

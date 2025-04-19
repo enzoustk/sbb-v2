@@ -1,6 +1,6 @@
 import ast
 import logging
-import pandas as pd
+from processes import circuit
 from object.bet import Bet
 from data import load, update
 from files.paths import LOCK
@@ -33,7 +33,6 @@ def run():
             return
 
         ended = []
-        made_bets = []
         not_ended = []
         error_events = [] 
 
@@ -64,10 +63,6 @@ def run():
                 match.mark_processed()
                 existing_bets.pop(event_id, None)
 
-                if match.bet_type is not None: 
-                    made_bets.append(match)
-                    match._save_made_bet()
-
             if match.totally_processed is True: 
                 ended.append(match)
 
@@ -86,7 +81,8 @@ def run():
         update.historic_data(ended)
         update.error_events(error_events)
         update.not_ended(not_ended)
-        
-        if made_bets is not None:
-            logging.info(f'Sucessfully added {len(made_bets)} bets to xlsx.')
-        
+
+        circuit.breaker(
+            threshold=-10,
+            hours=16
+        )

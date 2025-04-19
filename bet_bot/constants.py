@@ -1,4 +1,5 @@
 # pyright: reportUndefinedVariable=false
+from bet_bot import escape
 
 TELEGRAM_BET_BOT_TOKEN = "7694829289:AAF3xDQ0qXQHy5Zbf-QD_Zv5K4RnT2lyx8Q"
 TELEGRAM_CHAT_ID = -1002305899864
@@ -23,7 +24,7 @@ MIN_LINE_MESSAGE = (
 )
 
 MIN_ODD_MESSAGE = (
-    "(Mín @{minimum_odd})\n"
+    " (Mín @{minimum_odd})\n"
 )
 
 HOT_TIPS_MESSAGE = (
@@ -38,14 +39,21 @@ EDITED_MESSAGE = (
 
 LINKS_DICT = {
     'instagram': 'https://www.instagram.com/striker.betting/',
+    'instagram_text': escape.markdown('Instagram'), 
+    
     'results': 'https://t.me/StrikerSuporteBot',
-    'support': 'https://linktr.ee/strikerbetting'
+    'results_text': escape.markdown('Resultados'),
+
+    'support': 'https://linktr.ee/strikerbetting',
+    'support_text': escape.markdown('Suporte'),
+
+    'sep': escape.markdown('|')
 }
 
 LINKS_MESSAGE = (
-    "[Instagram]({instagram}) "
-    "[Resultados]({results}) "
-    "[Suporte]({support})"
+    "[{instagram_text}]({instagram}) {sep} "
+    "[{results_text}]({results}) {sep} "
+    "[{support_text}]({support})"
 ).format(**LINKS_DICT)
 
 

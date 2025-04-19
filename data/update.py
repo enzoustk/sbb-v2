@@ -26,6 +26,10 @@ def historic_data(data: list):
         if key not in exclude_keys}  
         for bet in data
     ]
+
+    if not new_data:
+        logging.info('No data to update')
+        return
     
     new_df = pd.DataFrame(new_data)
     new_df['date'] = pd.to_datetime(new_df['date'])
@@ -38,7 +42,7 @@ def historic_data(data: list):
         logging.info(f'Historic file created.'
             f'{len(new_df)} matches added.')
         
-    
+
     else:
         combined_df: pd.DataFrame = pd.concat([existing_data, new_df])
         combined_df['date'] = pd.to_datetime(combined_df['date'])
@@ -135,6 +139,7 @@ def error_events(data: list):
     
     if error_df is not None:
         logging.info(f' Added {len(error_df)} error events to error file')
+        logging.info(f" Events added to Error Events: {error_df}")
 
 
 def remove_columns_to_historic():
