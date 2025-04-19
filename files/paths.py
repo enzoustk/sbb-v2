@@ -5,11 +5,13 @@ HISTORIC_DATA = r'files\sheets\game_data.csv'
 
 #All matches we betted on
 MADE_BETS = r'files\sheets\bets.xlsx'
+MADE_BETS_MD = r'files\sheets\bets_md.md'
+MAIN_CONTEXT_TXT = r'files\context\main_context.txt'
 
 # All analised matches
 NOT_ENDED = r'files\sheets\not_ended.csv'
 ERROR_EVENTS = r'files\sheets\error_events.csv'
 
-LOCK = FileLock('files\sheets\.lock')
+LOCK = FileLock(r'files\sheets\.lock')
 
 MODEL_PATH = r'files\model\sbb_model.json'

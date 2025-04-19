@@ -62,7 +62,6 @@ def odds(event_id: str) -> list[dict]:
     params = {'token': API_TOKEN, 'event_id': event_id}
     
     try:
-        print(f'fetchin odds using url {URLS['odds']}')
         response = requests.get(URLS['odds'], params=params)
         response.raise_for_status()
         all_data = response.json()

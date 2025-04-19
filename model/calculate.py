@@ -140,7 +140,7 @@ def profit(bet_type: float, handicap: float, total_score: int, bet_odd: float) -
 
     if bet_type.lower() == 'over': outcome = total_score - handicap
     elif bet_type.lower() == 'under': outcome = handicap - total_score
-    print('bet outcome to calculate profit = ', outcome)
+
     try:
         if outcome >= 0.5: 
             profit = (bet_odd - 1)
