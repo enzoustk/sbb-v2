@@ -3,25 +3,26 @@ import logging
 import pandas as pd
 from bet_bot import message
 from datetime import datetime, timedelta, date
-from files.paths import HISTORIC_DATA
+from files.paths import HISTORIC_DATA, LOCK, MADE_BETS
 from model.betting_config import TIME_RANGES
 from bet_bot.constants import (
     REPORT_TITLE, REPORT_BODY, REPORT_TOTAL,
     REPORT_TIME_RANGE_TITLE, REPORT_TIME_RANGE_BODY,
 )
 
+logger = logging.getLogger(__name__)
+
 # TODO: Create CustomReport and PlayerReport classes
 
-class Report():
+class Report:
     def __init__(
         self, 
         df: pd.DataFrame | None = None,
-        date_column: str = 'time_sent'
+        date_column: str = 'date'
     ):
-        
         locale.setlocale(locale.LC_TIME, 'pt_BR.UTF-8')
         self.df = self._get_df(date_column, df)
-        self.date_column = df[date_column]
+        self.date_column = date_column
         self.month_in_date = True
         self.message = []
         self.today = date.today()
@@ -38,17 +39,19 @@ class Report():
 
     
     def build_and_send(self):
-        for report in self.reports:
-            self.generate_title(report)
-            self.generate_body(report)
-            self.generate_time_range(report)
-            self.generate_total(report)
-            self.message.append('end')
-        
-        messages = self.split_list_on_separator()
-        for telegram_message in messages:
-            message.send(telegram_message)
-
+        try:
+            for report in self.reports:
+                self.generate_title(report)
+                self.generate_body(report)
+                self.generate_time_range(report)
+                self.generate_total(report)
+                self.message.append('end')
+            
+            messages = self.split_list_on_separator()
+            for telegram_message in messages:
+                message.send(telegram_message)
+        except Exception as e:
+            logger.error(f'Error mandando report: {e}')
     # ----------------------------------- #
 
     
@@ -79,25 +82,21 @@ class Report():
             self.league_str = league
             self.filtered_df = self.filtered_df[self.filtered_df['league'] == league]
         else:
-            logging.error(f"League '{league}' not found in the league list.")
+            logger.error(f"League '{league}' not found in the league list.")
 
     def _filter_ev_type(self,
-        hot: bool = False,
-        not_hot: bool = False,
+            hot: bool = False,
+            not_hot: bool = False,
         ):
-        
-        self.reports = []
-
-        if hot:
-            self.hot_df = self.filtered_df[self.filtered_df['ev_hot'] > 0]
-            self.reports.append(self.hot_df)
-
-        if not_hot:
-            self.not_hot_df = self.filtered_df[self.filtered_df['ev_hot'] == 0]
-            self.reports.append(self.hot_df)
-
-        if hot and not_hot:
-            self.reports.append(self.filtered_df)
+            self.reports = []
+            if hot:
+                self.hot_df = self.filtered_df[self.filtered_df['ev_hot'] > 0]
+                self.reports.append(self.hot_df)
+            if not_hot:
+                self.not_hot_df = self.filtered_df[self.filtered_df['ev_hot'] == 0]
+                self.reports.append(self.not_hot_df)  # Corrigido: append not_hot_df
+            if hot and not_hot:
+                self.reports.append(self.filtered_df)
 
 
     # ----------------------------------- #
@@ -134,29 +133,24 @@ class Report():
         self.message.append(report_body)
 
     def generate_time_range(self, df: pd.DataFrame):
-        
-        time_range = []
-        grouped = df.groupby(
-            'time_range', observed=True
-            )['profit'].sum()
-        
-        ordered_profits = grouped.reindex(
-            TIME_RANGES.keys(), fill_value=0
-        )
-        
-        for time_range in TIME_RANGES:
-            profit = ordered_profits[time_range]
-            emoji = self._get_emoji(profit=profit)
-            time_range.append(
+        time_range_list = []
+        grouped = df.groupby('time_range', observed=True)['profit'].sum()
+        ordered_profits = grouped.reindex(TIME_RANGES.keys(), fill_value=0)
+            
+        for time_key in TIME_RANGES:
+            profit = ordered_profits[time_key]
+            emoji = self._get_emoji(profit)
+            time_range_list.append(
                 REPORT_TIME_RANGE_BODY.format(
-                    time_range=time_range,
+                    time_range=time_key,
                     emoji=emoji,
                     profit=f"{profit:,.2f}"
                 )
             )
-        
+            
         self.message.append(REPORT_TIME_RANGE_TITLE)
-        self.message.append(time_range)
+        self.message.append(time_range_list)
+
 
     def generate_total(self, df: pd.DataFrame):
     
@@ -222,13 +216,15 @@ class Report():
     def _get_df(self, date_column: str, df: pd.DataFrame | None = None):
         if df is None:
             try: 
-                df = pd.read_csv(HISTORIC_DATA)
-                df = df.dropna(subset='bet_type')
-                df[date_column] = pd.to_datetime(
-                    df[date_column]
-                )
-                print(f"Data loaded sucessfully: {len(df)} lines")
-                return df
+                with LOCK:
+                    df = pd.read_csv(HISTORIC_DATA)
+                    df = df.dropna(subset='bet_type')
+                    df[date_column] = pd.to_datetime(
+                        df[date_column]
+                    )
+                    copied_df = df.copy()
+                    print(f"Data loaded sucessfully: {len(copied_df)} lines")
+                    return copied_df
             except Exception as e: 
                 print(f"Error loading data: {e}")
                 return pd.DataFrame()
@@ -279,8 +275,8 @@ class Report():
         )
 
         final_df = final_df.sort_values(
-            by='final_df', ascending=False)
-        
+            by='total_profit', ascending=False  
+        )
         return final_df
 
     def _get_league(self, df: pd.DataFrame):
@@ -299,7 +295,7 @@ class Report():
         return ", ".join(leagues[:-1]) + " e " + leagues[-1]
             
     def _get_ev_type(self, df: pd.DataFrame):
-        ev_types = df['hot_ev'].drop_duplicates().tolist
+        ev_types = df['hot_ev'].drop_duplicates().tolist()
         
         if all(x > 0 for x in ev_types):
             return "Hot Tips 🔥"
@@ -368,7 +364,7 @@ class NormalReport(Report):
 
         super().__init__(df)
         self.date = datetime.now() - timedelta(days=1)
-        self.interval = self.date.strftime('%M de %Y')
+        self.interval = self.date.strftime('%m de %Y')
         self.reports = self._filter_df()
 
     def _filter_df(self):
@@ -379,7 +375,7 @@ class NormalReport(Report):
         2- Hot Tips
         3- Um Mensal (Total) para cada liga presente no Original
         """
-        self.df = pd.DataFrame
+
         
         reports = []
 
