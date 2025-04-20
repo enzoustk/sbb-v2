@@ -15,3 +15,8 @@ ERROR_EVENTS = r'files\sheets\error_events.csv'
 LOCK = FileLock(r'files\sheets\.lock')
 
 MODEL_PATH = r'files\model\sbb_model.json'
+
+LOG_PATHS = {
+    'bet': r'files\logs\bet.log',
+    'error': r'files\logs\error.log'
+}
