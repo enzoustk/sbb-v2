@@ -29,9 +29,6 @@ class CustomReport(Report):
             self.interval = self._set_custom_interval()
             self._set_custom_dates(start_date, end_date)
        
-
-
-
     def _set_custom_dates(self, start_date, end_date):
         
         self.start_date = self.df[self.date_column].min()
