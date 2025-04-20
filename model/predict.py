@@ -1,13 +1,16 @@
+import logging
+import pandas as pd
+from datetime import datetime
+from object.bet import Bet
+from features import create
+from utils.utils import print_separator
+from files.paths import ERROR_EVENTS
+from features.required import REQUIRED_FEATURES
+
+logger = logging.getLogger(__name__)
+bet_logger = logging.getLogger('bet')
+
 def match(df, event, model):
-    import logging
-    import pandas as pd
-    from datetime import datetime
-    from object.bet import Bet
-    from features import create
-    from utils.utils import print_separator
-    from files.paths import ERROR_EVENTS
-    from features.required import REQUIRED_FEATURES
-        
     """Processes live betting events using a predictive model.
 
     Performs error checking, feature engineering, model prediction, and bet handling
@@ -41,13 +44,13 @@ def match(df, event, model):
                 * Persists bet to NOT_ENDED file via `Bet.save_bet()`
             - Logs errors during processing
 
-        Exceptions are logged via logging.error().
+        Exceptions are logged via logger.error().
     """
     try:
         with open(ERROR_EVENTS, 'r', encoding='latin-1') as file:
             error_events = set(line.strip() for line in file)
     except FileNotFoundError:
-        logging.info('Error Events file not found. Skipping it')
+        logger.info('Error Events file not found. Skipping it')
         error_events = set()
         
     if event['id'] in error_events:
@@ -58,7 +61,7 @@ def match(df, event, model):
         hora_identificacao = datetime.now().strftime('%H:%M:%S')
         
         print_separator()
-        logging.info(f"Novo evento identificado às {hora_identificacao}")
+        bet_logger.bet(f"Novo evento identificado às {hora_identificacao}")
 
         bet = Bet(event)
         bet.get_odds(market='goals')
@@ -74,8 +77,8 @@ def match(df, event, model):
         X = features[REQUIRED_FEATURES]
 
         print_separator(30)
-        logging.info("Dados reais usados para previsão (X_ao_vivo):")
-        logging.info(X.to_string(index=False))
+        bet_logger.bet("Dados reais usados para previsão (X_ao_vivo):")
+        bet_logger.bet(X.to_string(index=False))
         print_separator(30)
         
         lambda_pred = model.predict(X)
@@ -88,4 +91,5 @@ def match(df, event, model):
         bet.save_bet()
 
     except Exception as e:
-        logging.error(f"Erro ao prever para o jogo {bet.event_id}: {e}")
+        bet_logger.bet(f"Erro ao prever para o jogo {bet.event_id}: {e}")
+        logger.error(f"Erro ao prever para o jogo {bet.event_id}: {e}")

@@ -32,6 +32,6 @@ def get_txt(file: str = MAIN_CONTEXT_TXT):
         with open(file, "r",) as f:
             return f.read()
     except FileNotFoundError:
-        logging.error(f'Error getting txt: File {file} not found')
+        logger.error(f'Error getting txt: File {file} not found')
     
 

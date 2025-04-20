@@ -6,7 +6,6 @@ from model import calculate
 from zoneinfo import ZoneInfo
 from api import fetch, validate
 from bet_bot import message, escape
-from utils.utils import print_separator
 from datetime import datetime, timezone, timedelta
 from model.betting_config import (EV_THRESHOLD, TIME_RANGES,
     AJUSTE_FUSO, HOT_TIPS_STEP, MAX_HOT, HOT_THRESHOLD)
@@ -14,6 +13,9 @@ from files.paths import NOT_ENDED, MADE_BETS
 from bet_bot.constants import (TELEGRAM_MESSAGE, MIN_LINE_MESSAGE,
     MIN_ODD_MESSAGE, HOT_TIPS_MESSAGE, EDITED_MESSAGE,
     RESULT_EMOJIS, BET_TYPE_EMOJIS, LINKS_MESSAGE)
+
+logger = logging.getLogger(__name__)
+bet_logger = logging.getLogger('bet')
 
 
 class Bet:
@@ -180,12 +182,13 @@ class Bet:
         self._get_hot_tip()
         print_hot_ev = self.hot_ev if self.hot_ev is not None else 0
 
-        if self.bet_type is not None: 
-            print(f'Bet: {self.bet_type} {self.handicap} @{self.bet_odd}')
-            print(f'Minimum Line: {self.minimum_line} @{self.minimum_odd}')
-            print(f'Hot Tip: {print_hot_ev}')
-            print_separator()
-        
+        if self.bet_type is not None:
+            message = f"""
+            Bet: {self.bet_type} {self.handicap} @{self.bet_odd}
+            Minimum Line: {self.minimum_line} @{self.minimum_odd}
+            Hot Tip: {print_hot_ev}
+        """
+        bet_logger.bet(message)
         self._generate_message()
         self._send_message()
 
@@ -218,11 +221,50 @@ class Bet:
             self.bet_type, self.handicap, self.total_score, self.bet_odd)
         self._edit_telegram_message()
         self._save_made_bet()
-        
+    
     def mark_processed(self):
-        """Gets all the attributes that are needed to be processed
-        If all of them were processed successfully, marks self.totally_processed as True
-        """
+        """Marca o processamento completo e identifica razões específicas de falha."""
+        self.totally_processed = True
+        reasons = []
+
+        if self.bet_type is not None:
+            # Verificar cada condição individualmente
+            if not self.sent: 
+                reasons.append("não foi enviado")
+            if not self.edited:
+                reasons.append("não foi editado")
+            if not self.ended:
+                reasons.append("não foi finalizado")
+            if not self.saved_on_excel:
+                reasons.append("não foi salvo no Excel")
+            if self.profit is None:
+                reasons.append("lucro não calculado")
+            if self.result is None:
+                reasons.append("resultado indefinido")
+            if self.raw_score is None:
+                reasons.append("placar bruto ausente")
+        else:
+            # Caso sem tipo de aposta
+            if self.raw_score is None:
+                reasons.append("placar bruto ausente")
+
+        # Atualizar status e mostrar razões se houver falhas
+        if reasons:
+            self.totally_processed = False
+            logger.error(f'Bet {self.home_str} vs {self.away_str} não processado. Motivos:')
+            for i, reason in enumerate(reasons, 1):
+                logger.error(f'{i}. {reason.capitalize()}')
+        else:
+            self.totally_processed = True
+
+
+    """
+    def mark_processed(self):
+    """
+    """Gets all the attributes that are needed to be processed
+    If all of them were processed successfully, marks self.totally_processed as True
+    """
+    """
         
         if self.bet_type is not None:
             self.totally_processed = all([
@@ -237,7 +279,10 @@ class Bet:
         else: 
             if self.raw_score is not None:
                 self.totally_processed = True
- 
+        
+        print('Bet ', self.home_str, self.away_str, 'was not totally processed, reason:')
+    """
+
     def _update_from_event(self, event: dict):
         """Parse and clean event data with NaN handling"""
         cleaned_event = self._clean_data(event)
@@ -364,7 +409,7 @@ class Bet:
             away = str(self.away_player).lower()
             return tuple(sorted([home, away]))
         except:
-            logging.error("Error: Failed to get players for "
+            logger.error("Error: Failed to get players for "
                 f"Event ID: {self.event_id}")
             return ('', '')
 
@@ -382,7 +427,7 @@ class Bet:
 
 
         if side is None or type is None:
-            logging.error("side or type is None while trying to get name")
+            logger.error("side or type is None while trying to get name")
             return None
 
         team_str = self.event.get(side, {}).get('name')
@@ -392,7 +437,7 @@ class Bet:
                 return team_str.split('(')[0].strip().lower()
             
             except Exception as e:
-                logging.error(f"Error: {e}")
+                logger.error(f"Error: {e}")
                 return None
         
         if type == 'player':
@@ -402,7 +447,7 @@ class Bet:
                 return team_str[start:end].lower()
             
             except Exception as e:
-                logging.error(f"Error: {e}")
+                logger.error(f"Error: {e}")
                 return None
     
     def _get_score(self):
@@ -490,8 +535,8 @@ class Bet:
             'Hot Tips': self._format_data(self.hot_emoji),
             'Linha': self._format_data(self.handicap),
             'Resultado' : self._format_data(self.result),
-            'Odd': self._format_data(self.bet_odd),
-            'Lucro': self._format_data(self.profit),
+            'Odd': self.bet_odd,
+            'Lucro': self.profit,
             'Intervalo': self._format_data(self.time_range),
         }
     
@@ -524,30 +569,33 @@ class Bet:
             self.bet_ev = self.ev_under
     
     def _print_bet_data(self):
+        """Log all bet data using the bet logger."""
+        bet_logger = logging.getLogger('bet')
         
-        """Print all bet data to the console.
+        
+        log_message = f"""
+        === New Bet ===
+        Event ID: {self.event_id}
+        Home: {self.home_player} ({self.home_team})
+        Away: {self.away_player} ({self.away_team})
+        League: {self.league}
+        ---
+        Line: {self.handicap}
+        Lambda: {self.lambda_pred}
+        ---
+        Over Odd: {self.odd_over}
+        Under Odd: {self.odd_under}
+        Over Probability: {self.prob_over*100:.2f}%
+        Under Probability: {self.prob_under*100:.2f}%
+        ---
+        Over EV: {self.ev_over*100:.2f}%
+        Under EV: {self.ev_under*100:.2f}%
         """
-        print_separator(30)
-        print(f"Home: {self.home_player} ({self.home_team}")
-        print(f"Away: {self.away_player} ({self.away_team})")
-        print(f"League: {self.league}")
-        print_separator(15)
-        print(f"Line: {self.handicap}")
-        print(f"Lambda: {self.lambda_pred}")
-        print_separator(15)
-        print(f'Over Odd: {self.odd_over}')
-        print(f'Under Odd: {self.odd_under}')
-        print(f"Over Probability: {self.prob_over*100:.2f}%")
-        print(f"Under Probability: {self.prob_under*100:.2f}%")
-        print_separator(15)
-        print(f"Over EV: {self.ev_over*100:.2f}%")
-        print(f"Under EV: {self.ev_under*100:.2f}%")
-        print_separator(15)
-        
-        if self.bet_type is None: 
-            print('No EV+ Bet Found')
-            print_separator()
-  
+
+        bet_logger.bet(log_message)
+        if self.bet_type is None:
+            bet_logger.bet('No +EV Bet Found')   
+
     def _find_min_line(self):
         """Finds and sets the minimum line and odd for the current bet type."""
         (self.minimum_line,
@@ -600,6 +648,7 @@ class Bet:
         self.message_id, self.chat_id = message.send(self.message)
         self._get_time_attributes()
         if self.message_id is None: self.sent = False
+        else: self.sent = True
 
     def _save_made_bet(self):
         """Saves successfully placed bets to a month-specific Excel sheet.
@@ -629,7 +678,7 @@ class Bet:
             - Requires openpyxl package for Excel manipulation
         """
         if self.bet_type is None:
-            logging.warning("Attempted to save match we didn't bet on. Skipped Sucessfully")
+            logger.warning("Attempted to save match we didn't bet on. Skipped Sucessfully")
             return
         
         try:
@@ -648,7 +697,7 @@ class Bet:
                 df_updated = pd.concat([df_existing, new_data], ignore_index=True)
                 df_updated.to_excel(writer, sheet_name=sheet_name, index=False)
 
-                logging.info(f"Saved bet {self.home_str + ' vs. ' + self.away_str} in xlsx.\nProfit: {self.profit}")
+                logger.info(f"Saved bet {self.home_str + ' vs. ' + self.away_str} in xlsx.\nProfit: {self.profit}")
 
                 self.saved_on_excel = True
                 

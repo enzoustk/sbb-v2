@@ -3,6 +3,8 @@ import pandas as pd
 from collections import defaultdict
 from files.paths import HISTORIC_DATA, NOT_ENDED 
 
+logger = logging.getLogger(__name__)
+
 def data(
         file: str,
         load_ids: bool = False
@@ -42,10 +44,10 @@ def data(
                     date = datapoint['time_sent'].date()
                     ids[date].add(datapoint['event_id'])
             except KeyError as e:
-                logging.warning(f'Missing Column: {e}')
+                logger.warning(f'Missing Column: {e}')
     
     except FileNotFoundError:
-        logging.warning(f'File {file} not found '
+        logger.warning(f'File {file} not found '
                         f'Creating it...')
 
     return (data, ids) if load_ids else data

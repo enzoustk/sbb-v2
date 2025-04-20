@@ -4,6 +4,8 @@ import pandas as pd
 from files.paths import MADE_BETS
 from datetime import datetime, timedelta
 
+logger = logging.getLogger(__name__)
+
 def breaker(threshold: int | float = -10, hours: int = 16):
     """Checks Current Rolling Profit.
     If it is worse than threshold in the last timeframe hours, it stops the bot.
@@ -22,5 +24,5 @@ def breaker(threshold: int | float = -10, hours: int = 16):
     rolling_profit = filtered_df['Lucro'].sum()
 
     if rolling_profit < threshold:
-        logging.critical(f'Circuit Breaker Started, current profit = {rolling_profit}')
+        logger.critical(f'Circuit Breaker Started, current profit = {rolling_profit}')
         sys.exit()

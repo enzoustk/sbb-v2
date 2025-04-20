@@ -4,6 +4,8 @@ import pandas as pd
 from features import h2h_acessor
 from features.required import REQUIRED_COLUMNS
 
+logger = logging.getLogger(__name__)
+
 def time_features(
     data: pd.DataFrame
     ) -> pd.DataFrame:
@@ -61,7 +63,7 @@ def goal_features(
     """
     
     if not REQUIRED_COLUMNS.issubset(data.columns):
-        logging.error(f"DataFrame must contain the following columns: {REQUIRED_COLUMNS}") 
+        logger.error(f"DataFrame must contain the following columns: {REQUIRED_COLUMNS}") 
 
     data = data.copy()
 
