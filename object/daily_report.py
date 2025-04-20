@@ -4,8 +4,8 @@ import pandas as pd
 from bet_bot import message
 from datetime import datetime, timedelta, date
 from files.paths import HISTORIC_DATA
-from model.config import TIME_RANGES
-from bet_bot import (
+from model.betting_config import TIME_RANGES
+from bet_bot.constants import (
     REPORT_TITLE, REPORT_BODY, REPORT_TOTAL,
     REPORT_TIME_RANGE_TITLE, REPORT_TIME_RANGE_BODY,
 )
@@ -19,7 +19,7 @@ class Report():
         date_column: str = 'time_sent'
     ):
         
-        locale.setlocale(locale.LC_TIME, 'pt_BR.utf8')
+        locale.setlocale(locale.LC_TIME, 'pt_BR.UTF-8')
         self.df = self._get_df(date_column, df)
         self.date_column = df[date_column]
         self.month_in_date = True
