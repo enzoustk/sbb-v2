@@ -1,7 +1,7 @@
 # pyright: reportUndefinedVariable=false
 from bet_bot import escape
 
-TELEGRAM_BET_BOT_TOKEN = "7694829289:AAF3xDQ0qXQHy5Zbf-QD_Zv5K4RnT2lyx8Q"
+TELEGRAM_BET_BOT_TOKEN = "7694829289:AAHqeWT6_VUucB25ymKG9-Q8EOEwcOzRsFs"
 TELEGRAM_CHAT_ID = -1002305899864
 
 """
