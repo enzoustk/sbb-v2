@@ -1,10 +1,7 @@
 import logging
-import threading
+from logging_config. settings import configure_logging
 from model import get
-from data import update
-from datetime import datetime
 from processes import scanner
-from utils.utils import print_separator
 
 
 if __name__ == '__main__':
@@ -15,21 +12,17 @@ if __name__ == '__main__':
     3- If scanner finds a new event, it will call the predict function;
     4- If predict function finds a new event, it will call the updater function;
 
-    """
-    now = datetime.now().strftime("%d-%m %H%M%S")
+    """    
 
-    logging.basicConfig(
-        level=logging.INFO,
-        #filename=f'{now}.log',
-        #filemode='w',
-        format='%(asctime)s - %(levelname)s - %(message)s'
-    )
-    print_separator()
-    logging.info(f'\nStarting Striker Betting Bot...')
-    print_separator()
-    
+    configure_logging()
+
+    logger = logging.getLogger(__name__)
+    bet_logger = logging.getLogger('bet')
+
+
+    logger.info(f'\nStarting Striker Betting Bot...')
+
     #update.fill_data_gaps()
-
-    model = get.get_model()
+    model = get.model()
 
     scanner.run(model=model, i=25)
