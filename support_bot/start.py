@@ -1,28 +1,51 @@
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
-from telegram.ext import Updater, CommandHandler, CallbackContext, CallbackQueryHandler
+import logging
+from object.daily_report import NormalReport
 from support_bot.constants import SUPPORT_BOT_TOKEN
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
+from telegram.ext import (
+    Application,
+    CommandHandler,
+    CallbackQueryHandler,
+    ContextTypes
+)
 
-def start(update: Update):
-    buttons = [
-        [InlineKeyboardButton("Construir Relatório Personalizado", callback_data='build_report')]
-    ]
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    buttons = [[
+        InlineKeyboardButton("Ver Relatório Mensal", callback_data='build_report')
+    ]]
     
-    update.message.reply_text(
-        "Seja Bem-vindo ao suporte da Striker.\n Escolha uma Ação.",
+    await update.message.reply_text(
+        "Seja Bem-vindo ao suporte da Striker.\nNo momento, só podemos construir "
+        "um relatório Diário Idêntico ao do Canal Principal.",
         reply_markup=InlineKeyboardMarkup(buttons)
     )
 
-def handle_button(update: Update, context: CallbackContext):
+async def handle_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
-    query.answer()
+    await query.answer()
     
     if query.data == 'build_report':
-        query.edit_message_text("Você clicou em Construir um Relatório?")
+        await query.edit_message_text("Você clicou em Construir um Relatório?")
 
+async def relatorio(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    try:
+        NormalReport().build_and_send()
+        await update.message.reply_text("Relatório enviado com sucesso!")
+    except Exception as e:
+        logging.error(f'Error Sending Report: {e}')
+        await update.message.reply_text("Erro ao enviar relatório. Verifique os logs.")
 
-updater = Updater(SUPPORT_BOT_TOKEN)
-updater.dispatcher.add_handler(CommandHandler('start', start))
-updater.dispatcher.add_handler(CallbackQueryHandler(handle_button))
+def main():
+    # Configuração moderna usando Application Builder
+    application = Application.builder().token(SUPPORT_BOT_TOKEN).build()
+    
+    # Registro dos handlers
+    application.add_handler(CommandHandler('start', start))
+    application.add_handler(CallbackQueryHandler(handle_button))
+    application.add_handler(CommandHandler('relatorio', relatorio))
+    
+    # Inicia o bot
+    application.run_polling()
 
-updater.start_polling()
-updater.idle()
+if __name__ == '__main__':
+    main()

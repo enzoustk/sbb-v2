@@ -1,7 +1,7 @@
 import ollama
 import re
 from telegram import Update
-from get_file import get_markdown
+from get_file import get_markdown, get_txt
 from telegram.ext import ContextTypes
 
 import sys
@@ -9,8 +9,6 @@ from pathlib import Path
 
 sys.path.append(str(Path(__file__).parent.parent))
 from constants import OLLAMA_MODEL
-sys.path.append(str(Path(__file__).parent))
-from files.paths import MAIN_CONTEXT_TXT
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -25,15 +23,14 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         
         # Carrega contexto do Markdown
         md_context = get_markdown()
+        txt_context = get_txt()
         
         # Gera resposta com Ollama usando o contexto
         response = ollama.chat(
             model=OLLAMA_MODEL,
             messages=[
                 {"role": "system", "content": md_context},
-                {"role": "system", "content": 'Não use nenhuma formatação especial na resposta'},
-                {"role": "system", "content": 'Responda Sempre em PT-BR'},
-                {"role": "system", "context": MAIN_CONTEXT_TXT},
+                {"role": "system", "context": txt_context},
                 {"role": "user", "content": user_input}
             ],
             stream=False
