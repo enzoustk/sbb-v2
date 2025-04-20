@@ -1,9 +1,6 @@
 from object.daily_report import Report
-from datetime import timedelta, date, datetime
+from datetime import timedelta, date
 import pandas as pd
-import logging
-from bet_bot import message
-
 """
 Estrutura:
 1- Filtar e gerar uma lista de DFs para cada mensagem que for enviada
