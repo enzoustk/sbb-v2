@@ -5,7 +5,7 @@ from object.bet import Bet
 from data import load, update
 from files.paths import LOCK
 
-
+logger = logging.getLogger(__name__)
 
 def run():
     """
@@ -21,15 +21,16 @@ def run():
 
     TODO: Create ERROR_EVENTS handling method
     """
-    logging.debug('Starting Updater..')
+
+    logger.debug('Starting Updater..')
     existing_bets = {}
 
     with LOCK:
         events_to_update = load.data('not_ended')
-        logging.debug(f'Updating data for {len(events_to_update)} events')
+        logger.debug(f'Updating data for {len(events_to_update)} events')
         
         if events_to_update.empty:
-            logging.debug('No events to Update.')
+            logger.debug('No events to Update.')
             return
 
         ended = []
@@ -73,7 +74,7 @@ def run():
                 not_ended.append(match)
 
             else: 
-                logging.error(
+                logger.error(
                     f'Total Processing: Labeling Error for Event'
                     f' {match.event_id}'
                     )
@@ -82,7 +83,9 @@ def run():
         update.error_events(error_events)
         update.not_ended(not_ended)
 
+        """
         circuit.breaker(
             threshold=-10,
             hours=16
         )
+        """

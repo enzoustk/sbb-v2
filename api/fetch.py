@@ -6,6 +6,7 @@ import requests
 import logging
 from api.constants import API_TOKEN, SPORT_ID, URLS, LEAGUE_IDS
 
+logger = logging.getLogger(__name__)
 
 def live_events(league_ids: dict = LEAGUE_IDS) -> list[dict]:
 
@@ -36,7 +37,7 @@ def live_events(league_ids: dict = LEAGUE_IDS) -> list[dict]:
 
 
     except requests.exceptions.RequestException as e:
-        logging.error(f"Error fetching live events: {e}")
+        logger.error(f"Error fetching live events: {e}")
         return []
 
 
@@ -69,7 +70,7 @@ def odds(event_id: str) -> list[dict]:
         return all_data
 
     except requests.exceptions.RequestException as e:
-        logging.error(f"Error fetching odds: {e}")
+        logger.error(f"Error fetching odds: {e}")
         return []
 
 
@@ -88,7 +89,7 @@ def events_for_date(dates: list, league_ids: dict = LEAGUE_IDS) -> list[dict]:
     
     TODO: add parameter to choose league.
     """
-    logging.info('Starting to fetch data')
+    logger.info('Starting to fetch data')
 
     league_ids = (LEAGUE_IDS.keys())
 
@@ -105,7 +106,7 @@ def events_for_date(dates: list, league_ids: dict = LEAGUE_IDS) -> list[dict]:
 
         params['page'] = 1
         params['day'] = date.strftime('%Y%m%d')
-        logging.info(f'Fetching events for {date.strftime('%d-%m-%y')}')
+        logger.info(f'Fetching events for {date.strftime('%d-%m-%y')}')
 
         events = []
         while True:
@@ -119,10 +120,10 @@ def events_for_date(dates: list, league_ids: dict = LEAGUE_IDS) -> list[dict]:
                 else:
                     break
             else:
-                logging.error(f"Request failed: {response.status_code} for date {date.strftime('%d-%m-%y')}")
+                logger.error(f"Request failed: {response.status_code} for date {date.strftime('%d-%m-%y')}")
                 break
         
-        logging.info(f"Fetched {len(events)} events for date {date.strftime('%Y-%m-%d')}")
+        logger.info(f"Fetched {len(events)} events for date {date.strftime('%Y-%m-%d')}")
         
         all_events.extend(events)
 
@@ -145,5 +146,5 @@ def event_for_id(event_id: str) -> dict:
         return event_data
     
     except requests.exceptions.RequestException as e:
-        logging.error(f"Error fetching event data: {e}")
+        logger.error(f"Error fetching event data: {e}")
         return {}

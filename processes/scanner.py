@@ -5,8 +5,9 @@ from data import load
 from api import fetch
 from model import predict
 from processes import updater
-from files.paths import LOCK, NOT_ENDED
+from files.paths import LOCK
 
+logger = logging.getLogger(__name__)
 
 def run(model, i: int = 50, sleep_time: int = 1):
     """Scans all live events and handles them
@@ -16,7 +17,7 @@ def run(model, i: int = 50, sleep_time: int = 1):
         i (int): After i runs, it shows a message to assert it is 
         running properly
     """
-    logging.info('Scanner Started.')
+    logger.info('Scanner Started.')
     i_counter = 0  # Iteration with no new events
     
     with LOCK:
@@ -25,12 +26,10 @@ def run(model, i: int = 50, sleep_time: int = 1):
         try:
             read_matches = set(not_ended['event_id'])
         except KeyError:
-            logging.error('not_ended data not found.')
+            logger.error('not_ended data not found.')
             read_matches = set()
         
-    while True:
-        print('i_counter = ', i_counter)
-        
+    while True:        
         live_matches = fetch.live_events()
 
         unread_matches = [
@@ -41,15 +40,12 @@ def run(model, i: int = 50, sleep_time: int = 1):
         if not unread_matches:
             i_counter += 1
             if i_counter % i == 0:
-                logging.info(f'{i} scans made. No new event found.')
-                logging.info('Starting updater thread...')
+                logger.info(f'{i} scans made. Starting Updater')
                 threading.Thread(
                     target=updater.run,
                     daemon=True
                 ).start()
 
-            if i_counter % (i * 10) == 0:
-                logging.info(f'{i*10} scans made. No new event found.')
         
         if unread_matches:
             try:
@@ -65,6 +61,6 @@ def run(model, i: int = 50, sleep_time: int = 1):
 
 
             except Exception as e:
-                logging.error(f'Error predicting match {match['id']}\n{e}')
+                logger.error(f'Error predicting match {match['id']}\n{e}')
         
         time.sleep(sleep_time)

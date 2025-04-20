@@ -1,13 +1,20 @@
-import logging
-from object.daily_report import NormalReport
-from support_bot.constants import SUPPORT_BOT_TOKEN
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
+import sys
 from telegram.ext import (
     Application,
     CommandHandler,
     CallbackQueryHandler,
     ContextTypes
 )
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
+
+
+from pathlib import Path
+sys.path.append(str(Path(__file__).parent.parent))
+
+from support_bot.constants import SUPPORT_BOT_TOKEN
+from object.daily_report import NormalReport
+
+
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     buttons = [[
@@ -28,13 +35,15 @@ async def handle_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await query.edit_message_text("Você clicou em Construir um Relatório?")
 
 async def relatorio(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    try:
-        NormalReport().build_and_send()
-        await update.message.reply_text("Relatório enviado com sucesso!")
+    report = NormalReport()
+    report.build_and_send()
+    await update.message.reply_text("Relatório enviado com sucesso!")
+    """
     except Exception as e:
-        logging.error(f'Error Sending Report: {e}')
+        logger.error(f'Error Sending Report: {e}')
         await update.message.reply_text("Erro ao enviar relatório. Verifique os logs.")
-
+    """
+    
 def main():
     # Configuração moderna usando Application Builder
     application = Application.builder().token(SUPPORT_BOT_TOKEN).build()

@@ -3,6 +3,9 @@ import numpy as np
 from scipy.stats import poisson
 from model.betting_config import EV_THRESHOLD
 
+logger = logging.getLogger(__name__)
+bet_logger = logging.getLogger('bet')
+
 def poisson_log_loss(y_true, y_pred):
 
     prob = np.array([poisson.pmf(k, y_pred) for k in y_true])
@@ -82,7 +85,7 @@ def poisson_goals(
         )
     
     else:
-        logging.error(f'Invalid Handicap used to estimate goal probabilities: {handicap}')
+        logger.error(f'Invalid Handicap used to estimate goal probabilities: {handicap}')
         raise ValueError(f"Handicap inválido: {handicap}")
     
     return prob_over, prob_under
@@ -112,7 +115,7 @@ def min_goal_line(
         prob = 1
 
     else: 
-        logging.error(f"Tipo de aposta inválido: {bet_type}")
+        logger.error(f"Tipo de aposta inválido: {bet_type}")
 
     while True:
         
@@ -127,7 +130,7 @@ def min_goal_line(
             minimum_line += step
         
         else: 
-            logging.error(f'Invalid Min. Odd: {minimum_odd}')
+            logger.error(f'Invalid Min. Odd: {minimum_odd}')
 
 
 def profit(bet_type: float, handicap: float, total_score: int, bet_odd: float) -> float:
@@ -165,7 +168,7 @@ def profit(bet_type: float, handicap: float, total_score: int, bet_odd: float) -
         return profit, result
         
     except: 
-        logging.error(f"Ajuste de resultado inválido: {outcome}")
+        logger.error(f"Ajuste de resultado inválido: {outcome}")
         return 0, 'error'
 
 

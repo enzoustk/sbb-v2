@@ -2,6 +2,8 @@ import logging
 import requests
 from bet_bot.constants import TELEGRAM_BET_BOT_TOKEN, TELEGRAM_CHAT_ID
 
+logger = logging.getLogger(__name__)
+
 
 def send(message):
 
@@ -16,13 +18,13 @@ def send(message):
     response_data = response.json()
 
     if response.ok and response.json().get('ok'):
-        logging.info("Telegram message sent successfully")
+        logger.info("Telegram message sent successfully")
         message_id = response.json()['result']['message_id']
         return message_id, TELEGRAM_CHAT_ID
     else:
-        logging.error("Telegram message not sent")
-        logging.error(f"Status code: {response.status_code}")
-        logging.error(f"Response: {response_data}")
+        logger.error("Telegram message not sent")
+        logger.error(f"Status code: {response.status_code}")
+        logger.error(f"Response: {response_data}")
         return None, None
 
 
@@ -40,6 +42,6 @@ def edit(message_id, message, chat_id):
         edited = True
         return edited
     else:
-        logging.error(f'Error editing message {message_id}: {response.status_code} - {response.text}')
+        logger.error(f'Error editing message {message_id}: {response.status_code} - {response.text}')
 
 

@@ -3,6 +3,8 @@
 import logging
 from api.constants import MARKET_IDS
 
+logger = logging.getLogger(__name__)
+
 def odds(betting_data: dict, event_id: str, market: str='goals') -> list:
 
     """Recieves a dict and returns desired odds.
@@ -20,7 +22,7 @@ def odds(betting_data: dict, event_id: str, market: str='goals') -> list:
     odds = betting_data.get('results', {}).get('odds', {})
     
     if MARKET_IDS[market] not in odds:
-        logging.error(f'Betting Market not found for event {event_id}')
+        logger.error(f'Betting Market not found for event {event_id}')
         return [None, None, None]
      
     market_data = [odd for odd in odds[MARKET_IDS[market]]]
@@ -29,7 +31,7 @@ def odds(betting_data: dict, event_id: str, market: str='goals') -> list:
         valid_odds = goal_odds(market_data=market_data)
     
     if not valid_odds: 
-        logging.warning(f'No odds avaliable for event {event_id}')
+        logger.warning(f'No odds avaliable for event {event_id}')
         return [None, None, None]
 
     earliest_odds = min(
@@ -65,7 +67,7 @@ def goal_handicap(handicap) -> float | None:
         return handicap
     
     except ValueError as ve:
-        logging.error(f"Error converting handicap '{handicap}': {ve}")
+        logger.error(f"Error converting handicap '{handicap}': {ve}")
         return None
 
 
