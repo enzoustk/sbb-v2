@@ -61,6 +61,6 @@ def run(model, i: int = 50, sleep_time: int = 1):
 
 
             except Exception as e:
-                logger.error(f'Error predicting match {match['id']}\n{e}')
+                logger.error(f"Error predicting match {match['id']}\n{e}")
         
         time.sleep(sleep_time)
