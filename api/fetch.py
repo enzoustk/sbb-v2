@@ -106,7 +106,7 @@ def events_for_date(dates: list, league_ids: dict = LEAGUE_IDS) -> list[dict]:
 
         params['page'] = 1
         params['day'] = date.strftime('%Y%m%d')
-        logger.info(f'Fetching events for {date.strftime('%d-%m-%y')}')
+        logger.info(f"Fetching events for {date.strftime('%d-%m-%y')}")
 
         events = []
         while True:
