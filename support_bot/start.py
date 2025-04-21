@@ -29,14 +29,25 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def handle_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
-    await query.answer()
+    await query.answer()  # Confirma o clique
     
     if query.data == 'build_report':
-        await query.edit_message_text("Você clicou em Construir um Relatório?")
+        try:
+            # Envia o relatório para o chat do usuário
+            report = NormalReport()
+            report.build_and_send(
+                chat_id=query.message.chat_id,
+                token= SUPPORT_BOT_TOKEN)  # <-- chat_id correto aqui
+            
+            # Feedback visual (opcional: edita a mensagem original)
+            await query.edit_message_text("✅ Relatório mensal enviado! Verifique sua conversa.")
+        except Exception as e:
+            print(f"Erro ao enviar relatório: {e}")
+            await query.edit_message_text("❌ Falha ao enviar o relatório. Tente novamente mais tarde.")
 
 async def relatorio(update: Update, context: ContextTypes.DEFAULT_TYPE):
     report = NormalReport()
-    report.build_and_send()
+    report.build_and_send(chat_id=str(update.message.chat_id))
     await update.message.reply_text("Relatório enviado com sucesso!")
     """
     except Exception as e:
