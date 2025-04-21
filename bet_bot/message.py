@@ -5,11 +5,15 @@ from bet_bot.constants import TELEGRAM_BET_BOT_TOKEN, TELEGRAM_CHAT_ID
 logger = logging.getLogger(__name__)
 
 
-def send(message):
+def send(
+    message: str,
+    chat_id: str = TELEGRAM_CHAT_ID,
+    token: str = TELEGRAM_BET_BOT_TOKEN
+    ):
 
-    url = f"https://api.telegram.org/bot{TELEGRAM_BET_BOT_TOKEN}/sendMessage"
+    url = f"https://api.telegram.org/bot{token}/sendMessage"
     data = {
-        "chat_id": TELEGRAM_CHAT_ID,
+        "chat_id": chat_id,
         "text": message,
         "disable_web_page_preview": True
     }
@@ -28,8 +32,14 @@ def send(message):
         return None, None
 
 
-def edit(message_id, message, chat_id):
-    url = f"https://api.telegram.org/bot{TELEGRAM_BET_BOT_TOKEN}/editMessageText"
+def edit(
+    message_id: str,
+    message: str, 
+    chat_id: str = TELEGRAM_CHAT_ID,
+    token: str = TELEGRAM_BET_BOT_TOKEN
+    ):
+
+    url = f"https://api.telegram.org/bot{token}/editMessageText"
     data = {
         "chat_id": chat_id,
         "message_id": message_id,
