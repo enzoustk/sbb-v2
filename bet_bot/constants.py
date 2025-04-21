@@ -79,7 +79,7 @@ REPORT_TITLE = (
 )
 
 REPORT_BODY = (
-    "{period}: {emoji} {profit}\n"
+    "{period}: {emoji} {profit}"
 )
 
 REPORT_TOTAL = (
@@ -91,9 +91,9 @@ REPORT_TOTAL = (
 )
 
 REPORT_TIME_RANGE_TITLE = (
-    "Por Faixa de Horário:\n\n"
+    "\nPor Faixa de Horário: ⏰\n"
 )
 
 REPORT_TIME_RANGE_BODY = (
-    "{time_range}: {emoji} {profit}\n"
+    "{time_range}: {emoji} {profit}"
 )
