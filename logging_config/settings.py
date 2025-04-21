@@ -1,17 +1,20 @@
 import logging
-from files.paths import LOG_PATHS
-
-
-BET_LEVEL = 15
-LOG_FORMAT = '%(asctime)s | %(name)s | %(levelname)s | %(message)s'
-BET_FORMAT = '%(asctime)s | %(name)s'
-LOG_FILES = {
-    'bet': LOG_PATHS['bet'],
-    'error': LOG_PATHS['error']
-}
-
+from bet_bot import message
+from logging_config.constants import(
+    BET_LEVEL, LOG_FORMAT, BET_FORMAT, 
+    TELEGRAM_LOG_CHAT_ID, LOG_PATHS
+)
 
 logging.addLevelName(BET_LEVEL, 'BET')
+
+class TelegramMessageHandler(logging.Handler):
+    """Handler customizado que usa seu módulo message para enviar logs"""
+    def emit(self, record):
+        try:
+            log_message = self.format(record)
+            message.send(message=log_message, chat_id=TELEGRAM_LOG_CHAT_ID)
+        except Exception as e:
+            logging.getLogger().error(f"Erro no handler Telegram: {str(e)}", exc_info=True)
 
 def log_bet(self, message, *args, **kwargs):
     if self.isEnabledFor(BET_LEVEL):
@@ -19,12 +22,10 @@ def log_bet(self, message, *args, **kwargs):
 
 logging.Logger.bet = log_bet
 
-
 class BetFilter(logging.Filter):
     """Filtra apenas logs do nível BET"""
     def filter(self, record):
         return record.levelno == BET_LEVEL
-
 
 def create_console_handler():
     """Handler para output no terminal"""
@@ -34,7 +35,7 @@ def create_console_handler():
 
 def create_bet_handler():
     """Handler específico para logs BET com formatação customizada"""
-    handler = logging.FileHandler(LOG_FILES['bet'])
+    handler = logging.FileHandler(LOG_PATHS['bet'])
     handler.setLevel(BET_LEVEL)
     handler.addFilter(BetFilter())
     
@@ -43,13 +44,17 @@ def create_bet_handler():
     
     return handler
 
-
 def create_error_handler():
     """Handler para logs de erro (WARNING+)"""
-    handler = logging.FileHandler(LOG_FILES['error'])
-    handler.setLevel(logging.WARNING) 
+    handler = logging.FileHandler(LOG_PATHS['error'])
+    handler.setLevel(logging.WARNING)
     return handler
 
+def create_telegram_handler():
+    """Novo handler usando seu módulo message"""
+    handler = TelegramMessageHandler()
+    handler.setLevel(logging.WARNING)
+    return handler
 
 def configure_logging():
     formatter = logging.Formatter(LOG_FORMAT, datefmt='%d-%m %H:%M:%S')
@@ -58,18 +63,22 @@ def configure_logging():
         'bet': create_bet_handler(),
         'console': create_console_handler(),
         'error': create_error_handler(),
+        'telegram': create_telegram_handler()
     }
 
-    for handler in handlers.values():
-        handler.setFormatter(formatter)
+    for name, handler in handlers.items():
+        if handler and name != 'bet':
+            handler.setFormatter(formatter)
 
     root_logger = logging.getLogger()
     root_logger.setLevel(BET_LEVEL)
 
+    # Adiciona handlers principais
     root_logger.addHandler(handlers['console'])
     root_logger.addHandler(handlers['error'])
+    root_logger.addHandler(handlers['telegram'])
 
-
+    # Configura logger específico para BET
     bet_logger = logging.getLogger('bet')
     bet_logger.addHandler(handlers['bet'])
     bet_logger.propagate = True
