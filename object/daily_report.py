@@ -38,7 +38,10 @@ class Report:
         self._filter_ev_type(ev_type)
 
     
-    def build_and_send(self):
+    def build_and_send(
+            self,
+            chat_id: str = -1002343941988,
+            ):
         try:
             for report in self.reports:
                 self.generate_title(report)
@@ -47,9 +50,12 @@ class Report:
                 self.generate_total(report)
                 self.message.append('end')
             
-            messages = self.split_list_on_separator()
-            for telegram_message in messages:
-                message.send(telegram_message)
+            message_groups = self.split_list_on_separator()
+            
+            for group in message_groups:
+                formatted_message = "\n".join(group)
+                message.send(message=formatted_message, chat_id=chat_id) 
+                
         except Exception as e:
             logger.error(f'Error mandando report: {e}')
     # ----------------------------------- #
@@ -111,7 +117,6 @@ class Report:
         self.message.append(REPORT_TITLE.format(**title))
             
     def generate_body(self, df: pd.DataFrame):
-        
         report_body = []
         for period, dataframe in df.groupby(df[self.date_column].dt.date):
             profit = dataframe['profit'].sum()
@@ -121,7 +126,6 @@ class Report:
             if self.month_in_date:
                 formatted_period += period.strftime('-%m')
             
-
             report_body.append(
                 REPORT_BODY.format(
                     period=formatted_period,
@@ -130,7 +134,8 @@ class Report:
                 )
             )
         
-        self.message.append(report_body)
+        for line in report_body:
+            self.message.append(line)
 
     def generate_time_range(self, df: pd.DataFrame):
         time_range_list = []
@@ -147,66 +152,60 @@ class Report:
                     profit=f"{profit:,.2f}"
                 )
             )
-            
-        self.message.append(REPORT_TIME_RANGE_TITLE)
-        self.message.append(time_range_list)
 
+        self.message.append(REPORT_TIME_RANGE_TITLE)
+        for line in time_range_list:
+            self.message.append(line)
 
     def generate_total(self, df: pd.DataFrame):
-    
         message_lines = []
         sub_dfs = {'total': df}
         grouped = df[df['bet_type'].notna()].groupby('bet_type')
+        
         for bet_type, group in grouped:
             sub_dfs[bet_type] = group
-
         
+        self.message.append('')
+
         for bet_type_key, sub_df in sub_dfs.items():
             profit = sub_df['profit'].sum()
             vol = sub_df['profit'].count()
-            roi = (profit / vol * 100) if vol > 0 else 0
+            roi = (profit / vol) if vol > 0 else 0
             total_emoji = self._get_emoji(profit)
             players_df = self._get_player_df(sub_df)
             notable_players = self._get_notable_players(players_df)
 
             message_lines.append(  
                 REPORT_TOTAL.format(
-                    bet_type=bet_type_key,
-                    profit=profit,
+                    bet_type=f'{bet_type_key.capitalize()}',
+                    profit=f'{profit:.2f}',
                     total_emoji=total_emoji,
                     vol=vol,
                     roi=roi,
                     best_player=notable_players['best_player']['player'],
                     bp_emoji=notable_players['best_player']['emoji'],
-                    bp_profit=notable_players['best_player']['profit'],
+                    bp_profit=f'{notable_players['best_player']['profit']:.2f}',
                     worst_player=notable_players['worst_player']['player'],
                     wp_emoji=notable_players['worst_player']['emoji'],
-                    wp_profit=notable_players['worst_player']['profit'],
+                    wp_profit=f'{notable_players['worst_player']['profit']:.2f}',
                 )
             )
 
-            self.message.append(message_lines)
+        # Adiciona todas as linhas de total
+        for line in message_lines:
+            self.message.append(line)
 
-    def split_list_on_separator(self, 
-        separator: str = 'end', 
-        start: int = 0
-        ) -> list[list]:
+    def split_list_on_separator(self, separator: str = 'end') -> list[list]:
 
-        separator_indices = [i for i,item 
-                        in enumerate(self.message) 
-                        if item == separator
-        ]
+        separator_indices = [i for i, item in enumerate(self.message) if item == separator]
         
         sublists = []
+        start = 0
         
         for sep_index in separator_indices:
-            
-            if start < sep_index:
-                sublists.append(self.message[start:sep_index])
-            start = sep_index + 1 
-        
-        if start <= len(self.message) - 1:
-            sublists.append(self.message[start:])
+            sublist = self.message[start:sep_index]  
+            sublists.append(sublist)
+            start = sep_index + 1
         
         return sublists
 
@@ -266,6 +265,7 @@ class Report:
             combined_df.groupby(['player', 'bet_type'])['profit']
             .sum()
             .unstack(fill_value=0)
+            .reindex(columns=['over', 'under'], fill_value=0)
             .reset_index()
         )
 
@@ -326,24 +326,28 @@ class Report:
         return 'Dia'
 
     def _get_notable_players(self, df: pd.DataFrame) -> dict:
-        
         notable_players = {}
-
-        if not df.empty and 'profit' in df.columns:
+        
+        if not df.empty and 'total_profit' in df.columns:  
+            bp_row = df.loc[df['total_profit'].idxmax()] 
+            notable_players['best_player'] = {
+                'player': bp_row['player'],
+                'profit': bp_row['total_profit'],
+                'emoji': self._get_emoji(bp_row['total_profit'])
+            }
             
-            bp_row = df.loc[df['profit'].idxmax()]
-            notable_players['best_player'] = bp_row.to_dict()
-            notable_players['best_player']['emoji'] = super()._get_emoji(bp_row['profit'])
-            
-            wp_row = df.loc[df['profit'].idxmin()]
-            notable_players['worst_player'] = wp_row.to_dict()
-            notable_players['worst_player']['emoji'] = super()._get_emoji(wp_row['profit'])
-
+            wp_row = df.loc[df['total_profit'].idxmin()]
+            notable_players['worst_player'] = {
+                'player': wp_row['player'],
+                'profit': wp_row['total_profit'],
+                'emoji': self._get_emoji(wp_row['total_profit'])
+            }
+        
         return notable_players
 
     def _get_emoji(self, profit):
         if profit > 0:
-            return '✅✅✅'
+            return '✅'
         
         if profit < 0:
             return '❌'
@@ -398,4 +402,3 @@ class NormalReport(Report):
                 reports.append(league_df)
         
         return reports
-
