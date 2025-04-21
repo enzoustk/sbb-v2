@@ -2,6 +2,7 @@ import locale
 import logging
 import pandas as pd
 from bet_bot import message
+from bet_bot.constants import TELEGRAM_BET_BOT_TOKEN
 from datetime import datetime, timedelta, date
 from files.paths import HISTORIC_DATA, LOCK, MADE_BETS
 from model.betting_config import TIME_RANGES
@@ -41,6 +42,7 @@ class Report:
     def build_and_send(
             self,
             chat_id: str = -1002343941988,
+            token: str = TELEGRAM_BET_BOT_TOKEN,
             ):
         try:
             for report in self.reports:
@@ -54,7 +56,7 @@ class Report:
             
             for group in message_groups:
                 formatted_message = "\n".join(group)
-                message.send(message=formatted_message, chat_id=chat_id) 
+                message.send(message=formatted_message, chat_id=chat_id, token=token) 
                 
         except Exception as e:
             logger.error(f'Error mandando report: {e}')
