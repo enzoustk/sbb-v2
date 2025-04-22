@@ -37,6 +37,12 @@ EDITED_MESSAGE = (
     '\n{LINKS_MESSAGE}'
 )
 
+CANCELED_MESSAGE = (
+    '\n {result} {result_emoji}\n'
+    '\n➡ Resultado: {raw_score}\n'
+    '\n{LINKS_MESSAGE}'
+)
+
 LINKS_DICT = {
     'instagram': 'https://www.instagram.com/striker.betting/',
     'instagram_text': escape.markdown('Instagram'), 

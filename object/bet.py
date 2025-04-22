@@ -11,7 +11,7 @@ from model.betting_config import (EV_THRESHOLD, TIME_RANGES,
     AJUSTE_FUSO, HOT_TIPS_STEP, MAX_HOT, HOT_THRESHOLD)
 from files.paths import NOT_ENDED, MADE_BETS
 from bet_bot.constants import (TELEGRAM_MESSAGE, MIN_LINE_MESSAGE,
-    MIN_ODD_MESSAGE, HOT_TIPS_MESSAGE, EDITED_MESSAGE,
+    MIN_ODD_MESSAGE, HOT_TIPS_MESSAGE, EDITED_MESSAGE, CANCELED_MESSAGE,
     RESULT_EMOJIS, BET_TYPE_EMOJIS, LINKS_MESSAGE)
 
 logger = logging.getLogger(__name__)
@@ -256,32 +256,6 @@ class Bet:
                 logger.error(f'{i}. {reason.capitalize()}')
         else:
             self.totally_processed = True
-
-
-    """
-    def mark_processed(self):
-    """
-    """Gets all the attributes that are needed to be processed
-    If all of them were processed successfully, marks self.totally_processed as True
-    """
-    """
-        
-        if self.bet_type is not None:
-            self.totally_processed = all([
-                self.sent,
-                self.edited,
-                self.ended,
-                self.saved_on_excel,
-                self.profit is not None,
-                self.result is not None,
-                self.raw_score is not None
-                ])
-        else: 
-            if self.raw_score is not None:
-                self.totally_processed = True
-        
-        print('Bet ', self.home_str, self.away_str, 'was not totally processed, reason:')
-    """
 
     def _update_from_event(self, event: dict):
         """Parse and clean event data with NaN handling"""
@@ -705,4 +679,7 @@ class Bet:
             new_data = pd.DataFrame([self._get_excel_columns()])
             with pd.ExcelWriter(MADE_BETS, engine='openpyxl') as writer:
                 new_data.to_excel(writer, sheet_name=sheet_name, index=False)
-            self.saved_on_excel = True        
+            self.saved_on_excel = True    
+
+    # ---------------------------------------------------------------------------
+
