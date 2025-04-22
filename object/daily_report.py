@@ -14,6 +14,7 @@ from bet_bot.constants import (
 logger = logging.getLogger(__name__)
 
 # TODO: Create CustomReport and PlayerReport classes
+# TODO: Dropar canceled = True
 
 class Report:
     def __init__(
@@ -186,10 +187,10 @@ class Report:
                     roi=roi,
                     best_player=notable_players['best_player']['player'],
                     bp_emoji=notable_players['best_player']['emoji'],
-                    bp_profit=f'{notable_players['best_player']['profit']:.2f}',
+                    bp_profit=f"{notable_players['best_player']['profit']:.2f}",
                     worst_player=notable_players['worst_player']['player'],
                     wp_emoji=notable_players['worst_player']['emoji'],
-                    wp_profit=f'{notable_players['worst_player']['profit']:.2f}',
+                    wp_profit=f"{notable_players['worst_player']['profit']:.2f}",
                 )
             )
 
