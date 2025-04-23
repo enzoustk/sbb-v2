@@ -58,7 +58,7 @@ def data(file: str,) -> dict[str, pd.DataFrame]:
     if file == 'historic':
         try:
             data = {
-                key: pd.read_csv(value['historic_data'])
+                key: pd.read_csv(value['historic_data'], low_memory=False)
                 for key, value in MODELS.items()     
             }
 
