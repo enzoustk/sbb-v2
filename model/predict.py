@@ -10,7 +10,7 @@ from features.required import REQUIRED_FEATURES
 logger = logging.getLogger(__name__)
 bet_logger = logging.getLogger('bet')
 
-def match(df, event, model):
+def match(dfs: dict, event: dict, models: dict):
     """Processes live betting events using a predictive model.
 
     Performs error checking, feature engineering, model prediction, and bet handling
@@ -57,7 +57,7 @@ def match(df, event, model):
         return []
 
     try:
-       
+    
         hora_identificacao = datetime.now().strftime('%H:%M:%S')
         
         print_separator()
@@ -69,7 +69,7 @@ def match(df, event, model):
         # TODO: Adicionar trava para caso features insuficientes, não executar.
         
         features = create.features(
-            data=df,
+            data=dfs[bet.league_id],
             live=True,
             players=bet.players
         )
@@ -80,8 +80,9 @@ def match(df, event, model):
         bet_logger.bet("Dados reais usados para previsão (X_ao_vivo):")
         bet_logger.bet(X.to_string(index=False))
         print_separator(30)
+        print(bet.league_id)
         
-        lambda_pred = model.predict(X)
+        lambda_pred = models[bet.league_id].predict(X)
         
         bet.find_ev(lambda_pred)
 
@@ -91,5 +92,5 @@ def match(df, event, model):
         bet.save_bet()
 
     except Exception as e:
-        bet_logger.bet(f"Erro ao prever para o jogo {bet.event_id}: {e}")
+        bet_logger.bet(f"Erro ao prever para o jogo {bet.event_id} {bet.home_str} vs {bet.away_str}: {e}")
         logger.error(f"Erro ao prever para o jogo {bet.event_id}: {e}")
