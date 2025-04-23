@@ -1,4 +1,5 @@
 import ast
+import time
 import logging
 from processes import circuit
 from object.bet import Bet
@@ -61,6 +62,7 @@ def run():
             
             if match.ended is True:    
                 match.handle_ended_bet()
+                time.sleep(1)
                 match.mark_processed()
                 existing_bets.pop(event_id, None)
 
@@ -78,6 +80,7 @@ def run():
                     f'Total Processing: Labeling Error for Event'
                     f' {match.event_id}'
                     )
+            
 
         update.historic_data(ended)
         update.error_events(error_events)
