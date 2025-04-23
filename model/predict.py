@@ -1,9 +1,10 @@
 import logging
 import pandas as pd
+from tabulate import tabulate
 from datetime import datetime
 from object.bet import Bet
-from features import create
-from utils.utils import print_separator
+from features import create, check
+from utils.utils import print_separator, print_features
 from files.paths import ERROR_EVENTS
 from features.required import REQUIRED_FEATURES
 
@@ -68,29 +69,38 @@ def match(dfs: dict, event: dict, models: dict):
 
         # TODO: Adicionar trava para caso features insuficientes, não executar.
         
+        
         features = create.features(
             data=dfs[bet.league_id],
             live=True,
             players=bet.players
         )
-
-        X = features[REQUIRED_FEATURES]
-
-        print_separator(30)
-        bet_logger.bet("Dados reais usados para previsão (X_ao_vivo):")
-        bet_logger.bet(X.to_string(index=False))
-        print_separator(30)
-        print(bet.league_id)
         
-        lambda_pred = models[bet.league_id].predict(X)
-        
-        bet.find_ev(lambda_pred)
+        try:
+            X = features[REQUIRED_FEATURES]
+            
+            if features[REQUIRED_FEATURES].empty:
+                logger.warning(f'Empty daframe for {bet.home_str} vs {bet.away_str}')
+                check.dataframe(bet.home_player, bet.away_player, df=dfs[bet.league_id])
+                return
 
-        if bet.bet_type is not None:
-            bet.handle_made_bet()
+            print_separator(30)
+            bet_logger.bet("Dados reais usados para previsão (X_ao_vivo):")
+            bet_logger.bet(f'{print_features(X)}')
+            print_separator(30)
+            
+            lambda_pred = models[bet.league_id].predict(X)
+            
+            bet.find_ev(lambda_pred)
+            if bet.bet_type is not None:
+                bet.handle_made_bet()
         
-        bet.save_bet()
+            bet.save_bet()
 
+        
+        except KeyError:
+            logger.error(f'Error predicting for {bet.home_str} vs {bet.away_str}. Model {models[bet.league_id]} not Found')     
+                
     except Exception as e:
         bet_logger.bet(f"Erro ao prever para o jogo {bet.event_id} {bet.home_str} vs {bet.away_str}: {e}")
         logger.error(f"Erro ao prever para o jogo {bet.event_id}: {e}")
