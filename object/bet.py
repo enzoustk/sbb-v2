@@ -504,6 +504,7 @@ class Bet:
         
         elif isinstance(data, str):
             return f'{data}'.title().replace('_', ' ')
+        
 
     def _get_excel_columns(self):
         """Returns a dcit with the columns and values
@@ -606,7 +607,7 @@ class Bet:
             in self.__dict__.items()
             }
 
-        self.message = TELEGRAM_MESSAGE.format(**formated_dict, league=self.league)
+        self.message = TELEGRAM_MESSAGE.format(**formated_dict)
 
         if self.minimum_line == self.handicap and self.minimum_odd != self.bet_odd:
             self.message += MIN_ODD_MESSAGE.format(**formated_dict)
