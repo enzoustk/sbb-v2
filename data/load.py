@@ -1,15 +1,15 @@
 import logging
 import pandas as pd
-from collections import defaultdict
-from files.paths import HISTORIC_DATA, NOT_ENDED 
+from files.paths import MODELS, NOT_ENDED 
 
 logger = logging.getLogger(__name__)
 
+"""
 def data(
         file: str,
         load_ids: bool = False
         ) -> pd.DataFrame | tuple[pd.DataFrame, defaultdict]:
-    """Loads data from a CSV file and optionally returns IDs grouped by date.
+    """"""Loads data from a CSV file and optionally returns IDs grouped by date.
 
     Args:
         file (str): Nome do arquivo a ser carregado ('historic', 'all_data', 'not_ended').
@@ -17,7 +17,7 @@ def data(
 
     Returns:
         pd.DataFrame | tuple[pd.DataFrame, defaultdict]: DataFrame com os dados e (opcionalmente) IDs por data.
-    """
+    """"""
 
     ids = defaultdict(set)
     data = pd.DataFrame()
@@ -51,3 +51,32 @@ def data(
                         f'Creating it...')
 
     return (data, ids) if load_ids else data
+"""
+
+def data(file: str,) -> dict[str, pd.DataFrame]:
+    
+    if file == 'historic':
+        try:
+            data = {
+                key: pd.read_csv(value['historic_data'])
+                for key, value in MODELS.items()     
+            }
+
+            for model_name, df in data.items():  # ✅
+                # Verificar colunas no DataFrame atual (df)
+                if 'date' in df.columns:  # ✅
+                    df['date'] = pd.to_datetime(df['date'])  # ✅
+                if 'time_sent' in df.columns:  # ✅
+                    df['time_sent'] = pd.to_datetime(df['time_sent'])  # ✅
+                data[model_name] = df
+
+        except Exception as e:
+            logger.error(f'Error Loading Historic data {e}')
+    
+    elif file == 'not_ended':
+        try:
+            data = pd.read_csv(NOT_ENDED)  
+        except pd.errors.EmptyDataError:
+            data = pd.DataFrame()
+    
+    return data

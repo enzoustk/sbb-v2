@@ -5,13 +5,13 @@ from object.bet import Bet
 from data import load
 from api import fetch
 from model.betting_config import AJUSTE_FUSO
-from files.paths import HISTORIC_DATA, NOT_ENDED, ERROR_EVENTS, LOCK
+from files.paths import MODELS, NOT_ENDED, ERROR_EVENTS, LOCK
 
 logger = logging.getLogger(__name__)
 
-
+"""
 def historic_data(data: list):
-    """Update HISTORIC_DATA.csv with new data."""
+    """"""Update HISTORIC_DATA.csv with new data.""""""
 
     if not data:
         logger.debug('No new ended events')
@@ -45,10 +45,65 @@ def historic_data(data: list):
         combined_df = combined_df.drop_duplicates(subset='event_id', keep='first')
         combined_df.to_csv(HISTORIC_DATA, index=False)
         logger.info(f'{len(new_df)} new matches added to ended events.')
-        
+"""
 
+
+def historic_data(data: list):
+    """Save new events to their respective CSV files based on MODELS' league_id."""
+    
+    if not data:
+        logger.debug('No new events to process')
+        return
+    
+    exclude_keys = remove_columns_to_historic()
+    
+
+    new_data = [
+        {key: value for key, value in event.__dict__.items() if key not in exclude_keys}
+        for event in data
+    ]
+    
+    if not new_data:
+        logger.info('No valid data to process')
+        return
+    
+    new_df = pd.DataFrame(new_data)
+    new_df['date'] = pd.to_datetime(new_df['date'], errors='coerce')  
+    
+   
+    for league_id, league_group in new_df.groupby('league_id'):
+        league_id_str = str(league_id)
+        
+        
+        if league_id_str not in MODELS:
+            logger.warning(f'League ID {league_id} não encontrado no MODELS. Ignorando...')
+            continue
+            
+        
+        target_path = MODELS[league_id_str]['historic_data']
+        
+        try:
+            existing_data = pd.read_csv(target_path)
+            existing_data['date'] = pd.to_datetime(existing_data['date'], errors='coerce')
+        except FileNotFoundError:
+            existing_data = pd.DataFrame()
+            logger.warning(f'Arquivo {target_path} não encontrado. Criando novo...')
+        
+        
+        combined_df = pd.concat([existing_data, league_group])
+        combined_df = combined_df.drop_duplicates(
+            subset='event_id', 
+            keep='first'
+        ).sort_values(by='date')
+        
+       
+        combined_df.to_csv(target_path, index=False)
+        logger.info(f'League {league_id}: {len(league_group)} novos eventos salvos em {target_path}')
+
+
+"""
 def fill_data_gaps(gap: int = 30):
-    """Uses API to fill gaps in the when the model was not running."""
+    """"""Uses API to fill gaps in the when the model was not running.""""""
 
     with LOCK:
         
@@ -106,7 +161,7 @@ def fill_data_gaps(gap: int = 30):
 
             final_df.to_csv(HISTORIC_DATA, mode='w', index=False)
             logger.info(f'{len(new_events)} novos eventos adicionados ao histórico.')
-
+"""
 
 def not_ended(data: list):
     """Updates NOT_ENDED.csv with new data."""
