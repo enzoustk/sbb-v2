@@ -22,8 +22,8 @@ def send(
     response_data = response.json()
 
     if response.ok and response.json().get('ok'):
-        logger.info("Telegram message sent successfully")
         message_id = response.json()['result']['message_id']
+        logger.info(f"Telegram message sent successfully. ID: {message_id}")
         return message_id, TELEGRAM_CHAT_ID
     else:
         logger.error("Telegram message not sent")
