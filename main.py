@@ -23,6 +23,6 @@ if __name__ == '__main__':
     logger.info(f'\nStarting Striker Betting Bot...')
 
     #update.fill_data_gaps()
-    model = get.model()
+    models = get.models()
 
-    scanner.run(model=model, i=25)
+    scanner.run(models=models, i=25)

@@ -9,6 +9,7 @@ from bet_bot import message, escape
 from datetime import datetime, timezone, timedelta
 from model.betting_config import (EV_THRESHOLD, TIME_RANGES,
     AJUSTE_FUSO, HOT_TIPS_STEP, MAX_HOT, HOT_THRESHOLD)
+from api.constants import LEAGUE_IDS
 from files.paths import NOT_ENDED, MADE_BETS
 from bet_bot.constants import (TELEGRAM_MESSAGE, MIN_LINE_MESSAGE,
     MIN_ODD_MESSAGE, HOT_TIPS_MESSAGE, EDITED_MESSAGE, CANCELED_MESSAGE,
@@ -264,6 +265,7 @@ class Bet:
         
         # Parse dos dados do evento
         self.event_id = self._get_event_id()
+        self.league_id = self._get_league_id()
         self.league = self._get_league()
         self.date = self._get_date()
         
@@ -484,7 +486,13 @@ class Bet:
         If it fails, returns 'Unknown League'.
         """
         
-        return self.event.get('league', {}).get('name', 'Unknown League')
+        return LEAGUE_IDS[self.league_id]
+    
+    def _get_league_id(self) -> str:
+        """Fetches league id from event data.
+        If it fails, returns 'Unknown League Id'.
+        """
+        return self.event.get('league', {}).get('id', 'Unknow League Id')
     
     def _format_data(self, data) -> str:
 
@@ -503,7 +511,7 @@ class Bet:
         """
         return{
             'Horário Envio': self._format_data(pd.to_datetime(self.time_sent)),
-            'Liga': self._format_data(self.league),
+            'Liga': self.league,
             'Partida': self.home_str + ' vs. ' + self.away_str,
             'Tipo Aposta': self._format_data(self.bet_type),
             'Hot Tips': self._format_data(self.hot_emoji),
