@@ -606,7 +606,7 @@ class Bet:
             in self.__dict__.items()
             }
 
-        self.message = TELEGRAM_MESSAGE.format(**formated_dict)
+        self.message = TELEGRAM_MESSAGE.format(**formated_dict, league=self.league)
 
         if self.minimum_line == self.handicap and self.minimum_odd != self.bet_odd:
             self.message += MIN_ODD_MESSAGE.format(**formated_dict)
