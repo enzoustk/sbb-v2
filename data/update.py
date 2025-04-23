@@ -72,7 +72,10 @@ def historic_data(data: list):
     
    
     for league_id, league_group in new_df.groupby('league_id'):
-        league_id_str = str(league_id)
+        if isinstance(league_id, float):
+            league_id_str = str(int(league_id))
+        else:
+            league_id_str = str(league_id)
         
         
         if league_id_str not in MODELS:
