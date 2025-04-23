@@ -9,7 +9,7 @@ from files.paths import LOCK
 
 logger = logging.getLogger(__name__)
 
-def run(model, i: int = 50, sleep_time: int = 1):
+def run(models: dict, i: int = 50, sleep_time: int = 1):
     """Scans all live events and handles them
     
     Arguments:
@@ -50,15 +50,14 @@ def run(model, i: int = 50, sleep_time: int = 1):
         if unread_matches:
             try:
                 with LOCK:
-                    df = load.data('historic')
+                    dfs = load.data('historic')
                     for match in unread_matches:
-                        predict.match(df=df,
+                        predict.match(dfs=dfs,
                                     event=match,
-                                    model=model,
+                                    models=models,
                         )
                         read_matches.add(int(match['id']))
                     i_counter = 0
-
 
             except Exception as e:
                 logger.error(f"Error predicting match {match['id']}\n{e}")
