@@ -86,10 +86,10 @@ def historic_data(data: list):
         target_path = MODELS[league_id_str]['historic_data']
         
         try:
-            existing_data = pd.read_csv(target_path)
+            existing_data = pd.read_csv(target_path, low_memory=False)
             existing_data['date'] = pd.to_datetime(existing_data['date'], errors='coerce')
         except FileNotFoundError:
-            existing_data = pd.DataFrame()
+            existing_data = pd.DataFrame(columns=league_group.columns)
             logger.warning(f'Arquivo {target_path} não encontrado. Criando novo...')
         
         
