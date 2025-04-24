@@ -1,3 +1,4 @@
+import time
 import logging
 import requests
 from bet_bot.constants import TELEGRAM_BET_BOT_TOKEN, TELEGRAM_CHAT_ID
@@ -25,6 +26,12 @@ def send(
         message_id = response.json()['result']['message_id']
         logger.info(f"Telegram message sent successfully. ID: {message_id}")
         return message_id, TELEGRAM_CHAT_ID
+    if response['error_code'] == 429:
+        logger.info('Too Many Requests, Sleeping for ')
+        try:
+            time.sleep((response['description'][-2:]) + 1)
+        except:    
+            time.sleep(60)
     else:
         logger.error("Telegram message not sent")
         logger.error(f"Status code: {response.status_code}")
@@ -51,6 +58,12 @@ def edit(
     if response.status_code == 200:
         edited = True
         return edited
+    if response['error_code'] == 429:
+        logger.info('Too Many Requests, Sleeping for ')
+        try:
+            time.sleep((response['description'][-2:]) + 1)
+        except:    
+            time.sleep(60)
     else:
         logger.error(f'Error editing message {message_id}: {response.status_code} - {response.text}')
 
