@@ -199,7 +199,6 @@ def features(
     data = data.sort_values(['matchup_key', 'date']).reset_index(drop=True)
 
     if lookback_data is not None:
-        
         original_data = data.copy()
         original_data['__original__'] = True
 
