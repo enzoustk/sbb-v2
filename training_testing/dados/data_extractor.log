@@ -1,0 +1,71 @@
+2025-04-24 17:49:39,225 - INFO - Collected 378 events for 2025-01-17
+2025-04-24 17:49:43,296 - INFO - Collected 268 events for 2025-01-18
+2025-04-24 17:49:46,292 - INFO - Collected 220 events for 2025-01-19
+2025-04-24 17:50:06,585 - INFO - Collected 378 events for 2025-01-17
+2025-04-24 17:50:12,069 - INFO - Checkpoint saved: soccer_data.csv
+2025-04-24 17:50:18,500 - INFO - Checkpoint saved: soccer_data.csv
+2025-04-24 17:50:22,483 - INFO - Checkpoint saved: soccer_data.csv
+2025-04-24 17:50:26,303 - INFO - Checkpoint saved: soccer_data.csv
+2025-04-24 17:50:31,078 - INFO - Checkpoint saved: soccer_data.csv
+2025-04-24 17:50:34,869 - INFO - Checkpoint saved: soccer_data.csv
+2025-04-24 17:50:39,126 - INFO - Checkpoint saved: soccer_data.csv
+2025-04-24 17:50:43,008 - INFO - Checkpoint saved: soccer_data.csv
+2025-04-24 17:50:47,965 - INFO - Checkpoint saved: soccer_data.csv
+2025-04-24 17:50:52,415 - INFO - Checkpoint saved: soccer_data.csv
+2025-04-24 17:50:57,246 - INFO - Checkpoint saved: soccer_data.csv
+2025-04-24 17:51:02,666 - INFO - Checkpoint saved: soccer_data.csv
+2025-04-24 17:51:09,840 - INFO - Checkpoint saved: soccer_data.csv
+2025-04-24 17:51:36,307 - INFO - Collected 265 events for 2025-02-01
+2025-04-24 17:51:38,516 - INFO - Collected 218 events for 2025-02-02
+2025-04-24 17:51:48,135 - INFO - Collected 314 events for 2025-02-03
+2025-04-24 17:52:08,095 - INFO - Collected 374 events for 2025-02-04
+2025-04-24 17:52:13,492 - INFO - Collected 374 events for 2025-02-05
+2025-04-24 17:52:25,372 - INFO - Collected 380 events for 2025-02-06
+2025-04-24 17:52:29,695 - INFO - Collected 378 events for 2025-02-07
+2025-04-24 17:52:32,646 - INFO - Collected 235 events for 2025-02-08
+2025-04-24 17:52:36,447 - INFO - Collected 209 events for 2025-02-09
+2025-04-24 17:52:51,948 - INFO - Collected 326 events for 2025-02-10
+2025-04-24 17:53:03,635 - WARNING - Attempt 1 failed: HTTPSConnectionPool(host='api.b365api.com', port=443): Read timed out. (read timeout=10). Retrying in 2 seconds.
+2025-04-24 17:53:10,090 - INFO - Collected 380 events for 2025-02-11
+2025-04-24 17:53:13,061 - INFO - Collected 319 events for 2025-02-12
+2025-04-24 17:53:18,001 - INFO - Collected 343 events for 2025-02-13
+2025-04-24 17:53:25,618 - INFO - Collected 371 events for 2025-02-14
+2025-04-24 17:53:32,993 - INFO - Collected 272 events for 2025-02-15
+2025-04-24 17:53:35,428 - INFO - Collected 218 events for 2025-02-16
+2025-04-24 17:53:42,441 - INFO - Collected 318 events for 2025-02-17
+2025-04-24 17:53:53,065 - WARNING - Attempt 1 failed: HTTPSConnectionPool(host='api.b365api.com', port=443): Read timed out. (read timeout=10). Retrying in 2 seconds.
+2025-04-24 17:54:00,546 - INFO - Collected 374 events for 2025-02-18
+2025-04-24 17:54:12,407 - INFO - Collected 380 events for 2025-02-19
+2025-04-24 17:54:19,000 - INFO - Collected 372 events for 2025-02-20
+2025-04-24 17:54:25,031 - INFO - Collected 380 events for 2025-02-21
+2025-04-24 17:54:28,633 - INFO - Collected 274 events for 2025-02-22
+2025-04-24 17:54:30,855 - INFO - Collected 220 events for 2025-02-23
+2025-04-24 17:54:37,483 - INFO - Collected 326 events for 2025-02-24
+2025-04-24 17:54:58,036 - INFO - Collected 380 events for 2025-02-25
+2025-04-24 17:55:04,611 - INFO - Collected 374 events for 2025-02-26
+2025-04-24 17:55:08,053 - INFO - Collected 380 events for 2025-02-27
+2025-04-24 17:55:13,701 - INFO - Collected 380 events for 2025-02-28
+2025-04-24 17:55:16,556 - INFO - Collected 274 events for 2025-03-01
+2025-04-24 17:55:19,416 - INFO - Collected 220 events for 2025-03-02
+2025-04-24 17:55:27,144 - INFO - Collected 266 events for 2025-03-03
+2025-04-24 17:55:43,331 - INFO - Collected 378 events for 2025-03-04
+2025-04-24 17:55:51,278 - WARNING - Attempt 1 failed: 429 Client Error: Too Many Requests for url: https://api.b365api.com/v3/events/ended?token=183604-pWN7flhoAsWGu8&sport_id=1&league_id=22614&day=20250305&page=8. Retrying in 2 seconds.
+2025-04-24 17:55:53,605 - WARNING - Attempt 2 failed: 429 Client Error: Too Many Requests for url: https://api.b365api.com/v3/events/ended?token=183604-pWN7flhoAsWGu8&sport_id=1&league_id=22614&day=20250305&page=8. Retrying in 4 seconds.
+2025-04-24 17:55:57,941 - WARNING - Attempt 3 failed: 429 Client Error: Too Many Requests for url: https://api.b365api.com/v3/events/ended?token=183604-pWN7flhoAsWGu8&sport_id=1&league_id=22614&day=20250305&page=8. Retrying in 8 seconds.
+2025-04-24 17:56:06,304 - WARNING - Attempt 4 failed: 429 Client Error: Too Many Requests for url: https://api.b365api.com/v3/events/ended?token=183604-pWN7flhoAsWGu8&sport_id=1&league_id=22614&day=20250305&page=8. Retrying in 16 seconds.
+2025-04-24 17:56:22,620 - WARNING - Attempt 5 failed: 429 Client Error: Too Many Requests for url: https://api.b365api.com/v3/events/ended?token=183604-pWN7flhoAsWGu8&sport_id=1&league_id=22614&day=20250305&page=8. Retrying in 32 seconds.
+2025-04-24 17:56:54,620 - ERROR - All 5 attempts failed for URL: https://api.b365api.com/v3/events/ended
+2025-04-24 17:56:54,621 - ERROR - Error fetching events for 20250305: 429 Client Error: Too Many Requests for url: https://api.b365api.com/v3/events/ended?token=183604-pWN7flhoAsWGu8&sport_id=1&league_id=22614&day=20250305&page=8
+2025-04-24 17:56:54,622 - INFO - Collected 350 events for 2025-03-05
+2025-04-24 17:56:54,976 - WARNING - Attempt 1 failed: 429 Client Error: Too Many Requests for url: https://api.b365api.com/v3/events/ended?token=183604-pWN7flhoAsWGu8&sport_id=1&league_id=22614&day=20250306&page=1. Retrying in 2 seconds.
+2025-04-24 17:56:57,287 - WARNING - Attempt 2 failed: 429 Client Error: Too Many Requests for url: https://api.b365api.com/v3/events/ended?token=183604-pWN7flhoAsWGu8&sport_id=1&league_id=22614&day=20250306&page=1. Retrying in 4 seconds.
+2025-04-24 17:57:01,609 - WARNING - Attempt 3 failed: 429 Client Error: Too Many Requests for url: https://api.b365api.com/v3/events/ended?token=183604-pWN7flhoAsWGu8&sport_id=1&league_id=22614&day=20250306&page=1. Retrying in 8 seconds.
+2025-04-24 17:57:09,935 - WARNING - Attempt 4 failed: 429 Client Error: Too Many Requests for url: https://api.b365api.com/v3/events/ended?token=183604-pWN7flhoAsWGu8&sport_id=1&league_id=22614&day=20250306&page=1. Retrying in 16 seconds.
+2025-04-24 17:57:26,268 - WARNING - Attempt 5 failed: 429 Client Error: Too Many Requests for url: https://api.b365api.com/v3/events/ended?token=183604-pWN7flhoAsWGu8&sport_id=1&league_id=22614&day=20250306&page=1. Retrying in 32 seconds.
+2025-04-24 17:57:58,271 - ERROR - All 5 attempts failed for URL: https://api.b365api.com/v3/events/ended
+2025-04-24 17:57:58,272 - ERROR - Error fetching events for 20250306: 429 Client Error: Too Many Requests for url: https://api.b365api.com/v3/events/ended?token=183604-pWN7flhoAsWGu8&sport_id=1&league_id=22614&day=20250306&page=1
+2025-04-24 17:57:58,273 - INFO - Collected 0 events for 2025-03-06
+2025-04-24 17:57:58,594 - WARNING - Attempt 1 failed: 429 Client Error: Too Many Requests for url: https://api.b365api.com/v3/events/ended?token=183604-pWN7flhoAsWGu8&sport_id=1&league_id=22614&day=20250307&page=1. Retrying in 2 seconds.
+2025-04-24 17:58:03,469 - WARNING - Attempt 2 failed: 429 Client Error: Too Many Requests for url: https://api.b365api.com/v3/events/ended?token=183604-pWN7flhoAsWGu8&sport_id=1&league_id=22614&day=20250307&page=1. Retrying in 4 seconds.
+2025-04-24 17:58:07,804 - WARNING - Attempt 3 failed: 429 Client Error: Too Many Requests for url: https://api.b365api.com/v3/events/ended?token=183604-pWN7flhoAsWGu8&sport_id=1&league_id=22614&day=20250307&page=1. Retrying in 8 seconds.
+2025-04-24 17:58:16,116 - WARNING - Attempt 4 failed: 429 Client Error: Too Many Requests for url: https://api.b365api.com/v3/events/ended?token=183604-pWN7flhoAsWGu8&sport_id=1&league_id=22614&day=20250307&page=1. Retrying in 16 seconds.

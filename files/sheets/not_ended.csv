@@ -1,5 +1,5 @@
-event_id,league,date,home_str,away_str,home_team,home_player,away_team,away_player,players,odd_over,odd_under,handicap,prob_over,prob_under,ev_over,ev_under,bet_type,bet_odd,bet_prob,bet_ev,hot_ev,hot_emoji,minimum_line,minimum_odd,time_sent,lambda_pred,ended,home_score,away_score,total_score,raw_score,profit,result,canceled,message,sent,message_id,chat_id,edited,result_emoji,bet_type_emoji,time_range,saved_on_excel,month,totally_processed,event
-9847456,Esoccer Battle - 8 mins play,2025-04-21 04:00:00,A.Madrid (GanGsta_Panda),Dortmund (exhausted),a.madrid,gangsta_panda,dortmund,exhausted,"('exhausted', 'gangsta_panda')",1.8,1.9,5.25,0.3854687217416856,0.6145312782583143,-0.3061563008649658,0.1676094286907972,under,1.9,0.6145312782583143,0.1676094286907972,1.0,🔥,5.0,1.82,2025-04-20 21:58:16.026212,[4.7975674],False,,,,,,,,"🔗 Link: https://www.bet365.com/#/IP/B151
+event_id,league,date,home_str,away_str,home_team,home_player,away_team,away_player,players,odd_over,odd_under,handicap,prob_over,prob_under,ev_over,ev_under,bet_type,bet_odd,bet_prob,bet_ev,hot_ev,hot_emoji,minimum_line,minimum_odd,time_sent,lambda_pred,ended,message,sent,message_id,chat_id,edited,bet_type_emoji,time_range,saved_on_excel,month,event,league_id
+9847456,Esoccer Battle - 8 mins play,2025-04-21 04:00:00,A.Madrid (GanGsta_Panda),Dortmund (exhausted),a.madrid,gangsta_panda,dortmund,exhausted,"('exhausted', 'gangsta_panda')",1.8,1.9,5.25,0.3854687217416856,0.6145312782583143,-0.3061563008649658,0.1676094286907972,under,1.9,0.6145312782583143,0.1676094286907972,1.0,🔥,5.0,1.82,2025-04-20 21:58:16.026212,[4.7975674],False,"🔗 Link: https://www.bet365.com/#/IP/B151
 ⚽ Times: Gangsta Panda (A.Madrid) x Exhausted (Dortmund)
 🏆 Liga: Esoccer Battle - 8 Mins Play
 🎯 Aposta: Under 5,25 ⬇️
@@ -7,4 +7,90 @@ event_id,league,date,home_str,away_str,home_team,home_player,away_team,away_play
 ➖ Mínima: 5,00 @1,82
 
 ⚠️ EV: 🔥
-",True,2920.0,-1002305899864.0,False,,⬇️,20:00 - 23:59,False,04-2025,,"{'id': '9847456', 'sport_id': '1', 'time': '1745208000', 'time_status': '1', 'league': {'id': '22614', 'name': 'Esoccer Battle - 8 mins play', 'cc': ''}, 'home': {'id': '1083904', 'name': 'A.Madrid (GanGsta_Panda)', 'image_id': '', 'cc': ''}, 'away': {'id': '1080613', 'name': 'Dortmund (exhausted)', 'image_id': '', 'cc': ''}, 'ss': '', 'bet365_id': '173356285', 'timer': {'tm': 0, 'ts': 0, 'tt': '0', 'ta': 0, 'md': 0}}"
+",True,2920.0,-1002305899864.0,False,⬇️,20:00 - 23:59,False,04-2025,"{'id': '9847456', 'sport_id': '1', 'time': '1745208000', 'time_status': '1', 'league': {'id': '22614', 'name': 'Esoccer Battle - 8 mins play', 'cc': ''}, 'home': {'id': '1083904', 'name': 'A.Madrid (GanGsta_Panda)', 'image_id': '', 'cc': ''}, 'away': {'id': '1080613', 'name': 'Dortmund (exhausted)', 'image_id': '', 'cc': ''}, 'ss': '', 'bet365_id': '173356285', 'timer': {'tm': 0, 'ts': 0, 'tt': '0', 'ta': 0, 'md': 0}}",
+9859491,H2H GG 8min,2025-04-23 13:25:00,Arsenal (CLINICAL),Tottenham (ZT),arsenal,clinical,tottenham,zt,"('clinical', 'zt')",1.85,1.85,2.0,0.3721548882092489,0.627845111790751,-0.3115134568128893,0.1615134568128893,under,1.85,0.627845111790751,0.1615134568128893,1.0,🔥,1.75,1.93,2025-04-23 07:24:23.342794,[1.8111911],False,"🔗 Link: https://www.bet365.com/#/IP/B151
+⚽ Times: Clinical (Arsenal) x Zt (Tottenham)
+🏆 Liga: H2H Gg 8Min
+🎯 Aposta: Under 2,00 ⬇️
+📈 Odd: 1,85
+➖ Mínima: 1,75 @1,93
+
+⚠️ EV: 🔥
+",True,3224.0,-1002305899864.0,False,⬇️,04:00 - 07:59,False,04-2025,"{'id': '9859491', 'sport_id': '1', 'time': '1745414700', 'time_status': '1', 'league': {'id': '37298', 'name': 'Esoccer H2H GG League - 8 mins play', 'cc': ''}, 'home': {'id': '1087475', 'name': 'Arsenal (CLINICAL)', 'image_id': '', 'cc': ''}, 'away': {'id': '1076706', 'name': 'Tottenham (ZT)', 'image_id': '', 'cc': ''}, 'ss': '', 'bet365_id': '173486590', 'timer': {'tm': 0, 'ts': 0, 'tt': '0', 'ta': 0, 'md': 0}, 'stats': {'attacks': ['0', '0'], 'dangerous_attacks': ['0', '0'], 'off_target': ['0', '0'], 'on_target': ['0', '0']}}",37298.0
+9859771,GT Leagues 12min,2025-04-23 14:09:50,Lyon (Lucas),Tottenham (Diego),lyon,lucas,tottenham,diego,"('diego', 'lucas')",1.875,1.825,6.5,0.3717311923263749,0.628268807673625,-0.3030040143880469,0.1465905740043656,under,1.825,0.628268807673625,0.1465905740043656,0.0,,6.25,1.77,2025-04-23 08:21:57.371088,[5.863173],False,"🔗 Link: https://www.bet365.com/#/IP/B151
+⚽ Times: Lucas (Lyon) x Diego (Tottenham)
+🏆 Liga: Gt Leagues 12Min
+🎯 Aposta: Under 6,50 ⬇️
+📈 Odd: 1,82
+➖ Mínima: 6,25 @1,77
+",True,3235.0,-1002305899864.0,False,⬇️,08:00 - 11:59,False,04-2025,"{'id': '9859771', 'sport_id': '1', 'time': '1745417390', 'time_status': '1', 'league': {'id': '23114', 'name': 'Esoccer GT Leagues – 12 mins play', 'cc': ''}, 'home': {'id': '1087297', 'name': 'Lyon (Lucas)', 'image_id': '1023433', 'cc': ''}, 'away': {'id': '1100119', 'name': 'Tottenham (Diego)', 'image_id': '1152077', 'cc': ''}, 'ss': '0-1', 'scores': {'2': {'home': '0', 'away': '1'}}, 'bet365_id': '173491292', 'timer': {'tm': 6, 'ts': 3, 'tt': '1', 'ta': 0, 'md': 0}, 'stats': {'attacks': ['23', '31'], 'corners': ['0', '0'], 'dangerous_attacks': ['13', '11'], 'goals': ['0', '1'], 'off_target': ['0', '0'], 'on_target': ['0', '1'], 'penalties': ['0', '0'], 'redcards': ['0', '0'], 'substitutions': ['0', '0'], 'yellowcards': ['0', '0']}}",23114.0
+9859772,GT Leagues 12min,2025-04-23 14:10:53,Fenerbahce (Jesus),Lazio (Carlos),fenerbahce,jesus,lazio,carlos,"('carlos', 'jesus')",1.825,1.875,5.75,0.5039624921755944,0.4960375078244056,-0.0802684517795402,-0.0699296728292395,,,,,,,,,,[5.956272],False,,,,,False,,,False,,"{'id': '9859772', 'sport_id': '1', 'time': '1745417453', 'time_status': '1', 'league': {'id': '23114', 'name': 'Esoccer GT Leagues – 12 mins play', 'cc': ''}, 'home': {'id': '1122160', 'name': 'Fenerbahce (Jesus)', 'image_id': '1242941', 'cc': ''}, 'away': {'id': '1086131', 'name': 'Lazio (Carlos)', 'image_id': '1106077', 'cc': ''}, 'ss': '', 'bet365_id': '173491294', 'timer': {'tm': 0, 'ts': 0, 'tt': '0', 'ta': 0, 'md': 0}, 'stats': {'attacks': ['0', '0'], 'dangerous_attacks': ['0', '0'], 'off_target': ['0', '0'], 'on_target': ['0', '0']}}",23114.0
+9859777,GT Leagues 12min,2025-04-23 14:14:27,Eintracht (Persie),VfB Stuttgart (Professor),eintracht,persie,vfb stuttgart,professor,"('persie', 'professor')",1.825,1.875,3.75,0.6258701549152191,0.374129845084781,0.1422130327202748,-0.2985065404660356,over,1.825,0.6258701549152191,0.1422130327202748,0.0,,4.0,1.79,2025-04-23 08:22:00.949948,[4.542874],False,"🔗 Link: https://www.bet365.com/#/IP/B151
+⚽ Times: Persie (Eintracht) x Professor (Vfb Stuttgart)
+🏆 Liga: Gt Leagues 12Min
+🎯 Aposta: Over 3,75 ⬆️
+📈 Odd: 1,82
+➖ Mínima: 4,00 @1,79
+",True,3236.0,-1002305899864.0,False,⬆️,08:00 - 11:59,False,04-2025,"{'id': '9859777', 'sport_id': '1', 'time': '1745417667', 'time_status': '1', 'league': {'id': '23114', 'name': 'Esoccer GT Leagues – 12 mins play', 'cc': ''}, 'home': {'id': '1121346', 'name': 'Eintracht (Persie)', 'image_id': '1242447', 'cc': ''}, 'away': {'id': '1084005', 'name': 'VfB Stuttgart (Professor)', 'image_id': '1092495', 'cc': ''}, 'ss': '1-2', 'scores': {'2': {'home': '1', 'away': '2'}}, 'bet365_id': '173526186', 'timer': {'tm': 6, 'ts': 27, 'tt': '1', 'ta': 0, 'md': 1}, 'stats': {'attacks': ['18', '15'], 'corners': ['0', '1'], 'dangerous_attacks': ['10', '9'], 'goals': ['1', '2'], 'off_target': ['0', '0'], 'on_target': ['1', '2'], 'penalties': ['0', '0'], 'redcards': ['0', '0'], 'substitutions': ['0', '0'], 'yellowcards': ['0', '0']}}",23114.0
+9859776,GT Leagues 12min,2025-04-23 14:15:00,Dortmund (Prince),RB Leipzig (Arthur),dortmund,prince,rb leipzig,arthur,"('arthur', 'prince')",1.85,1.85,5.0,0.4175469121063695,0.5824530878936305,-0.2275382126032162,0.0775382126032164,under,1.85,0.5824530878936305,0.0775382126032164,,,5.0,1.8,2025-04-23 08:22:02.478229,[4.775198],False,"🔗 Link: https://www.bet365.com/#/IP/B151
+⚽ Times: Prince (Dortmund) x Arthur (Rb Leipzig)
+🏆 Liga: Gt Leagues 12Min
+🎯 Aposta: Under 5,00 ⬇️
+📈 Odd: 1,85 (Mín @1,80)
+",True,3237.0,-1002305899864.0,False,⬇️,08:00 - 11:59,False,04-2025,"{'id': '9859776', 'sport_id': '1', 'time': '1745417700', 'time_status': '1', 'league': {'id': '23114', 'name': 'Esoccer GT Leagues – 12 mins play', 'cc': ''}, 'home': {'id': '1101623', 'name': 'Dortmund (Prince)', 'image_id': '1100383', 'cc': ''}, 'away': {'id': '1085681', 'name': 'RB Leipzig (Arthur)', 'image_id': '1044803', 'cc': ''}, 'ss': '1-0', 'scores': {'1': {'home': '2', 'away': '0'}, '2': {'home': '1', 'away': '0'}}, 'bet365_id': '173526184', 'timer': {'tm': 6, 'ts': 23, 'tt': '1', 'ta': 0, 'md': 0}, 'stats': {'attacks': ['17', '23'], 'ball_safe': ['15', '24'], 'corners': ['2', '1'], 'corner_h': ['2', '1'], 'dangerous_attacks': ['13', '6'], 'goals': ['1', '0'], 'off_target': ['0', '0'], 'on_target': ['2', '0'], 'penalties': ['0', '0'], 'redcards': ['0', '0'], 'substitutions': ['0', '0'], 'yellowcards': ['0', '0'], 'yellowred_cards': ['0', '0']}}",23114.0
+9859682,H2H GG 8min,2025-04-23 14:15:39,A.Madrid (HAZARD),Liverpool (BUTCHER),a.madrid,hazard,liverpool,butcher,"('butcher', 'hazard')",1.775,1.925,2.0,0.390974988737567,0.609025011262433,-0.3060193949908186,0.1723731466801836,under,1.925,0.609025011262433,0.1723731466801836,1.0,🔥,1.75,1.99,2025-04-23 08:22:04.594412,[1.8607161],False,"🔗 Link: https://www.bet365.com/#/IP/B151
+⚽ Times: Hazard (A.Madrid) x Butcher (Liverpool)
+🏆 Liga: H2H Gg 8Min
+🎯 Aposta: Under 2,00 ⬇️
+📈 Odd: 1,93
+➖ Mínima: 1,75 @1,99
+
+⚠️ EV: 🔥
+",True,3238.0,-1002305899864.0,False,⬇️,08:00 - 11:59,False,04-2025,"{'id': '9859682', 'sport_id': '1', 'time': '1745417739', 'time_status': '1', 'league': {'id': '37298', 'name': 'Esoccer H2H GG League - 8 mins play', 'cc': ''}, 'home': {'id': '1093552', 'name': 'A.Madrid (HAZARD)', 'image_id': '', 'cc': ''}, 'away': {'id': '1110141', 'name': 'Liverpool (BUTCHER)', 'image_id': '', 'cc': ''}, 'ss': '0-2', 'scores': {'1': {'home': '0', 'away': '1'}, '2': {'home': '0', 'away': '2'}}, 'bet365_id': '173486775', 'timer': {'tm': 5, 'ts': 12, 'tt': '1', 'ta': 0, 'md': 1}, 'stats': {'attacks': ['11', '14'], 'corners': ['0', '1'], 'corner_h': ['0', '1'], 'dangerous_attacks': ['6', '12'], 'goals': ['0', '2'], 'off_target': ['0', '0'], 'on_target': ['0', '2'], 'penalties': ['0', '0'], 'redcards': ['0', '0'], 'substitutions': ['0', '0'], 'yellowcards': ['0', '0']}}",37298.0
+9859689,Battle 8min,2025-04-23 14:16:00,PSG (arch),Man City (Hyper),psg,arch,man city,hyper,"('arch', 'hyper')",1.8,1.9,5.0,0.528752466245433,0.4712475337545669,-0.0482455607582205,-0.1046296858663228,,,,,,,,,,[5.3014617],False,,,,,False,,,False,,"{'id': '9859689', 'sport_id': '1', 'time': '1745417760', 'time_status': '1', 'league': {'id': '22614', 'name': 'Esoccer Battle - 8 mins play', 'cc': ''}, 'home': {'id': '1095017', 'name': 'PSG (arch)', 'image_id': '', 'cc': ''}, 'away': {'id': '1102671', 'name': 'Man City (Hyper)', 'image_id': '', 'cc': ''}, 'ss': '0-1', 'scores': {'2': {'home': '0', 'away': '1'}}, 'bet365_id': '173519567', 'timer': {'tm': 5, 'ts': 1, 'tt': '1', 'ta': 0, 'md': 1}, 'stats': {'corners': ['0', '2'], 'goals': ['0', '1'], 'penalties': ['0', '0'], 'redcards': ['0', '0'], 'substitutions': ['0', '0'], 'yellowcards': ['0', '0']}}",22614.0
+9859690,Battle 8min,2025-04-23 14:16:00,Boca Juniors (Maslja),River Plate (Steksy),boca juniors,maslja,river plate,steksy,"('maslja', 'steksy')",1.8,1.9,5.75,0.2983652599010427,0.7016347400989573,-0.4629425321781232,0.3331060061880189,under,1.9,0.7016347400989573,0.3331060061880189,4.0,🔥🔥🔥🔥,5.0,1.83,2025-04-23 08:22:07.650367,[4.813075],False,"🔗 Link: https://www.bet365.com/#/IP/B151
+⚽ Times: Maslja (Boca Juniors) x Steksy (River Plate)
+🏆 Liga: Battle 8Min
+🎯 Aposta: Under 5,75 ⬇️
+📈 Odd: 1,90
+➖ Mínima: 5,00 @1,83
+
+⚠️ EV: 🔥🔥🔥🔥
+",True,3239.0,-1002305899864.0,False,⬇️,08:00 - 11:59,False,04-2025,"{'id': '9859690', 'sport_id': '1', 'time': '1745417760', 'time_status': '1', 'league': {'id': '22614', 'name': 'Esoccer Battle - 8 mins play', 'cc': ''}, 'home': {'id': '1098264', 'name': 'Boca Juniors (Maslja)', 'image_id': '', 'cc': ''}, 'away': {'id': '1123641', 'name': 'River Plate (Steksy)', 'image_id': '', 'cc': ''}, 'ss': '5-1', 'scores': {'2': {'home': '5', 'away': '1'}}, 'bet365_id': '173519571', 'timer': {'tm': 5, 'ts': 9, 'tt': '1', 'ta': 0, 'md': 1}, 'stats': {'corners': ['1', '0'], 'goals': ['5', '1'], 'penalties': ['0', '0'], 'redcards': ['0', '0'], 'substitutions': ['0', '0'], 'yellowcards': ['0', '0']}}",22614.0
+9859815,Volta 6min,2025-04-23 14:20:50,Man City (Gala),Man Utd (Endry),man city,gala,man utd,endry,"('endry', 'gala')",1.825,1.875,4.25,0.6894137906095709,0.3105862093904291,0.2581801678624669,-0.4176508573929454,over,1.825,0.6894137906095709,0.2581801678624669,3.0,🔥🔥🔥,4.75,1.78,2025-04-23 08:22:11.900202,[5.419396],False,"🔗 Link: https://www.bet365.com/#/IP/B151
+⚽ Times: Gala (Man City) x Endry (Man Utd)
+🏆 Liga: Volta 6Min
+🎯 Aposta: Over 4,25 ⬆️
+📈 Odd: 1,82
+➖ Mínima: 4,75 @1,78
+
+⚠️ EV: 🔥🔥🔥
+",True,3240.0,-1002305899864.0,False,⬆️,08:00 - 11:59,False,04-2025,"{'id': '9859815', 'sport_id': '1', 'time': '1745418050', 'time_status': '1', 'league': {'id': '38439', 'name': 'Esoccer Battle Volta - 6 mins play', 'cc': ''}, 'home': {'id': '1076360', 'name': 'Man City (Gala)', 'image_id': '', 'cc': ''}, 'away': {'id': '1077360', 'name': 'Man Utd (Endry)', 'image_id': '', 'cc': ''}, 'ss': '1-0', 'scores': {'2': {'home': '1', 'away': '0'}}, 'bet365_id': '173521484', 'timer': {'tm': 1, 'ts': 0, 'tt': '1', 'ta': 0, 'md': 0}, 'stats': {'corners': ['0', '0'], 'goals': ['0', '0'], 'penalties': ['0', '0'], 'redcards': ['0', '0'], 'substitutions': ['0', '0'], 'yellowcards': ['0', '0']}}",38439.0
+9859819,Volta 6min,2025-04-23 14:21:58,Tottenham (Nell),Arsenal (Kolesya),tottenham,nell,arsenal,kolesya,"('kolesya', 'nell')",1.775,1.925,4.5,0.5552297556540969,0.444770244345903,-0.014467183713978,-0.1438172796341366,,,,,,,,,,[4.975684],False,,,,,False,,,False,,"{'id': '9859819', 'sport_id': '1', 'time': '1745418118', 'time_status': '1', 'league': {'id': '38439', 'name': 'Esoccer Battle Volta - 6 mins play', 'cc': ''}, 'home': {'id': '1086499', 'name': 'Tottenham (Nell)', 'image_id': '', 'cc': ''}, 'away': {'id': '1087601', 'name': 'Arsenal (Kolesya)', 'image_id': '', 'cc': ''}, 'ss': '1-0', 'scores': {'2': {'home': '1', 'away': '0'}}, 'bet365_id': '173521486', 'timer': {'tm': 0, 'ts': 36, 'tt': '1', 'ta': 0, 'md': 0}, 'stats': {'corners': ['0', '0'], 'goals': ['1', '0'], 'penalties': ['0', '0'], 'redcards': ['0', '0'], 'substitutions': ['0', '0'], 'yellowcards': ['0', '0']}}",38439.0
+9859681,H2H GG 8min,2025-04-23 14:25:11,Newcastle (LAVA),Tottenham (ZT),newcastle,lava,tottenham,zt,"('lava', 'zt')",1.9,1.8,2.25,0.3771793835702147,0.6228206164297853,-0.283359171216592,0.1210771095736134,under,1.8,0.6228206164297853,0.1210771095736134,0.0,,2.0,1.86,2025-04-23 08:26:03.601669,[1.980887],False,"🔗 Link: https://www.bet365.com/#/IP/B151
+⚽ Times: Lava (Newcastle) x Zt (Tottenham)
+🏆 Liga: H2H Gg 8Min
+🎯 Aposta: Under 2,25 ⬇️
+📈 Odd: 1,80
+➖ Mínima: 2,00 @1,86
+",True,3241.0,-1002305899864.0,False,⬇️,08:00 - 11:59,False,04-2025,"{'id': '9859681', 'sport_id': '1', 'time': '1745418311', 'time_status': '1', 'league': {'id': '37298', 'name': 'Esoccer H2H GG League - 8 mins play', 'cc': ''}, 'home': {'id': '1076069', 'name': 'Newcastle (LAVA)', 'image_id': '', 'cc': ''}, 'away': {'id': '1076706', 'name': 'Tottenham (ZT)', 'image_id': '', 'cc': ''}, 'ss': '0-0', 'scores': {'2': {'home': '0', 'away': '0'}}, 'bet365_id': '173486619', 'timer': {'tm': 0, 'ts': 30, 'tt': '1', 'ta': 0, 'md': 0}, 'stats': {'attacks': ['0', '2'], 'corners': ['0', '0'], 'dangerous_attacks': ['0', '1'], 'goals': ['0', '0'], 'off_target': ['0', '0'], 'on_target': ['0', '0'], 'penalties': ['0', '0'], 'redcards': ['0', '0'], 'substitutions': ['0', '0'], 'yellowcards': ['0', '0']}}",37298.0
+9859608,GT Leagues 12min,2025-04-23 14:30:00,Lyon (Lucas),Lazio (Carlos),lyon,lucas,lazio,carlos,"('carlos', 'lucas')",1.875,1.825,4.25,0.6204463305320365,0.3795536694679635,0.1633368697475683,-0.3073145532209665,over,1.875,0.6204463305320365,0.1633368697475683,1.0,🔥,4.5,1.87,2025-04-23 08:26:13.287256,[5.0078325],False,"🔗 Link: https://www.bet365.com/#/IP/B151
+⚽ Times: Lucas (Lyon) x Carlos (Lazio)
+🏆 Liga: Gt Leagues 12Min
+🎯 Aposta: Over 4,25 ⬆️
+📈 Odd: 1,88
+➖ Mínima: 4,50 @1,87
+
+⚠️ EV: 🔥
+",True,3242.0,-1002305899864.0,False,⬆️,08:00 - 11:59,False,04-2025,"{'id': '9859608', 'sport_id': '1', 'time': '1745418600', 'time_status': '1', 'league': {'id': '23114', 'name': 'Esoccer GT Leagues – 12 mins play', 'cc': ''}, 'home': {'id': '1087297', 'name': 'Lyon (Lucas)', 'image_id': '1023433', 'cc': ''}, 'away': {'id': '1086131', 'name': 'Lazio (Carlos)', 'image_id': '1106077', 'cc': ''}, 'ss': '', 'bet365_id': '173491296', 'timer': {'tm': 0, 'ts': 0, 'tt': '0', 'ta': 0, 'md': 0}, 'stats': {'attacks': ['0', '0'], 'dangerous_attacks': ['0', '0'], 'off_target': ['0', '0'], 'on_target': ['0', '0']}}",23114.0
+9859598,GT Leagues 12min,2025-04-23 14:30:00,Fenerbahce (Jesus),A.Bilbao (Sato),fenerbahce,jesus,a.bilbao,sato,"('jesus', 'sato')",1.875,1.825,7.0,0.3158966308765628,0.6841033691234373,-0.4076938171064448,0.2484886486502731,under,1.825,0.6841033691234373,0.2484886486502731,2.0,🔥🔥,6.5,1.78,2025-04-23 08:26:58.380811,[6.112411],False,"🔗 Link: https://www.bet365.com/#/IP/B151
+⚽ Times: Jesus (Fenerbahce) x Sato (A.Bilbao)
+🏆 Liga: Gt Leagues 12Min
+🎯 Aposta: Under 7,00 ⬇️
+📈 Odd: 1,82
+➖ Mínima: 6,50 @1,78
+
+⚠️ EV: 🔥🔥
+",True,3243.0,-1002305899864.0,False,⬇️,08:00 - 11:59,False,04-2025,"{'id': '9859598', 'sport_id': '1', 'time': '1745418600', 'time_status': '1', 'league': {'id': '23114', 'name': 'Esoccer GT Leagues – 12 mins play', 'cc': ''}, 'home': {'id': '1122160', 'name': 'Fenerbahce (Jesus)', 'image_id': '1242941', 'cc': ''}, 'away': {'id': '1089724', 'name': 'A.Bilbao (Sato)', 'image_id': '1206143', 'cc': ''}, 'ss': '', 'bet365_id': '173491302', 'timer': {'tm': 0, 'ts': 0, 'tt': '0', 'ta': 0, 'md': 0}, 'stats': {'attacks': ['0', '0'], 'dangerous_attacks': ['0', '0'], 'off_target': ['0', '0'], 'on_target': ['0', '0']}}",23114.0
+9859693,Battle 8min,2025-04-23 14:28:00,River Plate (Steksy),PSG (arch),river plate,steksy,psg,arch,"('arch', 'steksy')",1.85,1.85,4.75,0.4967680363147516,0.5032319636852484,-0.0809791328177094,-0.0690208671822905,,,,,,,,,,[4.91871],False,,,,,False,,,False,,"{'id': '9859693', 'sport_id': '1', 'time': '1745418480', 'time_status': '1', 'league': {'id': '22614', 'name': 'Esoccer Battle - 8 mins play', 'cc': ''}, 'home': {'id': '1123641', 'name': 'River Plate (Steksy)', 'image_id': '', 'cc': ''}, 'away': {'id': '1095017', 'name': 'PSG (arch)', 'image_id': '', 'cc': ''}, 'ss': '', 'bet365_id': '173519577', 'timer': {'tm': 0, 'ts': 0, 'tt': '0', 'ta': 0, 'md': 0}}",22614.0
+9859694,Battle 8min,2025-04-23 14:28:00,Man City (Hyper),Real Madrid (Glumac),man city,hyper,real madrid,glumac,"('glumac', 'hyper')",1.9,1.8,5.75,0.5048415782217679,0.49515842177823216,-0.040801001378641066,-0.10871484079918214,,,,,,,,,,[5.9612436],False,,,,,False,,,False,,"{'id': '9859694', 'sport_id': '1', 'time': '1745418480', 'time_status': '1', 'league': {'id': '22614', 'name': 'Esoccer Battle - 8 mins play', 'cc': ''}, 'home': {'id': '1102671', 'name': 'Man City (Hyper)', 'image_id': '', 'cc': ''}, 'away': {'id': '1095756', 'name': 'Real Madrid (Glumac)', 'image_id': '', 'cc': ''}, 'ss': '', 'bet365_id': '173519582', 'timer': {'tm': 0, 'ts': 0, 'tt': '0', 'ta': 0, 'md': 0}}",22614
