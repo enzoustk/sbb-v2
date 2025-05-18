@@ -1,0 +1,4 @@
+Teste:
+MAE: 1.4547
+RMSE: 1.7876
+Log Loss: 2.1297
