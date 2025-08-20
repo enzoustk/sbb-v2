@@ -11,7 +11,11 @@ from features.required import REQUIRED_FEATURES
 logger = logging.getLogger(__name__)
 bet_logger = logging.getLogger('bet')
 
-def match(dfs: dict, event: dict, models: dict):
+def match(
+    dfs: dict,
+    event: dict,
+    models: dict,
+    predictor: str):
     """Processes live betting events using a predictive model.
 
     Performs error checking, feature engineering, model prediction, and bet handling
@@ -69,7 +73,26 @@ def match(dfs: dict, event: dict, models: dict):
 
         # TODO: Adicionar trava para caso features insuficientes, não executar.
         
+        if predictor == 'ml_goals':
+            predict_ml_model(
+                dfs=dfs,
+                models=models,
+                bet=bet)
         
+        if predictor == 'elo':
+            predict_elo_model()
+
+        
+       
+    except Exception as e:
+        bet_logger.bet(f"Erro ao prever para o jogo {bet.event_id} {bet.home_str} vs {bet.away_str}: {e}")
+        logger.error(f"Erro ao prever para o jogo {bet.event_id}: {e}")
+
+def predict_ml_model(
+        dfs: dict,
+        models: dict,
+        bet: Bet
+        ):
         features = create.features(
             data=dfs[bet.league_id],
             live=True,
@@ -96,11 +119,9 @@ def match(dfs: dict, event: dict, models: dict):
                 bet.handle_made_bet()
         
             bet.save_bet()
-
         
         except KeyError:
             logger.error(f'Error predicting for {bet.home_str} vs {bet.away_str}. Model {models[bet.league_id]} not Found')     
                 
-    except Exception as e:
-        bet_logger.bet(f"Erro ao prever para o jogo {bet.event_id} {bet.home_str} vs {bet.away_str}: {e}")
-        logger.error(f"Erro ao prever para o jogo {bet.event_id}: {e}")
+def predict_elo_model():
+    pass
