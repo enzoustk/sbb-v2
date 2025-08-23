@@ -505,7 +505,6 @@ class Bet:
         elif isinstance(data, str):
             return f'{data}'.title().replace('_', ' ')
         
-
     def _get_excel_columns(self):
         """Returns a dcit with the columns and values
         To the Made Bets Excel file
@@ -691,4 +690,3 @@ class Bet:
             self.saved_on_excel = True    
 
     # ---------------------------------------------------------------------------
-

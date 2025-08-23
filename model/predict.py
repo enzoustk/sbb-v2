@@ -61,38 +61,35 @@ def match(
     if event['id'] in error_events:
         return []
 
-    try:
+
     
-        hora_identificacao = datetime.now().strftime('%H:%M:%S')
-        
-        print_separator()
-        bet_logger.bet(f"Novo evento identificado às {hora_identificacao}")
+    hora_identificacao = datetime.now().strftime('%H:%M:%S')
+    
+    print_separator()
+    bet_logger.bet(f"Novo evento identificado às {hora_identificacao}")
 
-        bet = Bet(event)
-        bet.get_odds(market='goals')
 
-        # TODO: Adicionar trava para caso features insuficientes, não executar.
-        
-        if predictor == 'ml_goals':
-            predict_ml_model(
-                dfs=dfs,
-                models=models,
-                bet=bet)
-        
-        if predictor == 'elo':
-            predict_elo_model()
 
+    # TODO: Adicionar trava para caso features insuficientes, não executar.
         
-       
-    except Exception as e:
-        bet_logger.bet(f"Erro ao prever para o jogo {bet.event_id} {bet.home_str} vs {bet.away_str}: {e}")
-        logger.error(f"Erro ao prever para o jogo {bet.event_id}: {e}")
+    if predictor == 'ml_goals':
+        predict_ml_model(
+            dfs=dfs,
+            models=models,
+            event=event)
+        
+    if predictor == 'elo':
+        predict_elo_model()
 
 def predict_ml_model(
         dfs: dict,
         models: dict,
-        bet: Bet
+        event: dict
         ):
+
+        bet = Bet(event)
+        bet.get_odds(market='goals')
+
         features = create.features(
             data=dfs[bet.league_id],
             live=True,

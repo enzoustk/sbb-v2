@@ -173,9 +173,10 @@ class H2HEngineer(FeatureEngineer):
             'away_score': row['away_score']
         })
 
-df = pd.read_csv('data/training_data.csv')
+df = pd.read_csv('data/raw_dataset.csv', low_memory=False)
 indv = IndvEngineer(df=df)
 indv_df = indv.calculate_features()
 h2h = H2HEngineer(df=indv_df)
 featured_df = h2h.calculate_features()
+featured_df.to_excel('featured.xlsx', index=False)
 featured_df.to_csv('featured.csv', index=False)

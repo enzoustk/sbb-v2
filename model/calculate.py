@@ -1,5 +1,6 @@
 import logging
 import numpy as np
+from scipy.stats import norm
 from scipy.stats import poisson
 from model.betting_config import EV_THRESHOLD
 
@@ -133,7 +134,7 @@ def min_goal_line(
             logger.error(f'Invalid Min. Odd: {minimum_odd}')
 
 
-def profit(bet_type: float, handicap: float, total_score: int, bet_odd: float) -> float:
+def profit(bet_type: str, handicap: float, total_score: int, bet_odd: float) -> float:
     
     """
     Calcular o PL dado um tipo de aposta, handicap, odd e resultado.
@@ -148,18 +149,11 @@ def profit(bet_type: float, handicap: float, total_score: int, bet_odd: float) -
         if outcome >= 0.5: 
             profit = (bet_odd - 1)
             result = 'win' 
-        
-        elif outcome == 0.25: 
-            profit = (bet_odd - 1) / 2
-            result = 'half_win'
-        
+                
         elif outcome == 0: 
             profit = 0
             result = 'push'
         
-        elif outcome == -0.25:
-            profit = -0.5 
-            result = 'half_loss'
         
         elif outcome <= -0.5: 
             profit = -1
