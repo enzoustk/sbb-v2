@@ -105,7 +105,7 @@ def odds(
     
     if market == 'total':
         
-        handicap = float(selected.get('handicap'))
+        handicap = float(goal_handicap(selected.get('handicap')))
 
         try:
             over_od = float(selected.get('over_od'))
@@ -115,11 +115,8 @@ def odds(
             logger.error(f"Error converting home/away odds for event {event_id}: {e}")
             
         
-        return {
-            'handicap': handicap,
-            'over_od': over_od,
-            'under_od': under_od
-        }
+        return handicap, over_od, under_od
+        
 
 def spread(spread) -> float | None:
     """
@@ -157,3 +154,25 @@ def filter_odds(market_data: list[dict], market: str = 'spread') -> list[dict]:
             and odd.get("handicap") not in (None, '-')
         )
     ]
+    
+def goal_handicap(handicap) -> float | None:
+
+    """
+    Gets the handicap from the API and solves type errors,
+    Also, converts it to a float and returns the current handicap if successful.
+    """
+
+    try: 
+        if isinstance(handicap, str):
+            if ',' in handicap:
+                handicap_vals = [float(h.strip()) for h in handicap.split(',')]
+                handicap = sum(handicap_vals) / len(handicap_vals)
+            
+            else:
+                handicap = float(handicap.strip())
+        
+        return handicap
+    
+    except ValueError as ve:
+        logger.error(f"Error converting handicap '{handicap}': {ve}")
+        return None

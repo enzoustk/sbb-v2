@@ -5,10 +5,10 @@ API_TOKEN = "<B365_TOKEN>"
 SPORT_ID = 1
 
 LEAGUE_IDS = {
-   '22614': "Battle 8min",
-   '23114': "GT Leagues 12min",
-   '37298': "H2H GG 8min",
-   '38439': "Volta 6min"
+   '22614': "Battle: 8 min",
+#    '23114': "GT Leagues 12min",
+#    '37298': "H2H GG 8min",
+#    '38439': "Volta 6min"
 }
 
 MARKET_IDS = {

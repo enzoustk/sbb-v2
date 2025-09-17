@@ -15,9 +15,7 @@ TELEGRAM_MESSAGE = (
     "🔗 Link: https://www.bet365.com/#/IP/B151\n"
     "⚽ Times: {home_player} ({home_team}) x {away_player} ({away_team})\n" 
     "🏆 Liga: {league}\n"
-    "-----"
-    "🎰 Mercado: {market_str}\n"   
-    "🎯 Aposta: {bet_type} {bet_line}\n" 
+    "🎯 Aposta: {bet_type} {handicap} {bet_type_emoji}\n" 
     "📈 Odd: {bet_odd}" 
 )
 
