@@ -16,6 +16,7 @@ def match(
     history: dict,
     event: dict,
     models: dict,
+    scalers: dict,
     predictor: str):
     """Processes live betting events using a predictive model.
 
@@ -78,6 +79,7 @@ def match(
             dfs=dfs,
             history=history,
             models=models,
+            scalers=scalers,
             event=event)
         
     if predictor == 'elo':
@@ -86,6 +88,7 @@ def match(
 def predict_ml_model(
         history: dict,
         dfs: dict,
+        scalers: dict,
         models: dict,
         event: dict
         ):
@@ -113,7 +116,7 @@ def predict_ml_model(
             bet_logger.bet(f'{print_features(X)}')
             print_separator(30)
             
-            lambda_pred = models[bet.league_id].predict(X)
+            lambda_pred = models[bet.league_id].predict(scalers[bet.league_id].transform(features))
             
             bet.find_ev(lambda_pred)
             if bet.bet_type is not None:

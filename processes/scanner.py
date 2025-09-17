@@ -11,6 +11,7 @@ logger = logging.getLogger(__name__)
 
 def run(
         models: dict,
+        scalers: dict,
         history: dict,
         i: int = 50,
         sleep_time: int = 1,
@@ -61,6 +62,7 @@ def run(
                                     event=match,
                                     history=history,
                                     models=models,
+                                    scalers=scalers,
                                     predictor='ml_goals'
                         )
                         read_matches.add(int(match['id']))

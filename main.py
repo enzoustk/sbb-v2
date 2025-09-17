@@ -25,6 +25,7 @@ if __name__ == '__main__':
 
     #update.fill_data_gaps()
     models = get.models()
+    scalers = get.scalers()
     history = initialize_player_data()
 
-    scanner.run(models=models, i=25, history=history)
+    scanner.run(models=models, i=25, history=history, scalers=scalers)

@@ -1,5 +1,6 @@
-import logging
 import sys
+import logging
+import joblib
 from xgboost import XGBRegressor
 from files.paths import MODELS
 
@@ -24,4 +25,11 @@ def models():
         model.load_model(value['model'])
         models[key] = model
     return models
+
+def scalers():
+    scalers = {}
+    for key, value in MODELS.items():
+        scaler = joblib.load(value['scaler'])
+        scalers[key] = scaler
+    return scalers
     
