@@ -120,7 +120,7 @@ class Bet:
 
     def get_odds(
         self,
-        market: str='goals'
+        market: str='total'
         ):
 
         """Fetches and validates betting odds from external API.
@@ -163,11 +163,14 @@ class Bet:
         """
 
         self.lambda_pred = lambda_pred
-        
+        print('lambda', self.lambda_pred)
+        print('handicap: ', self.handicap)
         self.prob_over, self.prob_under = calculate.poisson_goals(self.lambda_pred, self.handicap)
+
 
         self.ev_over = calculate.ev(self.odd_over, self.prob_over)
         self.ev_under = calculate.ev(self.odd_under, self.prob_under)
+
 
         if self.ev_over >= EV_THRESHOLD:
             self._get_bet_type('over')

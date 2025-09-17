@@ -1,18 +1,19 @@
 import logging
 import pandas as pd
+import numpy as np
 from tabulate import tabulate
 from datetime import datetime
 from object.bet import Bet
-from features import create, check
 from utils.utils import print_separator, print_features
 from files.paths import ERROR_EVENTS
-from features.required import REQUIRED_FEATURES
+from features.start import get_features
 
 logger = logging.getLogger(__name__)
 bet_logger = logging.getLogger('bet')
 
 def match(
     dfs: dict,
+    history: dict,
     event: dict,
     models: dict,
     predictor: str):
@@ -75,6 +76,7 @@ def match(
     if predictor == 'ml_goals':
         predict_ml_model(
             dfs=dfs,
+            history=history,
             models=models,
             event=event)
         
@@ -82,30 +84,32 @@ def match(
         predict_elo_model()
 
 def predict_ml_model(
+        history: dict,
         dfs: dict,
         models: dict,
         event: dict
         ):
 
         bet = Bet(event)
-        bet.get_odds(market='goals')
+        bet.get_odds(market='total')
 
-        features = create.features(
-            data=dfs[bet.league_id],
-            live=True,
-            players=bet.players
+        features = get_features(
+            event=bet,
+            history=history
         )
+    
         
         try:
-            X = features[REQUIRED_FEATURES]
+            X = features
             
-            if features[REQUIRED_FEATURES].empty:
-                logger.warning(f'Empty daframe for {bet.home_str} vs {bet.away_str}')
-                check.dataframe(bet.home_player, bet.away_player, df=dfs[bet.league_id])
+            if (isinstance(features, (pd.DataFrame, pd.Series)) and features.empty) or \
+            (isinstance(features, np.ndarray) and features.size == 0):
+                logger.warning(f'Empty dataframe/array for {bet.home_str} vs {bet.away_str}')
                 return
 
             print_separator(30)
             bet_logger.bet("Dados reais usados para previsão (X_ao_vivo):")
+            bet_logger.bet(f'{bet.home_player} vs {bet.away_player}')
             bet_logger.bet(f'{print_features(X)}')
             print_separator(30)
             
@@ -114,11 +118,10 @@ def predict_ml_model(
             bet.find_ev(lambda_pred)
             if bet.bet_type is not None:
                 bet.handle_made_bet()
-        
             bet.save_bet()
         
-        except KeyError:
-            logger.error(f'Error predicting for {bet.home_str} vs {bet.away_str}. Model {models[bet.league_id]} not Found')     
+        except KeyError as e:
+            logger.error(f'Error predicting for {bet.home_str} vs {bet.away_str}. Model {bet.league_id} not Found\n Error: {e}')     
                 
 def predict_elo_model():
     pass

@@ -9,7 +9,12 @@ from files.paths import LOCK
 
 logger = logging.getLogger(__name__)
 
-def run(models: dict, i: int = 50, sleep_time: int = 1):
+def run(
+        models: dict,
+        history: dict,
+        i: int = 50,
+        sleep_time: int = 1,
+    ):
     """Scans all live events and handles them
     
     Arguments:
@@ -54,7 +59,9 @@ def run(models: dict, i: int = 50, sleep_time: int = 1):
                     for match in unread_matches:
                         predict.match(dfs=dfs,
                                     event=match,
+                                    history=history,
                                     models=models,
+                                    predictor='ml_goals'
                         )
                         read_matches.add(int(match['id']))
                     i_counter = 0
