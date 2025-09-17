@@ -2,6 +2,7 @@ import logging
 from logging_config. settings import configure_logging
 from model import get
 from processes import scanner
+from features.start import initialize_player_data
 
 
 if __name__ == '__main__':
@@ -24,5 +25,6 @@ if __name__ == '__main__':
 
     #update.fill_data_gaps()
     models = get.models()
+    history = initialize_player_data()
 
-    scanner.run(models=models, i=25)
+    scanner.run(models=models, i=25, history=history)
