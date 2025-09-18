@@ -98,8 +98,13 @@ def predict_ml_model(
 
         features = get_features(
             event=bet,
-            history=history
+            history=history,
+            drop_h2h=10
         )
+
+        if features.isnull().values.any() or features.empty:
+            bet_logger.bet(f'Pulando pois o evento {bet.home_player} vs {bet.away_player} possui features nan')   # mantém o anterior
+            return
     
         
         try:
@@ -113,7 +118,10 @@ def predict_ml_model(
             print_separator(30)
             bet_logger.bet("Dados reais usados para previsão (X_ao_vivo):")
             bet_logger.bet(f'{bet.home_player} vs {bet.away_player}')
+            bet_logger.bet(f'Features Normais:')
             bet_logger.bet(f'{print_features(X)}')
+            bet_logger.bet(f'Features Escaladas:')
+            bet_logger.bet(print(scalers[bet.league_id].transform(features)))
             print_separator(30)
             
             lambda_pred = models[bet.league_id].predict(scalers[bet.league_id].transform(features))

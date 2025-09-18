@@ -4,25 +4,30 @@ from datetime import datetime
 from collections import deque
 from sklearn.preprocessing import StandardScaler
 
-import pandas as pd
-import numpy as np
-from collections import deque
-from sklearn.preprocessing import StandardScaler
 
 def input_averages(
     train_df: pd.DataFrame,
     test_df: pd.DataFrame,
-    return_scaler: bool = False
+    return_scaler: bool = False,
+    drop_h2h: int = 0
 ) -> tuple[pd.DataFrame, pd.DataFrame] | tuple[pd.DataFrame, pd.DataFrame, StandardScaler]:
     """
     Calcula médias e desvios padrão (até 50 jogos) para:
       1. Gols marcados pelo jogador (independente de casa/fora)
       2. Gols em confrontos diretos (ignora ordem casa/fora)
+      3. Quantidade de confrontos diretos já disputados (h2h_count)
+
+    Parâmetros
+    ----------
+    drop_h2h : int
+        Valor mínimo de confrontos diretos necessários.
+        Linhas com `h2h_count < drop_h2h` serão removidas.
     """
 
     def compute_rolling_stats(df: pd.DataFrame, history: dict) -> tuple[pd.DataFrame, dict]:
         ma_player, std_player = [], []
         ma_h2h, std_h2h = [], []
+        h2h_count = []
 
         for _, row in df.iterrows():
             h, a = row["home_player"], row["away_player"]
@@ -51,21 +56,29 @@ def input_averages(
             ma_h2h.append(np.mean(history["h2h"][key_h2h]) if history["h2h"][key_h2h] else np.nan)
             std_h2h.append(np.std(history["h2h"][key_h2h]) if history["h2h"][key_h2h] else np.nan)
 
+            # contagem de confrontos diretos
+            h2h_count.append(len(history["h2h"][key_h2h]))
+
             # ---- atualizar histórico ----
             history["player"][h].append(hs)
             history["player"][a].append(as_)
             history["h2h"][key_h2h].append(hs + as_)
 
         df = df.copy()
-        # atenção: como temos duas entradas (h e a), é melhor separar colunas
         df["ma_home"], df["std_home"] = ma_player[0::2], std_player[0::2]
         df["ma_away"], df["std_away"] = ma_player[1::2], std_player[1::2]
         df["ma_h2h"], df["std_h2h"] = ma_h2h, std_h2h
+        df["h2h_count"] = h2h_count
 
+        # remover linhas inválidas
         df = df.dropna(
             subset=["ma_home", "ma_away", "ma_h2h",
                     "std_home", "std_away", "std_h2h"]
         ).copy()
+
+        # aplicar filtro de drop_h2h
+        if drop_h2h > 0:
+            df = df[df["h2h_count"] >= drop_h2h].copy()
 
         return df, history
 
@@ -81,7 +94,8 @@ def input_averages(
     scaler = StandardScaler()
     cols = ["ma_home", "std_home",
             "ma_away", "std_away",
-            "ma_h2h", "std_h2h"]
+            "ma_h2h", "std_h2h",
+            "h2h_count"]
 
     train_with_avg[cols] = scaler.fit_transform(train_with_avg[cols])
     test_with_avg[cols] = scaler.transform(test_with_avg[cols])
