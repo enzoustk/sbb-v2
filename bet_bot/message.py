@@ -20,23 +20,30 @@ def send(
     }
 
     response = requests.post(url, data=data)
-    response_data = response.json()
+    try:
+        response_data = response.json()
+    except ValueError:
+        logger.error("Resposta do Telegram não é JSON:")
+        logger.error(response.text)
+        return None, None
 
-    if response.ok and response.json().get('ok'):
-        message_id = response.json()['result']['message_id']
+    if response.ok and response_data.get('ok'):
+        message_id = response_data['result']['message_id']
         logger.info(f"Telegram message sent successfully. ID: {message_id}")
         return message_id, TELEGRAM_CHAT_ID
-    if response['error_code'] == 429:
-        logger.info('Too Many Requests, Sleeping for ')
-        try:
-            time.sleep((response['description'][-2:]) + 1)
-        except:    
-            time.sleep(60)
-    else:
-        logger.error("Telegram message not sent")
-        logger.error(f"Status code: {response.status_code}")
-        logger.error(f"Response: {response_data}")
+
+    # checa rate limit via status_code
+    if response.status_code == 429:
+        logger.warning("Too Many Requests, sleeping...")
+        retry_after = response_data.get("parameters", {}).get("retry_after", 60)
+        time.sleep(retry_after + 1)
         return None, None
+
+    # erro genérico
+    logger.error("Telegram message not sent")
+    logger.error(f"Status code: {response.status_code}")
+    logger.error(f"Response: {response_data}")
+    return None, None
 
 
 def edit(
@@ -54,17 +61,23 @@ def edit(
         "parse_mode": "MarkdownV2",
         "disable_web_page_preview": True
     }
+
     response = requests.post(url, data=data)
-    if response.status_code == 200:
-        edited = True
-        return edited
-    if response['error_code'] == 429:
-        logger.info('Too Many Requests, Sleeping for ')
-        try:
-            time.sleep((response['description'][-2:]) + 1)
-        except:    
-            time.sleep(60)
-    else:
-        logger.error(f'Error editing message {message_id}: {response.status_code} - {response.text}')
+    try:
+        response_data = response.json()
+    except ValueError:
+        logger.error(f"Resposta inválida ao editar mensagem {message_id}: {response.text}")
+        return False
 
+    if response.ok and response_data.get('ok'):
+        logger.info(f"Message {message_id} edited successfully.")
+        return True
 
+    if response.status_code == 429:
+        logger.warning("Too Many Requests ao editar, sleeping...")
+        retry_after = response_data.get("parameters", {}).get("retry_after", 60)
+        time.sleep(retry_after + 1)
+        return False
+
+    logger.error(f"Error editing message {message_id}: {response.status_code} - {response_data}")
+    return False
