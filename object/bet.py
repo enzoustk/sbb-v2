@@ -6,14 +6,13 @@ from model import calculate
 from zoneinfo import ZoneInfo
 from api import fetch, validate
 from bet_bot import message, escape
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone
 from model.betting_config import (EV_THRESHOLD, TIME_RANGES,
     AJUSTE_FUSO, HOT_TIPS_STEP, MAX_HOT, HOT_THRESHOLD)
 from api.constants import LEAGUE_IDS
 from files.paths import NOT_ENDED, MADE_BETS
-from bet_bot.constants import (TELEGRAM_MESSAGE, MIN_LINE_MESSAGE,
-    MIN_ODD_MESSAGE, HOT_TIPS_MESSAGE, EDITED_MESSAGE, CANCELED_MESSAGE,
-    RESULT_EMOJIS, BET_TYPE_EMOJIS, LINKS_MESSAGE)
+from bet_bot.constants import *
+
 
 logger = logging.getLogger(__name__)
 bet_logger = logging.getLogger('bet')
@@ -83,6 +82,7 @@ class Bet:
         self.ev_under = None
 
         self.bet_type = None
+        self.bet_initial = None
         self.bet_odd = None
         self.bet_prob = None
         self.bet_ev = None
@@ -194,7 +194,7 @@ class Bet:
         """
         bet_logger.bet(message)
         self._generate_message()
-        self._send_message()
+        self._send_message()      
 
     def save_bet(self):
         """Adds the current bet to the NOT_ENDED file."""
@@ -210,7 +210,7 @@ class Bet:
             updated_df.to_csv(NOT_ENDED, index=False)
         else:
             new_data.to_csv(NOT_ENDED, index=False)
-    
+
     def handle_ended_bet(self):
 
         '''
@@ -225,7 +225,7 @@ class Bet:
             self.bet_type, self.handicap, self.total_score, self.bet_odd)
         self._edit_telegram_message()
         self._save_made_bet()
-    
+
     def mark_processed(self):
         """Marca o processamento completo e identifica razões específicas de falha."""
         self.totally_processed = True
@@ -316,16 +316,6 @@ class Bet:
         self.message = escape.markdown(self.message)
         self.message += EDITED_MESSAGE.format(**escaped_dict, LINKS_MESSAGE=LINKS_MESSAGE)
         self.edited = message.edit(self.message_id, self.message, self.chat_id)
-
-    def _get_bet_type(self, bet_type: str | None):
-        
-        """
-        Gets Bet Type Object.
-        Args:
-            bet_type (str): Type of bet ('over'/'under'/'None')
-        """
-
-        self.bet_type = bet_type
 
     def _get_result_emoji(self):
         """Gets emoji for the result and bet type
@@ -497,7 +487,13 @@ class Bet:
         """
         return self.event.get('league', {}).get('id', 'Unknow League Id')
     
-    def _format_data(self, data) -> str:
+    def _format_data(self, data, key=None, whitelist=None):
+        """
+        Formata dados para exibição, exceto se a chave estiver em whitelist.
+        """
+        # se for whitelist, não altera
+        if whitelist and key in whitelist:
+            return data
 
         if isinstance(data, (datetime, pd.Timestamp)):
             return data.replace(second=0, microsecond=0)
@@ -508,6 +504,8 @@ class Bet:
         elif isinstance(data, str):
             return f'{data}'.title().replace('_', ' ')
         
+        return data
+
     def _get_excel_columns(self):
         """Returns a dcit with the columns and values
         To the Made Bets Excel file
@@ -542,7 +540,10 @@ class Bet:
         """
 
         self.bet_type = bet_type
-
+        try:
+            self.bet_initial = str(bet_type)[0].lower()
+        except Exception as e:
+            print(f'error no bet_initial: {e}')
         if self.bet_type == 'over':
             self.bet_odd = self.odd_over
             self.bet_prob = self.prob_over

@@ -121,7 +121,7 @@ def predict_ml_model(
             bet_logger.bet(f'Features Normais:')
             bet_logger.bet(f'{print_features(X)}')
             bet_logger.bet(f'Features Escaladas:')
-            bet_logger.bet(print(scalers[bet.league_id].transform(features)))
+            bet_logger.bet(scalers[bet.league_id].transform(features))
             print_separator(30)
             
             lambda_pred = models[bet.league_id].predict(scalers[bet.league_id].transform(features))
