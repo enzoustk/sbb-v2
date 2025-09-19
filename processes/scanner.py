@@ -49,8 +49,9 @@ def run(
                 logger.info(f'{i} scans made. Starting Updater')
                 threading.Thread(
                     target=updater.run,
+                    args=(history,),
                     daemon=True
-                ).start()
+                    ).start()
 
         
         if unread_matches:
@@ -66,9 +67,11 @@ def run(
                                     predictor='ml_goals'
                         )
                         read_matches.add(int(match['id']))
+                        
                     i_counter = 0
 
             except Exception as e:
                 logger.error(f"Error predicting match {match['id']}\n{e}")
-        
+                read_matches.add(int(match['id']))
+                
         time.sleep(sleep_time)

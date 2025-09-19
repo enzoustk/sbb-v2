@@ -2,13 +2,14 @@ import ast
 import time
 import logging
 from processes import circuit
+from features import start
 from object.bet import Bet
 from data import load, update
 from files.paths import LOCK
 
 logger = logging.getLogger(__name__)
 
-def run():
+def run(history):
     """
     Quando o scanner passar i execuções sem encontrar novos eventos,
     ele chama o updater para processar os eventos que estão no CSV.
@@ -65,6 +66,7 @@ def run():
                 time.sleep(1)
                 match.mark_processed()
                 existing_bets.pop(event_id, None)
+                start.update(event=match, history=history)
 
             if match.totally_processed is True: 
                 ended.append(match)
