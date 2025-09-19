@@ -12,7 +12,7 @@ Chat ID Telegram STK = -1001563465125
 
 
 TELEGRAM_MESSAGE = (
-    "🔗 Link: https://www.bet365.com/#/IP/B151\n"
+    "🔗 Link: https://www.bet365.bet.br/#/IP/B151\n"
     "⚽ Times: {home_player} ({home_team}) x {away_player} ({away_team})\n" 
     "🏆 Liga: {league}\n"
     "🎯 Aposta: {bet_type} {handicap} {bet_type_emoji}\n" 
@@ -64,7 +64,7 @@ LINKS_MESSAGE = (
 
 
 RESULT_EMOJIS = {
-    'win': '✅✅✅',
+    'win': '✅✅✅✅✅',
     'half_win': '🔁✅',
     'push': '🔁',
     'half_loss': '🔁❌',
