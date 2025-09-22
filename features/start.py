@@ -27,6 +27,7 @@ def initialize_player_data(
 
     raw_data = load.data(file='historic')
     df = raw_data['22614']
+    df = df.sort_values(by="date")
 
     for _, row in df.iterrows():
         h, a = row["home_player"].lower(), row["away_player"].lower()
@@ -71,12 +72,15 @@ def initialize_player_data(
 
     # drop linhas inválidas
     df = df.dropna(
-        subset=["ma_home", "ma_away", "ma_h2h",
-                "std_home", "std_away", "std_h2h"]
+        subset=[
+            "ma_home", "ma_away", "ma_h2h",
+            "std_home", "std_away", "std_h2h"
+        ]
     ).copy()
 
     if drop_h2h > 0:
         df = df[df["h2h_count"] >= drop_h2h].copy()
+
 
     return history
 
