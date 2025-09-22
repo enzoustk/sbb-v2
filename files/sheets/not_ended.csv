@@ -1,1 +1,27 @@
+event_id,league,date,home_str,away_str,home_team,home_player,away_team,away_player,players,odd_over,odd_under,handicap,prob_over,prob_under,ev_over,ev_under,bet_type,bet_initial,bet_odd,bet_prob,bet_ev,hot_ev,hot_emoji,minimum_line,minimum_odd,time_sent,lambda_pred,ended,home_score,away_score,total_score,raw_score,profit,result,canceled,message,sent,message_id,chat_id,edited,result_emoji,bet_type_emoji,time_range,saved_on_excel,month,totally_processed,event,league_id
+10713709,Battle: 8 min,2025-09-22 13:48:00,Fenerbahce (Wboy),Man Utd (KraftVK),fenerbahce,wboy,man utd,kraftvk,"('kraftvk', 'wboy')",1.825,1.875,7.5,0.3350765158513371,0.6649234841486629,-0.3884853585713097,0.2467315327787429,under,u,1.875,0.6649234841486629,0.2467315327787429,1.0,🔥,7.0,1.78,2025-09-22 07:47:20.990574,[6.5534678],False,,,,,,,,"🔗 Link: https://www.bet365.bet.br/#/IP/B151
+⚽ Times: Wboy (Fenerbahce) x Kraftvk (Man Utd)
+🏆 Liga: Battle: 8 Min
+🎯 Aposta: Under 7,50 ⬇️
+📈 Odd: 1,88
+➖ Mínima: 7,00 @1,78
 
+⚠️ EV: 🔥
+",True,4935.0,-1002305899864.0,False,,⬇️,04:00 - 07:59,False,09-2025,,"{'id': '10713709', 'sport_id': '1', 'time': '1758548880', 'time_status': '1', 'league': {'id': '22614', 'name': 'Esoccer Battle - 8 mins play', 'cc': ''}, 'home': {'id': '1085726', 'name': 'Fenerbahce (Wboy)', 'image_id': '', 'cc': ''}, 'away': {'id': '1144475', 'name': 'Man Utd (KraftVK)', 'image_id': '695757', 'cc': ''}, 'ss': '', 'bet365_id': '181724552', 'timer': {'tm': 0, 'ts': 0, 'tt': '0', 'ta': 0, 'md': 0}}",22614
+10713710,Battle: 8 min,2025-09-22 13:48:00,Roma (Bomb1to),Tottenham (Uncle),roma,bomb1to,tottenham,uncle,"('bomb1to', 'uncle')",1.825,1.875,4.75,0.6502187968172041,0.3497812031827959,0.1866493041913974,-0.3441602440322576,over,o,1.825,0.6502187968172041,0.1866493041913974,0.0,,5.0,1.75,2025-09-22 07:47:22.158175,[5.7629848],False,,,,,,,,"🔗 Link: https://www.bet365.bet.br/#/IP/B151
+⚽ Times: Bomb1To (Roma) x Uncle (Tottenham)
+🏆 Liga: Battle: 8 Min
+🎯 Aposta: Over 4,75 ⬆️
+📈 Odd: 1,82
+➖ Mínima: 5,00 @1,75
+",True,4936.0,-1002305899864.0,False,,⬆️,04:00 - 07:59,False,09-2025,,"{'id': '10713710', 'sport_id': '1', 'time': '1758548880', 'time_status': '1', 'league': {'id': '22614', 'name': 'Esoccer Battle - 8 mins play', 'cc': ''}, 'home': {'id': '1076613', 'name': 'Roma (Bomb1to)', 'image_id': '', 'cc': ''}, 'away': {'id': '1099219', 'name': 'Tottenham (Uncle)', 'image_id': '', 'cc': ''}, 'ss': '', 'bet365_id': '181724557', 'timer': {'tm': 0, 'ts': 0, 'tt': '0', 'ta': 0, 'md': 0}}",22614
+10713713,Battle: 8 min,2025-09-22 13:52:00,Man City (Glumac),Real Madrid (Maslja),man city,glumac,real madrid,maslja,"('glumac', 'maslja')",1.8,1.9,6.5,0.3262249065892528,0.6737750934107472,-0.4127951681393448,0.2801726774804196,under,u,1.9,0.6737750934107472,0.2801726774804196,2.0,🔥🔥,6.0,1.76,2025-09-22 07:51:03.758746,[5.5777764],False,,,,,,,,"🔗 Link: https://www.bet365.bet.br/#/IP/B151
+⚽ Times: Glumac (Man City) x Maslja (Real Madrid)
+🏆 Liga: Battle: 8 Min
+🎯 Aposta: Under 6,50 ⬇️
+📈 Odd: 1,90
+➖ Mínima: 6,00 @1,76
+
+⚠️ EV: 🔥🔥
+",True,4937.0,-1002305899864.0,False,,⬇️,04:00 - 07:59,False,09-2025,,"{'id': '10713713', 'sport_id': '1', 'time': '1758549120', 'time_status': '1', 'league': {'id': '22614', 'name': 'Esoccer Battle - 8 mins play', 'cc': ''}, 'home': {'id': '1095016', 'name': 'Man City (Glumac)', 'image_id': '', 'cc': ''}, 'away': {'id': '1097784', 'name': 'Real Madrid (Maslja)', 'image_id': '', 'cc': ''}, 'ss': '', 'bet365_id': '181757995', 'timer': {'tm': 0, 'ts': 0, 'tt': '0', 'ta': 0, 'md': 0}}",22614
+10713716,Battle: 8 min,2025-09-22 13:52:00,River Plate (Elmagico),Boca Juniors (Terza),river plate,elmagico,boca juniors,terza,"('elmagico', 'terza')",1.825,1.875,4.75,0.498775340024703,0.501224659975297,-0.0897350044549171,-0.0602037625463182,,,,,,,,,,,[4.928946],False,,,,,,,,,,,,False,,,,False,,,"{'id': '10713716', 'sport_id': '1', 'time': '1758549120', 'time_status': '1', 'league': {'id': '22614', 'name': 'Esoccer Battle - 8 mins play', 'cc': ''}, 'home': {'id': '1174082', 'name': 'River Plate (Elmagico)', 'image_id': '', 'cc': ''}, 'away': {'id': '1185890', 'name': 'Boca Juniors (Terza)', 'image_id': '', 'cc': ''}, 'ss': '', 'bet365_id': '181757993', 'timer': {'tm': 0, 'ts': 0, 'tt': '0', 'ta': 0, 'md': 0}}",22614
