@@ -28,4 +28,4 @@ if __name__ == '__main__':
     scalers = get.scalers()
     history = initialize_player_data()
 
-    scanner.run(models=models, i=25, history=history, scalers=scalers)
+    scanner.run(models=models, i=50, history=history, scalers=scalers)
