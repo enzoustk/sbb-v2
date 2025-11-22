@@ -1,24 +1,37 @@
-This is a betting bot I developed 100% in Python.  
+# 🤖 SBB v2: High-Frequency Betting Bot
 
-Unlike many projects in this category, this one was truly designed with the goal of generating real profit for both clients and myself
-by placing the described bets. It is not just an educational or illustrative bot—the real objective is to make a profit through betting. However,
-it will not be possible to replicate this bot on your own server or machine, as it uses APIs containing sensitive data that I cannot share.  
-This project serves to demonstrate the feasibility of such a tool, as well as my ability to successfully develop it.  
+> **Context:** Unlike standard educational projects, this bot was architected for **real financial profit**. It runs in production using proprietary data feeds to execute EV+ strategies.
+
+[![Python](https://img.shields.io/badge/Python-3.10%2B-blue)](https://www.python.org/)
+[![Model](https://img.shields.io/badge/Model-XGBoost%20%7C%20Scikit--Learn-orange)](https://scikit-learn.org/)
+[![Bot](https://img.shields.io/badge/Interface-Telegram%20API-2CA5E0)](https://core.telegram.org/bots/api)
+
+### ⚠️ Replication Notice
+**This repository is for demonstration/portfolio purposes only.**
+The system relies on private APIs and paid data streams containing sensitive keys. You will not be able to run `main.py` locally without these specific credentials.
+
+---
+
+### 🛠️ The Stack
+Built 100% in Python, focusing on speed and data integrity.
+* **Core ML:** `xgboost`, `scikit-learn` (Retrained dynamically)
+* **Data Processing:** `pandas`, `numpy`, `openpyxl`
+* **Infrastructure:** `python-telegram-bot`, `requests`, `python-dotenv`
+
+### ⚡ Architecture & Workflow
+The bot operates on a continuous data-driven loop:
+
+1.  **Ingestion:** Fetches historical and live match data via API.
+2.  **Processing:** Structures raw data into predictive features in real-time.
+3.  **Inference:** Runs the latest XGBoost model on live matches.
+4.  **Execution:** Identifies **EV+ (Positive Expected Value)** opportunities and pushes alerts to Telegram.
+5.  **Warehousing:** Logs every prediction context (bet taken vs. skipped).
+6.  **Settlement:** Automatically verifies match results once concluded.
+7.  **Reporting:** Updates the database, edits the original Telegram message with the result (Win/Loss), and generates a 24h ROI report.
+
+---
 
 
-Its functions are:  
-1. Receive existing data;  
-2. Structure features;  
-3. Train a machine learning model;  
-4. Make predictions on live matches;  
-5. Send EV+ betting suggestions on Telegram;  
-6. Store data from matches it bet on or not;  
-7. Receive results of matches where predictions were made;  
-8. Update the database with betting and match results;  
-9. Edit messages on Telegram with betting results;  
-10. Send detailed reports every 24 hours on the model's overall betting performance.
 
-
-
-
-To track the real results of the tool, visit: link-to-results.
+---
+*Developed by Enzo Araujo.*
