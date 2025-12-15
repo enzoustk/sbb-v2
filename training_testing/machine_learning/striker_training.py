@@ -4,7 +4,6 @@ from datetime import datetime
 from collections import deque
 from sklearn.preprocessing import StandardScaler
 
-
 def input_averages(
     train_df: pd.DataFrame,
     test_df: pd.DataFrame,
@@ -33,7 +32,7 @@ def input_averages(
             h, a = row["home_player"], row["away_player"]
             hs, as_ = row["home_score"], row["away_score"]
 
-            # inicializar histórico do jogador se necessário
+            
             for pid in [h, a]:
                 if pid not in history["player"]:
                     history["player"][pid] = deque(maxlen=50)
@@ -43,20 +42,19 @@ def input_averages(
             if key_h2h not in history["h2h"]:
                 history["h2h"][key_h2h] = deque(maxlen=50)
 
-            # ---- calcular features antes de atualizar ----
-            # jogador mandante
+            
             ma_player.append(np.mean(history["player"][h]) if history["player"][h] else np.nan)
             std_player.append(np.std(history["player"][h]) if history["player"][h] else np.nan)
 
-            # jogador visitante
+    
             ma_player.append(np.mean(history["player"][a]) if history["player"][a] else np.nan)
             std_player.append(np.std(history["player"][a]) if history["player"][a] else np.nan)
 
-            # head-to-head
+
             ma_h2h.append(np.mean(history["h2h"][key_h2h]) if history["h2h"][key_h2h] else np.nan)
             std_h2h.append(np.std(history["h2h"][key_h2h]) if history["h2h"][key_h2h] else np.nan)
 
-            # contagem de confrontos diretos
+
             h2h_count.append(len(history["h2h"][key_h2h]))
 
             # ---- atualizar histórico ----
@@ -70,32 +68,32 @@ def input_averages(
         df["ma_h2h"], df["std_h2h"] = ma_h2h, std_h2h
         df["h2h_count"] = h2h_count
 
-        # remover linhas inválidas
-        df = df.dropna(
-            subset=["ma_home", "ma_away", "ma_h2h",
-                    "std_home", "std_away", "std_h2h"]
-        ).copy()
 
-        # aplicar filtro de drop_h2h
+        df = df.dropna(
+            subset=[
+                "ma_home", "ma_away", "ma_h2h",
+                "std_home", "std_away", "std_h2h",
+        ]).copy()
+
         if drop_h2h > 0:
             df = df[df["h2h_count"] >= drop_h2h].copy()
 
         return df, history
 
-    # histórico único por jogador
+
     history = {"player": {}, "h2h": {}}
 
-    # treino
     train_with_avg, history = compute_rolling_stats(train_df, history)
-    # teste
     test_with_avg, _ = compute_rolling_stats(test_df, history)
 
     # escalar
     scaler = StandardScaler()
-    cols = ["ma_home", "std_home",
-            "ma_away", "std_away",
-            "ma_h2h", "std_h2h",
-            "h2h_count"]
+    cols = [
+        "ma_home", "std_home",
+        "ma_away", "std_away",
+        "ma_h2h", "std_h2h",
+        "h2h_count"
+        ]
 
     train_with_avg[cols] = scaler.fit_transform(train_with_avg[cols])
     test_with_avg[cols] = scaler.transform(test_with_avg[cols])
