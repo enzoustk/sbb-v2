@@ -1,14 +1,12 @@
 # pyright: reportUndefinedVariable=false
+import os
+from dotenv import load_dotenv
 from bet_bot import escape
 
-TELEGRAM_BET_BOT_TOKEN = "<TELEGRAM_BET_BOT_TOKEN>"
-TELEGRAM_CHAT_ID = -1002305899864
+load_dotenv()
 
-"""
-Chat Individual do Telegram - Enzo  = <CHAT_ID>
-Chat ID Grupo Teste (Privado) = -1002305899864
-Chat ID Telegram STK = -1001563465125
-"""
+TELEGRAM_BET_BOT_TOKEN = os.environ.get("TELEGRAM_BET_BOT_TOKEN")
+TELEGRAM_CHAT_ID = int(os.environ.get("TELEGRAM_CHAT_ID", "0"))
 
 
 TELEGRAM_MESSAGE = (

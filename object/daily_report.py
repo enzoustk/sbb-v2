@@ -6,6 +6,7 @@ from bet_bot.constants import TELEGRAM_BET_BOT_TOKEN
 from datetime import datetime, timedelta, date
 from files.paths import HISTORIC_DATA, LOCK, MADE_BETS
 from model.betting_config import TIME_RANGES
+from logging_config.constants import TELEGRAM_LOG_CHAT_ID
 from bet_bot.constants import (
     REPORT_TITLE, REPORT_BODY, REPORT_TOTAL,
     REPORT_TIME_RANGE_TITLE, REPORT_TIME_RANGE_BODY,
@@ -42,7 +43,7 @@ class Report:
     
     def build_and_send(
             self,
-            chat_id: str = -1002343941988,
+            chat_id: str = TELEGRAM_LOG_CHAT_ID,
             token: str = TELEGRAM_BET_BOT_TOKEN,
             ):
         try:

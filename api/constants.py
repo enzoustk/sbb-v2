@@ -1,6 +1,10 @@
-"""All API-related constants."""
+"""All API-related constants. Secrets come from the environment (.env, see .env.example)."""
+import os
+from dotenv import load_dotenv
 
-API_TOKEN = "<B365_TOKEN>"
+load_dotenv()
+
+API_TOKEN = os.environ.get("B365_TOKEN")
 
 SPORT_ID = 1
 
